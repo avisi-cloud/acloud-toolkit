@@ -1,6 +1,8 @@
 # CSI snapshot utils
 
-CLI tooling for working with CSI snapshots
+CLI tooling for working with CSI snapshots.
+
+This is based on the [manual documentation](https://insight.avisi.nl/confluence/display/AME/how-to+restore+a+snapshot+to+a+new+namespace) for restoring CSI snapshots.
 
 ## Installation
 
