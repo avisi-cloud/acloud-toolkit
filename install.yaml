@@ -1,0 +1,52 @@
+
+repositories:
+  # - name: stable
+  #   url: https://kubernetes-charts.storage.googleapis.com
+  # - name: gitlab
+  #   url: https://charts.gitlab.io
+  # - name: harbor
+  #   url: https://helm.goharbor.io
+  # - name: rancher-latest
+  #   url: https://releases.rancher.com/server-charts/latest
+  # - name: rancher-stable
+  #   url: https://releases.rancher.com/server-charts/stable
+  # # - name: aps-avisi-cloud
+  # #   url: https://registry.avisi.cloud/chartrepo/aps
+  # - name: codecentric
+  #   url: https://codecentric.github.io/helm-charts
+  # - name: fluxcd
+  #   url: https://charts.fluxcd.io
+  # - name: cert-manager
+  #   url: https://charts.jetstack.io
+  - name: bitnami
+    url: 'https://charts.bitnami.com/bitnami'
+    username: '${BITNAMI_REPO_USERNAME}'
+    password: '${BITNAMI_REPO_PASSWORD}'
+
+rollouts:
+  - name: metrics-server
+    charts:
+    - name: metrics-server
+      namespace: metrics-server
+      chart: stable/metrics-server
+      version: 2.9.0
+
+  # - namespace: cortex
+  #   # manifests: 'manifests/'
+  #   charts:
+  #   - name: cortex
+  #     chart: ame/cortex
+  #     version: 0.5.0
+  #     valuesFile: './cortex/cortex.yaml'
+
+  # - namespace: cortex-data
+  #   # manifests: 'cortex-data/manifests/'
+  #   charts:
+  #   - name: cassandra
+  #     chart: bitnami/cassandra
+  #     valuesFile: './cortex-data/cassandra.yaml'
+  #     version: 5.0.0
+  #   # - name: cassandra-backup
+  #   #   chart: ame/cassandra-backup
+  #   #   version: 0.0.1
+  
