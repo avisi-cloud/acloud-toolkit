@@ -8,7 +8,9 @@ import (
 
 	"k8s.io/client-go/dynamic"
 
+	volumesnapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v4/apis/volumesnapshot/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
@@ -27,8 +29,10 @@ func List(sourceNamespace string) error {
 	if err != nil {
 		return err
 	}
-	for _, snapshot := range snapshotUnstructued.Items {
-		fmt.Printf("%s\n", snapshot.GetName())
+	for _, snapshotItem := range snapshotUnstructued.Items {
+		snapshot := volumesnapshotv1.VolumeSnapshot{}
+		runtime.DefaultUnstructuredConverter.FromUnstructured(snapshotItem.Object, &snapshot)
+		fmt.Printf("%s\t\n", snapshot.GetName())
 	}
 	return nil
 }
