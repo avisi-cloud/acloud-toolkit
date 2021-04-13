@@ -3,33 +3,16 @@ module gitlab.avisi.cloud/ame/csi-snapshot-utils
 go 1.15
 
 require (
-	github.com/Unleash/unleash-client-go/v3 v3.1.1
-	github.com/aws/aws-sdk-go v1.38.3
-	github.com/container-storage-interface/spec v1.4.0 // indirect
-	github.com/docker/distribution v2.7.1+incompatible
-	github.com/google/go-cmp v0.5.2
 	github.com/google/uuid v1.2.0
-	github.com/gorilla/mux v1.8.0
-	github.com/kubernetes-csi/external-snapshotter v1.2.2 // indirect
+	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/kubernetes-csi/external-snapshotter/client/v4 v4.0.0
-	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.1.1
 	github.com/spf13/pflag v1.0.5
-	github.com/stretchr/testify v1.7.0
-	golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
-	gopkg.in/yaml.v2 v2.4.0
-	gotest.tools v2.2.0+incompatible
+	github.com/stretchr/testify v1.7.0 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	k8s.io/api v0.20.5
-	k8s.io/apiextensions-apiserver v0.20.5
 	k8s.io/apimachinery v0.20.5
 	k8s.io/client-go v0.20.5
-	k8s.io/cluster-bootstrap v0.20.5
-	k8s.io/component-base v0.20.5
-	k8s.io/klog v1.0.0
-	k8s.io/kube-proxy v0.20.5
-	k8s.io/kubectl v0.20.5
-	k8s.io/kubelet v0.20.5
-	k8s.io/kubernetes v1.20.5
 )
 
 replace (
