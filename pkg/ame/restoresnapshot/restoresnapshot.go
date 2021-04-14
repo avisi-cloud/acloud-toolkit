@@ -59,7 +59,7 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 			StorageClassName: helpers.String(restoreStorageClass),
 			DataSource: &apiv1.TypedLocalObjectReference{
 				APIGroup: helpers.String("snapshot.storage.k8s.io"),
-				Kind:     "volumesnapshots",
+				Kind:     "VolumeSnapshot",
 				Name:     snapshotName,
 			},
 			AccessModes: []apiv1.PersistentVolumeAccessMode{apiv1.ReadWriteOnce},
@@ -137,6 +137,7 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 	fmt.Printf("created a new PVC %s in namespace %s...\n", targetName, targetNamespace)
 
 	// TODO: validate that the new PVC has the correct persistent volume claimed.
+	// TODO: patch PV if it was originaly marked as PersistentVolumeReclaimPolicy = Delete, back to Delete
 
 	return nil
 }

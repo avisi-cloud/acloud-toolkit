@@ -22,6 +22,6 @@ func NewCikCmd(in io.Reader, out, err io.Writer) *cobra.Command {
 	cmds.AddCommand(NewVersionCmd())
 	cmds.AddCommand(NewListCmd(nil))
 	cmds.AddCommand(NewRestoreCmd(nil))
-
+	cmds.AddCommand(NewSnapshotCreateCmd(nil))
 	return cmds
 }

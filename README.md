@@ -43,3 +43,16 @@ deleted the PVC test3-721bd6a7-6f75-471f-ad24-a99e063a6cf0...
 removed the PV pvc-dc23367b-f5b2-4fb7-9ddc-da0d864a7147 claim ref to test3-721bd6a7-6f75-471f-ad24-a99e063a6cf0...
 created a new PVC test3 in namespace default...
 ```
+
+### Create snapshot
+
+```bash
+./bin/csi-snapshot-utils create-snapshot --pvc jira-jira-0 --snapshot-name jira-$(date "+%F-%H%M%S") -n jira
+```
+
+### Examples
+
+```
+./bin/csi-snapshot-utils restore --snapshot-name=jira-2021-04-14-110521 --target-name=jira-jira-0 --target-namespace=jira-acc --source-namespace=jira
+./bin/csi-snapshot-utils restore --snapshot-name=jira-db-2021-04-14-110635 --target-name=data-jira-database-postgresql-0 --target-namespace=jira-acc --source-namespace=jira
+```
