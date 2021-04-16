@@ -20,7 +20,11 @@ import (
 )
 
 func Restore(snapshotName string, sourceNamespace string, targetName string, targetNamespace string, restoreStorageClass string) error {
-	config, err := k8s.GetKubeConfigOrInCluster()
+	kubeconfig, err := k8s.GetClientCmd()
+	if err != nil {
+		return err
+	}
+	config, err := kubeconfig.ClientConfig()
 	if err != nil {
 		return err
 	}
@@ -28,7 +32,10 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 	if err != nil {
 		return err
 	}
-	k8sclient := k8s.GetClientOrDie()
+	k8sclient, err := k8s.GetClientWithConfig(config)
+	if err != nil {
+		return err
+	}
 
 	volumesnapshotRes := schema.GroupVersionResource{Group: "snapshot.storage.k8s.io", Version: "v1", Resource: "volumesnapshots"}
 	snapshotUnstructued, err := client.Resource(volumesnapshotRes).Namespace(sourceNamespace).Get(context.TODO(), snapshotName, metav1.GetOptions{})
@@ -50,10 +57,20 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 	// get size from the volumesnapshot restoresize
 	storageSize := *snapshot.Status.RestoreSize
 
-	k8sclient.CoreV1().PersistentVolumeClaims(sourceNamespace).Create(context.TODO(), &apiv1.PersistentVolumeClaim{
+	sourcePVC := ""
+	if snapshot.Spec.Source.PersistentVolumeClaimName != nil {
+		sourcePVC = *snapshot.Spec.Source.PersistentVolumeClaimName
+	}
+	_, err = k8sclient.CoreV1().PersistentVolumeClaims(sourceNamespace).Create(context.TODO(), &apiv1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      restorePVCName,
 			Namespace: sourceNamespace,
+			Labels: map[string]string{
+				"csi-snapshot-utils.k8s.avisi.cloud/snapshot-reference": string(snapshot.GetUID()),
+				"csi-snapshot-utils.k8s.avisi.cloud/target-pvc":         fmt.Sprintf("%s", targetName),
+				"csi-snapshot-utils.k8s.avisi.cloud/source-snapshot":    fmt.Sprintf("%s", snapshotName),
+				"csi-snapshot-utils.k8s.avisi.cloud/source-pvc":         fmt.Sprintf("%s", sourcePVC),
+			},
 		},
 		Spec: apiv1.PersistentVolumeClaimSpec{
 			StorageClassName: helpers.String(restoreStorageClass),
@@ -70,6 +87,9 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 			},
 		},
 	}, metav1.CreateOptions{})
+	if err != nil {
+		return err
+	}
 	fmt.Printf("created PVC %s...\n", restorePVCName)
 
 	// wait until PVC has a persistent volume
@@ -106,23 +126,39 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 	}
 
 	// Delete the PVC
-	k8sclient.CoreV1().PersistentVolumeClaims(sourceNamespace).Delete(context.TODO(), restorePVCName, metav1.DeleteOptions{})
+	err = k8sclient.CoreV1().PersistentVolumeClaims(sourceNamespace).Delete(context.TODO(), restorePVCName, metav1.DeleteOptions{})
+	if err != nil {
+		return err
+	}
 	fmt.Printf("deleted the PVC %s...\n", restorePVCName)
 
 	// Update the PVC to remove the claimRef
-	pv, _ = k8sclient.CoreV1().PersistentVolumes().Get(context.TODO(), pvc.Spec.VolumeName, metav1.GetOptions{})
+	pv, err = k8sclient.CoreV1().PersistentVolumes().Get(context.TODO(), pvc.Spec.VolumeName, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
 	pv.Spec.ClaimRef = nil
-	k8sclient.CoreV1().PersistentVolumes().Update(context.TODO(), pv, metav1.UpdateOptions{})
+	_, err = k8sclient.CoreV1().PersistentVolumes().Update(context.TODO(), pv, metav1.UpdateOptions{})
+	if err != nil {
+		return err
+	}
 	fmt.Printf("removed the PV %s claim ref to %s...\n", pvc.Spec.VolumeName, restorePVCName)
 
 	// give kube some time to catch up
 	time.Sleep(1 * time.Second)
 
 	// Create a new PVC in the target namespace.
-	k8sclient.CoreV1().PersistentVolumeClaims(targetNamespace).Create(context.TODO(), &apiv1.PersistentVolumeClaim{
+	_, err = k8sclient.CoreV1().PersistentVolumeClaims(targetNamespace).Create(context.TODO(), &apiv1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      targetName,
 			Namespace: targetNamespace,
+			Labels: map[string]string{
+				"csi-snapshot-utils.k8s.avisi.cloud/restored":           "true",
+				"csi-snapshot-utils.k8s.avisi.cloud/snapshot-reference": string(snapshot.GetUID()),
+				"csi-snapshot-utils.k8s.avisi.cloud/target-pvc":         fmt.Sprintf("%s", targetName),
+				"csi-snapshot-utils.k8s.avisi.cloud/source-snapshot":    fmt.Sprintf("%s", snapshotName),
+				"csi-snapshot-utils.k8s.avisi.cloud/source-pvc":         fmt.Sprintf("%s", sourcePVC),
+			},
 		},
 		Spec: apiv1.PersistentVolumeClaimSpec{
 			StorageClassName: helpers.String(restoreStorageClass),
@@ -134,9 +170,31 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 			},
 		},
 	}, metav1.CreateOptions{})
+	if err != nil {
+		return err
+	}
 	fmt.Printf("created a new PVC %s in namespace %s...\n", targetName, targetNamespace)
 
-	// TODO: validate that the new PVC has the correct persistent volume claimed.
+	// validate that the new PVC has the correct persistent volume claimed.
+	targetPVC, err := k8sclient.CoreV1().PersistentVolumeClaims(targetNamespace).Get(context.TODO(), targetName, metav1.GetOptions{})
+	if err != nil {
+		return err
+	}
+	for {
+		if targetPVC.Spec.VolumeName != "" {
+			break
+		}
+		time.Sleep(1 * time.Second)
+
+		targetPVC, err = k8sclient.CoreV1().PersistentVolumeClaims(targetNamespace).Get(context.TODO(), targetName, metav1.GetOptions{})
+		if err != nil {
+			return err
+		}
+	}
+	if targetPVC.Spec.VolumeName != pvc.Spec.VolumeName {
+		fmt.Printf("warning: the restored pvc does not have the expected volume name. Expected: %q, found %q\n", pvc.Spec.VolumeName, targetPVC.Spec.VolumeName)
+	}
+	fmt.Printf("restore completed\n")
 	// TODO: patch PV if it was originaly marked as PersistentVolumeReclaimPolicy = Delete, back to Delete
 
 	return nil
