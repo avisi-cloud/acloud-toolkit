@@ -9,6 +9,19 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 )
 
+func GetClientCmd() (clientcmd.ClientConfig, error) {
+	loadingRules := clientcmd.NewDefaultClientConfigLoadingRules()
+	// if you want to change the loading rules (which files in which order), you can do so here
+
+	configOverrides := &clientcmd.ConfigOverrides{}
+	// if you want to change override values or bind them to flags, there are methods to help you
+
+	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(loadingRules, configOverrides), nil
+	// if err != nil {
+	// 	// Do something
+	// }
+}
+
 // GetClient creates a new k8s client object from the currently configured kubecontext
 func GetClient() (*kubernetes.Clientset, error) {
 	config, err := rest.InClusterConfig()

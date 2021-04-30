@@ -15,17 +15,29 @@ import (
 )
 
 func List(sourceNamespace string) error {
-	config, err := k8s.GetKubeConfigOrInCluster()
+	kubeconfig, err := k8s.GetClientCmd()
 	if err != nil {
-		panic(err)
+		return err
+	}
+	config, err := kubeconfig.ClientConfig()
+	if err != nil {
+		return err
 	}
 	client, err := dynamic.NewForConfig(config)
 	if err != nil {
-		panic(err)
+		return err
+	}
+
+	namespace, _, err := kubeconfig.Namespace()
+	if err != nil {
+		return err
+	}
+	if namespace == "" {
+		return nil
 	}
 
 	volumesnapshotRes := schema.GroupVersionResource{Group: "snapshot.storage.k8s.io", Version: "v1", Resource: "volumesnapshots"}
-	snapshotUnstructued, err := client.Resource(volumesnapshotRes).Namespace(sourceNamespace).List(context.TODO(), metav1.ListOptions{})
+	snapshotUnstructued, err := client.Resource(volumesnapshotRes).Namespace(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return err
 	}
