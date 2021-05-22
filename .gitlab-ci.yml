@@ -52,3 +52,27 @@ docker:promote:
   stage: publish
   only: [tags]
   tags: [docker]
+
+trivy:scan:image:
+  stage: test
+  image:
+    name: docker.io/aquasec/trivy:latest
+    entrypoint: [""]
+  allow_failure: true
+  variables:
+    # No need to clone the repo, we exclusively work on artifacts.  See
+    # https://docs.gitlab.com/ee/ci/runners/README.html#git-strategy
+    GIT_STRATEGY: none
+    TRIVY_USERNAME: "$gitlab-ci-token"
+    TRIVY_PASSWORD: "$CI_JOB_TOKEN"
+    TRIVY_AUTH_URL: "$CI_REGISTRY"
+    FULL_IMAGE_NAME: $CI_APPLICATION_REPOSITORY:$CI_APPLICATION_TAG
+  script:
+    - trivy --version
+    - trivy image --severity LOW,MEDIUM --exit-code 0 --ignore-unfixed --format template --template "@/contrib/junit.tpl" -o junit-report-trivy-low-med.xml $FULL_IMAGE_NAME
+    - trivy image --severity HIGH,CRITICAL --exit-code 1 --ignore-unfixed --format template --template "@/contrib/junit.tpl" -o junit-report-trivy-high-crit.xml $FULL_IMAGE_NAME
+  artifacts:
+    reports:
+      junit:
+        - ./junit-report-trivy-low-med.xml
+        - ./junit-report-trivy-high-crit.xml
