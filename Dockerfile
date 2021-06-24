@@ -11,7 +11,7 @@ COPY . .
 RUN make build
 
 # ----
-FROM registry.avisi.cloud/library/centos:7
+FROM registry.avisi.cloud/library/centos:8
 COPY --from=builder /data/bin/csi-snapshot-utils /usr/local/bin/csi-snapshot-utils
 
 USER root
