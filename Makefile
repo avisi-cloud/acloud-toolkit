@@ -32,6 +32,10 @@ build:
 	CGO_ENABLED=0 go build ${LDFLAGS} -o bin/${BINARY} ./cmd/${BINARY} ;
 	chmod +x bin/${BINARY};
 
+build-vm:
+	CGO_ENABLED=0 go build ${LDFLAGS} -o bin/volume-migrator ./cmd/volume-migrator ;
+	chmod +x bin/volume-migrator;
+
 lint: ## Lint the files
 	@golint -set_exit_status ${PKG_LIST}
 
