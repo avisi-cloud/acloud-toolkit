@@ -1,4 +1,4 @@
-package volume_migrator
+package migrate_volume
 
 import (
     "context"
@@ -7,11 +7,36 @@ import (
     batchv1 "k8s.io/api/batch/v1"
     v1 "k8s.io/api/core/v1"
     metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-    "k8s.io/client-go/kubernetes"
 )
 
-func MigrateVolumeJob(k8sclient *kubernetes.Clientset, jobName string, pvcNameOld string, pvcNameNew string, namespace string) error {
+func MigrateVolumeJob(pvcNameOld string, pvcNameNew string, namespace string) error {
+    kubeconfig, err := k8s.GetClientCmd()
+    if err != nil {
+        return err
+    }
+    config, err := kubeconfig.ClientConfig()
+    if err != nil {
+        return err
+    }
+    k8sclient, err := k8s.GetClientWithConfig(config)
+    if err != nil {
+        return err
+    }
+
     migrateVolumeJob := k8sclient.BatchV1().Jobs(namespace)
+
+    jobName := "migrate-volume-" + pvcNameOld
+
+    pvc, err := k8s.GetPersistentVolumeClaim(k8sclient, pvcNameOld, namespace)
+    if err != nil {
+        return err
+    }
+
+    err = k8s.SetPVReclaimPolicyToRetain(k8sclient, *pvc)
+    if err != nil {
+        return err
+    }
+
     ttlSecondsAfterFinished := int32(1000)
 
     jobSpec := &batchv1.Job{
@@ -43,16 +68,6 @@ func MigrateVolumeJob(k8sclient *kubernetes.Clientset, jobName string, pvcNameOl
                 },
             },
         },
-    }
-
-    pvc, err := k8s.GetPersistentVolumeClaim(k8sclient, pvcNameOld, namespace)
-    if err != nil {
-        return err
-    }
-
-    err = k8s.SetPVReclaimPolicyToRetain(k8sclient, *pvc)
-    if err != nil {
-        return err
     }
 
     _, err = migrateVolumeJob.Create(context.TODO(), jobSpec, metav1.CreateOptions{})

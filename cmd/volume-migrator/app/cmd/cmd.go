@@ -18,5 +18,6 @@ func NewCikCmd(in io.Reader, out, err io.Writer) *cobra.Command {
 	}
 
 	cmds.ResetFlags()
+    cmds.AddCommand(NewMigrateVolumeCmd(nil))
 	return cmds
 }
