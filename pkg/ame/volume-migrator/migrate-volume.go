@@ -2,22 +2,22 @@ package volume_migrator
 
 import (
     "context"
-    helpers "gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/k8s"
+    "fmt"
+    "gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/k8s"
     batchv1 "k8s.io/api/batch/v1"
     v1 "k8s.io/api/core/v1"
     metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
     "k8s.io/client-go/kubernetes"
-    "log"
 )
 
-func MigrateVolumeJob(clientset *kubernetes.Clientset, jobName *string, pvcNameOld *string, pvcNameNew *string, namespace *string) {
-    jobs := clientset.BatchV1().Jobs(*namespace)
+func MigrateVolumeJob(k8sclient *kubernetes.Clientset, jobName string, pvcNameOld string, pvcNameNew string, namespace string) error {
+    migrateVolumeJob := k8sclient.BatchV1().Jobs(namespace)
     ttlSecondsAfterFinished := int32(1000)
 
     jobSpec := &batchv1.Job{
         ObjectMeta: metav1.ObjectMeta{
-            Name:      *jobName,
-            Namespace: *namespace,
+            Name:      jobName,
+            Namespace: namespace,
         },
         Spec: batchv1.JobSpec{
             TTLSecondsAfterFinished: &ttlSecondsAfterFinished,
@@ -30,41 +30,44 @@ func MigrateVolumeJob(clientset *kubernetes.Clientset, jobName *string, pvcNameO
                             Command: []string{"/bin/sh"},
                             Args: []string{"-c", "cp -rp /mnt/old/ /mnt/new/"},
                             VolumeMounts: []v1.VolumeMount{
-                                helpers.NewVolumeMount("old", "/mnt/old/", false),
-                                helpers.NewVolumeMount("new", "/mnt/new/", false),
+                                k8s.NewVolumeMount("old", "/mnt/old/", false),
+                                k8s.NewVolumeMount("new", "/mnt/new/", false),
                             },
                         },
                     },
                     RestartPolicy: v1.RestartPolicyNever,
                     Volumes: []v1.Volume{
-                        helpers.NewPersistentVolumeClaimVolume("old", *pvcNameOld, false),
-                        helpers.NewPersistentVolumeClaimVolume("new", *pvcNameNew, false),
+                        k8s.NewPersistentVolumeClaimVolume("old", pvcNameOld, false),
+                        k8s.NewPersistentVolumeClaimVolume("new", pvcNameNew, false),
                     },
                 },
             },
         },
     }
-    _, err := jobs.Create(context.TODO(), jobSpec, metav1.CreateOptions{})
+
+    pvc, err := k8s.GetPersistentVolumeClaim(k8sclient, pvcNameOld, namespace)
     if err != nil {
-        log.Fatalln("Failed to create volume migrator job.")
+        return err
+    }
+
+    err = k8s.SetPVReclaimPolicyToRetain(k8sclient, *pvc)
+    if err != nil {
+        return err
+    }
+
+    _, err = migrateVolumeJob.Create(context.TODO(), jobSpec, metav1.CreateOptions{})
+    if err != nil {
+        return err
+    }
+
+    err = k8s.RemoveClaimRefOfPV(k8sclient, *pvc)
+    if err != nil {
+        return err
     }
 
     //print job details
-    log.Println("Created volume migrator job successfully")
-}
-
-func SetPVReclaimPolicyToRetain(clientset *kubernetes.Clientset, pv *string){
-    persistentVolume, err := clientset.CoreV1().PersistentVolumes().Get(context.TODO(), *pv, metav1.GetOptions{})
-    if err != nil {
-        log.Fatalln("Failed to get PV with name: " + *pv)
-    }
-
-    persistentVolume.Spec.PersistentVolumeReclaimPolicy = "Retain"
-
-    _, err = clientset.CoreV1().PersistentVolumes().Update(context.TODO(), persistentVolume, metav1.UpdateOptions{})
-    if err != nil {
-        log.Fatalln("Failed to set PVReclaimPolicy")
-    }
+    fmt.Printf("Created volume migrator job successfully")
+    return nil
 }
 
 
