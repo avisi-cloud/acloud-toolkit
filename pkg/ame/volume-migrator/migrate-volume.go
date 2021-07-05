@@ -8,7 +8,6 @@ import (
     metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
     "k8s.io/client-go/kubernetes"
     "log"
-    "strings"
 )
 
 func MigrateVolumeJob(clientset *kubernetes.Clientset, jobName *string, pvcNameOld *string, pvcNameNew *string, namespace *string) {
@@ -28,8 +27,8 @@ func MigrateVolumeJob(clientset *kubernetes.Clientset, jobName *string, pvcNameO
                         {
                             Name:    "volume-migrator",
                             Image:   "centos:7",
-                            Command: strings.Split("/bin/sh", ","),
-                            Args: strings.Split("-c,cp -rp /mnt/old/ /mnt/new/",","),
+                            Command: []string{"/bin/sh"},
+                            Args: []string{"-c", "cp -rp /mnt/old/ /mnt/new/"},
                             VolumeMounts: []v1.VolumeMount{
                                 helpers.NewVolumeMount("old", "/mnt/old/", false),
                                 helpers.NewVolumeMount("new", "/mnt/new/", false),
@@ -53,3 +52,20 @@ func MigrateVolumeJob(clientset *kubernetes.Clientset, jobName *string, pvcNameO
     //print job details
     log.Println("Created volume migrator job successfully")
 }
+
+func SetPVReclaimPolicyToRetain(clientset *kubernetes.Clientset, pv *string){
+    persistentVolume, err := clientset.CoreV1().PersistentVolumes().Get(context.TODO(), *pv, metav1.GetOptions{})
+    if err != nil {
+        log.Fatalln("Failed to get PV with name: " + *pv)
+    }
+
+    persistentVolume.Spec.PersistentVolumeReclaimPolicy = "Retain"
+
+    _, err = clientset.CoreV1().PersistentVolumes().Update(context.TODO(), persistentVolume, metav1.UpdateOptions{})
+    if err != nil {
+        log.Fatalln("Failed to set PVReclaimPolicy")
+    }
+}
+
+
+
