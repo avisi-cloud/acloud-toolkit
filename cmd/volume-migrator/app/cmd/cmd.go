@@ -1,7 +1,8 @@
 package cmd
 
 import (
-	"io"
+    "context"
+    "io"
 
 	"github.com/spf13/cobra"
 )
@@ -18,6 +19,6 @@ func NewCikCmd(in io.Reader, out, err io.Writer) *cobra.Command {
 	}
 
 	cmds.ResetFlags()
-    cmds.AddCommand(NewMigrateVolumeCmd(nil))
+    cmds.AddCommand(NewMigrateVolumeCmd(context.TODO(),nil))
 	return cmds
 }

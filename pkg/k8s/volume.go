@@ -3,7 +3,9 @@ package k8s
 import (
     "context"
     "fmt"
+    "gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/helpers"
     v1 "k8s.io/api/core/v1"
+    "k8s.io/apimachinery/pkg/api/resource"
     metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
     "k8s.io/client-go/kubernetes"
     "time"
@@ -29,9 +31,9 @@ func NewPersistentVolumeClaimVolume(name, claimName string, readOnly bool) v1.Vo
     }
 }
 
-func SetPVReclaimPolicyToRetain(k8sclient *kubernetes.Clientset, pvc v1.PersistentVolumeClaim) error {
+func SetPVReclaimPolicyToRetain(k8sClient *kubernetes.Clientset, pvc v1.PersistentVolumeClaim) error {
     // Get the persistent volume, ensure it's set to Retain.
-    pv, err := k8sclient.CoreV1().PersistentVolumes().Get(context.TODO(), pvc.Spec.VolumeName, metav1.GetOptions{})
+    pv, err := k8sClient.CoreV1().PersistentVolumes().Get(context.TODO(), pvc.Spec.VolumeName, metav1.GetOptions{})
     if err != nil {
         return err
     }
@@ -39,7 +41,7 @@ func SetPVReclaimPolicyToRetain(k8sclient *kubernetes.Clientset, pvc v1.Persiste
     if pv.Spec.PersistentVolumeReclaimPolicy != v1.PersistentVolumeReclaimRetain {
         fmt.Printf("PV %s does not have retain as the reclaim policy, updating ...\n", pvc.Spec.VolumeName)
         pv.Spec.PersistentVolumeReclaimPolicy = v1.PersistentVolumeReclaimRetain
-        _, err2 := k8sclient.CoreV1().PersistentVolumes().Update(context.TODO(), pv, metav1.UpdateOptions{})
+        _, err2 := k8sClient.CoreV1().PersistentVolumes().Update(context.TODO(), pv, metav1.UpdateOptions{})
         if err2 != nil {
             return err2
         }
@@ -48,13 +50,15 @@ func SetPVReclaimPolicyToRetain(k8sclient *kubernetes.Clientset, pvc v1.Persiste
         time.Sleep(1 * time.Second)
     }
 
+    fmt.Printf("PV %s already has retain as the reclaim policy...\n", pvc.Spec.VolumeName)
+
     // give kube some time to catch up
     time.Sleep(1 * time.Second)
     return nil
 }
 
-func GetPersistentVolumeClaim(k8sclient *kubernetes.Clientset, pvcName string, namespace string) (*v1.PersistentVolumeClaim,error){
-    pvc, err := k8sclient.CoreV1().PersistentVolumeClaims(namespace).Get(context.TODO(), pvcName, metav1.GetOptions{})
+func GetPersistentVolumeClaimAndCheckForVolumes(k8sClient *kubernetes.Clientset, pvcName string, namespace string) (*v1.PersistentVolumeClaim,error){
+    pvc, err := k8sClient.CoreV1().PersistentVolumeClaims(namespace).Get(context.TODO(), pvcName, metav1.GetOptions{})
     if err != nil {
         return nil, err
     }
@@ -64,7 +68,7 @@ func GetPersistentVolumeClaim(k8sclient *kubernetes.Clientset, pvcName string, n
         }
         time.Sleep(1 * time.Second)
 
-        pvc, err = k8sclient.CoreV1().PersistentVolumeClaims(namespace).Get(context.TODO(), pvcName, metav1.GetOptions{})
+        pvc, err = k8sClient.CoreV1().PersistentVolumeClaims(namespace).Get(context.TODO(), pvcName, metav1.GetOptions{})
         if err != nil {
             return nil, err
         }
@@ -72,17 +76,41 @@ func GetPersistentVolumeClaim(k8sclient *kubernetes.Clientset, pvcName string, n
     return pvc, err
 }
 
-func RemoveClaimRefOfPV(k8sclient *kubernetes.Clientset, pvc v1.PersistentVolumeClaim) error{
+func RemoveClaimRefOfPV(k8sClient *kubernetes.Clientset, pvc v1.PersistentVolumeClaim) error{
     // Update the PVC to remove the claimRef
-    pv, err := k8sclient.CoreV1().PersistentVolumes().Get(context.TODO(), pvc.Spec.VolumeName, metav1.GetOptions{})
+    pv, err := k8sClient.CoreV1().PersistentVolumes().Get(context.TODO(), pvc.Spec.VolumeName, metav1.GetOptions{})
     if err != nil {
         return err
     }
     pv.Spec.ClaimRef = nil
-    _, err = k8sclient.CoreV1().PersistentVolumes().Update(context.TODO(), pv, metav1.UpdateOptions{})
+    _, err = k8sClient.CoreV1().PersistentVolumes().Update(context.TODO(), pv, metav1.UpdateOptions{})
     if err != nil {
         return err
     }
     fmt.Printf("removed the PV %s claim ref to %s...\n", pvc.Spec.VolumeName, pvc.Name)
+    return nil
+}
+
+func CreatePersistentVolumeClaim(ctx context.Context, k8sClient kubernetes.Interface, pvcName, namespace, storageClass string, storageSize resource.Quantity) error {
+    _, err := k8sClient.CoreV1().PersistentVolumeClaims(namespace).Create(ctx, &v1.PersistentVolumeClaim{
+        ObjectMeta: metav1.ObjectMeta{
+            Name:      pvcName,
+            Namespace: namespace,
+        },
+        Spec: v1.PersistentVolumeClaimSpec{
+            StorageClassName: helpers.String(storageClass),
+            AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
+            Resources: v1.ResourceRequirements{
+                Requests: v1.ResourceList{
+                    "storage": storageSize,
+                },
+            },
+        },
+    }, metav1.CreateOptions{})
+    if err != nil {
+        return err
+    }
+
+    fmt.Printf("created a new PVC %s in namespace %s...\n", pvcName, namespace)
     return nil
 }

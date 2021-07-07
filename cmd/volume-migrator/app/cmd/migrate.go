@@ -1,14 +1,15 @@
 package cmd
 
 import (
+    "context"
     "github.com/spf13/cobra"
     flag "github.com/spf13/pflag"
     "gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/ame/migrate-volume"
 )
 
 type migrateVolumeOptions struct {
-    oldPVCName      string
-    newPVCName      string
+    storageClassName      string
+    PVCname      string
     targetNamespace string
 }
 
@@ -18,13 +19,13 @@ func NewMigrateVolumeOptions() *migrateVolumeOptions {
 }
 
 func AddMigrateVolumeOptions(flagSet *flag.FlagSet, opts *migrateVolumeOptions) {
-    flagSet.StringVarP(&opts.oldPVCName, "old-pvc-name", "d", "", "name of the old pvc")
-    flagSet.StringVarP(&opts.newPVCName, "new-pvc-name", "w", "", "name of the new pvc")
+    flagSet.StringVarP(&opts.storageClassName, "storageClass", "s", "", "name of the new storageclass")
+    flagSet.StringVarP(&opts.PVCname, "pvc", "p", "", "name of the persitentvolumeclaim")
     flagSet.StringVarP(&opts.targetNamespace, "target-namespace","n", "default", "Namespace where de migrate job will be executed")
 }
 
 // NewMigrateVolumeCmd returns the Cobra Bootstrap sub command
-func NewMigrateVolumeCmd(runOptions *migrateVolumeOptions) *cobra.Command {
+func NewMigrateVolumeCmd(ctx context.Context,runOptions *migrateVolumeOptions) *cobra.Command {
     if runOptions == nil {
         runOptions = NewMigrateVolumeOptions()
     }
@@ -34,7 +35,7 @@ func NewMigrateVolumeCmd(runOptions *migrateVolumeOptions) *cobra.Command {
         Short: "Migrate a volume",
         Long:  `Migrate a volume from one PVC to other PVC`,
         RunE: func(cmd *cobra.Command, args []string) error {
-            return migrate_volume.MigrateVolumeJob(runOptions.oldPVCName, runOptions.newPVCName, runOptions.targetNamespace)
+            return migrate_volume.MigrateVolumeJob(ctx, runOptions.storageClassName, runOptions.PVCname, runOptions.targetNamespace)
         },
     }
 

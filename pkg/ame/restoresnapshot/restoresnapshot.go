@@ -110,7 +110,7 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 	}
 	fmt.Printf("PVC has volume %s...\n", pvc.Spec.VolumeName)
 
-    pvc, err = k8s.GetPersistentVolumeClaim(k8sclient, restorePVCName, sourceNamespace)
+    pvc, err = k8s.GetPersistentVolumeClaimAndCheckForVolumes(k8sclient, restorePVCName, sourceNamespace)
     if err != nil {
         return err
     }
