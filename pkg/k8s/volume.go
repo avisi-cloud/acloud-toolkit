@@ -31,7 +31,7 @@ func NewPersistentVolumeClaimVolume(name, claimName string, readOnly bool) v1.Vo
     }
 }
 
-func SetPVReclaimPolicyToRetain(k8sClient *kubernetes.Clientset, pvc v1.PersistentVolumeClaim) error {
+func SetPVReclaimPolicyToRetain(k8sClient *kubernetes.Clientset, pvc *v1.PersistentVolumeClaim) error {
     // Get the persistent volume, ensure it's set to Retain.
     pv, err := k8sClient.CoreV1().PersistentVolumes().Get(context.TODO(), pvc.Spec.VolumeName, metav1.GetOptions{})
     if err != nil {
@@ -48,9 +48,10 @@ func SetPVReclaimPolicyToRetain(k8sClient *kubernetes.Clientset, pvc v1.Persiste
 
         // give kube some time to catch up
         time.Sleep(1 * time.Second)
+    } else {
+        fmt.Printf("PV %s already has retain as the reclaim policy...\n", pvc.Spec.VolumeName)
     }
 
-    fmt.Printf("PV %s already has retain as the reclaim policy...\n", pvc.Spec.VolumeName)
 
     // give kube some time to catch up
     time.Sleep(1 * time.Second)
@@ -88,6 +89,21 @@ func RemoveClaimRefOfPV(k8sClient *kubernetes.Clientset, pvc v1.PersistentVolume
         return err
     }
     fmt.Printf("removed the PV %s claim ref to %s...\n", pvc.Spec.VolumeName, pvc.Name)
+    return nil
+}
+
+func SetClaimRefOfPV(k8sClient *kubernetes.Clientset, volumeName string, claimRef v1.ObjectReference) error{
+    // Update the PVC to remove the claimRef
+    pv, err := k8sClient.CoreV1().PersistentVolumes().Get(context.TODO(), volumeName, metav1.GetOptions{})
+    if err != nil {
+        return err
+    }
+    pv.Spec.ClaimRef = &claimRef
+    _, err = k8sClient.CoreV1().PersistentVolumes().Update(context.TODO(), pv, metav1.UpdateOptions{})
+    if err != nil {
+        return err
+    }
+    fmt.Printf("set the PV %s claim ref to %s in namespace %s...\n", volumeName, claimRef.Name, claimRef.Namespace)
     return nil
 }
 

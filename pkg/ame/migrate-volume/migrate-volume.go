@@ -31,11 +31,6 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
     }
     fmt.Printf("Temporary pvc %s created\n", tmpPVCName)
 
-    tmpPVC, err := k8sClient.CoreV1().PersistentVolumeClaims(namespace).Get(ctx, pvcName, metav1.GetOptions{})
-    if err != nil {
-        return err
-    }
-
     ttlSecondsAfterFinished := int32(1000)
 
     jobSpec := &batchv1.Job{
@@ -81,7 +76,6 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
         return err
     }
 
-
     background := metav1.DeletePropagationBackground
     err = migrateVolumeJob.Delete(ctx, jobName, metav1.DeleteOptions{
         PropagationPolicy: &background })
@@ -93,12 +87,17 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
     time.Sleep(5 * time.Second)
     fmt.Printf("Job: %s deleted\n", jobName)
 
-    err = k8s.SetPVReclaimPolicyToRetain(k8sClient, *pvc)
+    tmpPVC, err := k8sClient.CoreV1().PersistentVolumeClaims(namespace).Get(ctx, tmpPVCName, metav1.GetOptions{})
     if err != nil {
         return err
     }
 
-    err = k8s.SetPVReclaimPolicyToRetain(k8sClient, *tmpPVC)
+    err = k8s.SetPVReclaimPolicyToRetain(k8sClient, pvc)
+    if err != nil {
+        return err
+    }
+
+    err = k8s.SetPVReclaimPolicyToRetain(k8sClient, tmpPVC)
     if err != nil {
         return err
     }
@@ -125,6 +124,12 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
         return err
     }
     fmt.Printf("Creating pvc: %s\n", pvcName)
+
+    claimRef := v1.ObjectReference{Name: pvcName, Namespace: namespace}
+    err = k8s.SetClaimRefOfPV(k8sClient, tmpPVC.Spec.VolumeName, claimRef)
+    if err != nil {
+        return err
+    }
 
     return nil
 }
