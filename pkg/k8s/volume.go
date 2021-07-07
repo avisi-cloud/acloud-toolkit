@@ -11,16 +11,16 @@ import (
     "time"
 )
 
-func NewVolumeMount(name, path string, readOnly bool) v1.VolumeMount {
-    return v1.VolumeMount{
+func NewVolumeMount(name, path string, readOnly bool) *v1.VolumeMount 
+return &v1.VolumeMount{
         Name:      name,
         MountPath: path,
         ReadOnly:  readOnly,
     }
 }
 
-func NewPersistentVolumeClaimVolume(name, claimName string, readOnly bool) v1.Volume {
-    return v1.Volume{
+func NewPersistentVolumeClaimVolume(name, claimName string, readOnly bool) *v1.Volume {
+return &v1.Volume{
         Name: name,
         VolumeSource: v1.VolumeSource{
             PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
@@ -77,7 +77,7 @@ func GetPersistentVolumeClaimAndCheckForVolumes(k8sClient *kubernetes.Clientset,
     return pvc, err
 }
 
-func RemoveClaimRefOfPV(k8sClient *kubernetes.Clientset, pvc v1.PersistentVolumeClaim) error{
+func RemoveClaimRefOfPV(k8sClient *kubernetes.Clientset, pvc *v1.PersistentVolumeClaim) error{
     // Update the PVC to remove the claimRef
     pv, err := k8sClient.CoreV1().PersistentVolumes().Get(context.TODO(), pvc.Spec.VolumeName, metav1.GetOptions{})
     if err != nil {
