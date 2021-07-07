@@ -49,15 +49,15 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
                         Command: []string{"/bin/sh"},
                         Args: []string{"-c", "cp -rp /mnt/old/ /mnt/new/"},
                         VolumeMounts: []v1.VolumeMount{
-                            k8s.NewVolumeMount("old", "/mnt/old/", false),
-                            k8s.NewVolumeMount("new", "/mnt/new/", false),
+                            *k8s.NewVolumeMount("old", "/mnt/old/", false),
+                            *k8s.NewVolumeMount("new", "/mnt/new/", false),
                         },
                     },
                     },
                     RestartPolicy: v1.RestartPolicyNever,
                     Volumes: []v1.Volume{
-                        k8s.NewPersistentVolumeClaimVolume("old", pvcName, false),
-                        k8s.NewPersistentVolumeClaimVolume("new", tmpPVCName, false),
+                        *k8s.NewPersistentVolumeClaimVolume("old", pvcName, false),
+                        *k8s.NewPersistentVolumeClaimVolume("new", tmpPVCName, false),
                     },
                 },
             },
@@ -114,7 +114,7 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
     }
     fmt.Printf("Deleting pvc: %s\n", pvcName)
 
-    err = k8s.RemoveClaimRefOfPV(k8sClient, *tmpPVC)
+    err = k8s.RemoveClaimRefOfPV(k8sClient, tmpPVC)
     if err != nil {
         return err
     }
