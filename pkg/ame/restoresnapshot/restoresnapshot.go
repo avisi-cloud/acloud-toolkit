@@ -110,27 +110,27 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 	}
 	fmt.Printf("PVC has volume %s...\n", pvc.Spec.VolumeName)
 
-    pvc, err = k8s.GetPersistentVolumeClaimAndCheckForVolumes(k8sclient, restorePVCName, sourceNamespace)
-    if err != nil {
-        return err
-    }
+	pvc, err = k8s.GetPersistentVolumeClaimAndCheckForVolumes(k8sclient, restorePVCName, sourceNamespace)
+	if err != nil {
+		return err
+	}
 
-    err = k8s.SetPVReclaimPolicyToRetain(k8sclient, *pvc)
-    if err != nil {
-        return err
-    }
+	err = k8s.SetPVReclaimPolicyToRetain(k8sclient, *pvc)
+	if err != nil {
+		return err
+	}
 
-    // Delete the PVC
+	// Delete the PVC
 	err = k8sclient.CoreV1().PersistentVolumeClaims(sourceNamespace).Delete(context.TODO(), restorePVCName, metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
 	fmt.Printf("deleted the PVC %s...\n", restorePVCName)
 
-    err = k8s.RemoveClaimRefOfPV(k8sclient, *pvc)
-    if err != nil {
-        return err
-    }
+	err = k8s.RemoveClaimRefOfPV(k8sclient, *pvc)
+	if err != nil {
+		return err
+	}
 
 	// Create a new PVC in the target namespace.
 	_, err = k8sclient.CoreV1().PersistentVolumeClaims(targetNamespace).Create(context.TODO(), &apiv1.PersistentVolumeClaim{

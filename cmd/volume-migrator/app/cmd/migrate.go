@@ -1,46 +1,50 @@
 package cmd
 
 import (
-    "context"
-    "github.com/spf13/cobra"
-    flag "github.com/spf13/pflag"
-    "gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/ame/migrate-volume"
+	"context"
+	"github.com/spf13/cobra"
+	flag "github.com/spf13/pflag"
+	"gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/ame/migrate-volume"
+    "time"
 )
 
 type migrateVolumeOptions struct {
-    storageClassName      string
-    PVCname      string
-    targetNamespace string
+	storageClassName string
+	pvcName          string
+	targetNamespace  string
+	timeout  time.Duration
 }
 
-
 func NewMigrateVolumeOptions() *migrateVolumeOptions {
-    return &migrateVolumeOptions{}
+	return &migrateVolumeOptions{}
 }
 
 func AddMigrateVolumeOptions(flagSet *flag.FlagSet, opts *migrateVolumeOptions) {
-    flagSet.StringVarP(&opts.storageClassName, "storageClass", "s", "", "name of the new storageclass")
-    flagSet.StringVarP(&opts.PVCname, "pvc", "p", "", "name of the persitentvolumeclaim")
-    flagSet.StringVarP(&opts.targetNamespace, "target-namespace","n", "default", "Namespace where de migrate job will be executed")
+	flagSet.StringVarP(&opts.storageClassName, "storageClass", "s", "", "name of the new storageclass")
+	flagSet.StringVarP(&opts.pvcName, "pvc", "p", "", "name of the persitentvolumeclaim")
+	flagSet.StringVarP(&opts.targetNamespace, "target-namespace", "n", "default", "Namespace where de migrate job will be executed")
+	flagSet.DurationVarP(&opts.timeout, "timout", "t", 60, "Timeout for context in minutes")
 }
 
 // NewMigrateVolumeCmd returns the Cobra Bootstrap sub command
 func NewMigrateVolumeCmd(ctx context.Context,runOptions *migrateVolumeOptions) *cobra.Command {
-    if runOptions == nil {
-        runOptions = NewMigrateVolumeOptions()
-    }
+	if runOptions == nil {
+		runOptions = NewMigrateVolumeOptions()
+	}
+
+    ctxWithTimeout, cancel := context.WithTimeout(ctx, runOptions.timeout*time.Minute)
+    defer cancel()
 
     var cmd = &cobra.Command{
-        Use:   "migrate",
-        Short: "Migrate a volume",
-        Long:  `Migrate a volume from one PVC to other PVC`,
-        RunE: func(cmd *cobra.Command, args []string) error {
-            return migrate_volume.MigrateVolumeJob(ctx, runOptions.storageClassName, runOptions.PVCname, runOptions.targetNamespace)
-        },
-    }
+		Use:   "migrate",
+		Short: "Migrate a volume",
+		Long:  `Migrate a volume from one PVC to other PVC`,
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return migrate_volume.MigrateVolumeJob(ctxWithTimeout, runOptions.storageClassName, runOptions.pvcName, runOptions.targetNamespace)
+		},
+	}
 
-    AddMigrateVolumeOptions(cmd.Flags(), runOptions)
+	AddMigrateVolumeOptions(cmd.Flags(), runOptions)
 
-    return cmd
+	return cmd
 }
-

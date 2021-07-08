@@ -27,4 +27,3 @@ func True() *bool {
 func False() *bool {
 	return Bool(false)
 }
-

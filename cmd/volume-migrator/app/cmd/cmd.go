@@ -1,14 +1,14 @@
 package cmd
 
 import (
-    "context"
-    "io"
+	"context"
+	"io"
 
 	"github.com/spf13/cobra"
 )
 
-// NewCikCmd returns cobra.Command to run the cik command
-func NewCikCmd(in io.Reader, out, err io.Writer) *cobra.Command {
+// NewVolumeMigratorCmd returns cobra.Command to run the volume-migrator command
+func NewVolumeMigratorCmd(in io.Reader, out, err io.Writer) *cobra.Command {
 	cmds := &cobra.Command{
 		Use:   "volume-migrator",
 		Short: "volume-migrator for moving Kubernetes volumes",
@@ -19,6 +19,6 @@ func NewCikCmd(in io.Reader, out, err io.Writer) *cobra.Command {
 	}
 
 	cmds.ResetFlags()
-    cmds.AddCommand(NewMigrateVolumeCmd(context.TODO(),nil))
+	cmds.AddCommand(NewMigrateVolumeCmd(context.TODO(), nil))
 	return cmds
 }
