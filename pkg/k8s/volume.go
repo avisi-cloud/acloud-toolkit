@@ -3,12 +3,13 @@ package k8s
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/helpers"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	"time"
 )
 
 func NewVolumeMount(name, path string, readOnly bool) *v1.VolumeMount {
@@ -31,7 +32,7 @@ func NewPersistentVolumeClaimVolume(name, claimName string, readOnly bool) *v1.V
 	}
 }
 
-func SetPVReclaimPolicyToRetain(ctx context.Context,k8sClient kubernetes.Interface, pvc *v1.PersistentVolumeClaim) error {
+func SetPVReclaimPolicyToRetain(ctx context.Context, k8sClient kubernetes.Interface, pvc *v1.PersistentVolumeClaim) error {
 	// Get the persistent volume, ensure it's set to Retain.
 	pv, err := k8sClient.CoreV1().PersistentVolumes().Get(ctx, pvc.Spec.VolumeName, metav1.GetOptions{})
 	if err != nil {
@@ -81,7 +82,7 @@ func GetPersistentVolumeClaimAndCheckForVolumes(ctx context.Context, k8sClient k
 	return pvc, err
 }
 
-func RemoveClaimRefOfPV(ctx context.Context,k8sClient kubernetes.Interface, pvc *v1.PersistentVolumeClaim) error {
+func RemoveClaimRefOfPV(ctx context.Context, k8sClient kubernetes.Interface, pvc *v1.PersistentVolumeClaim) error {
 	// Update the PVC to remove the claimRef
 	pv, err := k8sClient.CoreV1().PersistentVolumes().Get(ctx, pvc.Spec.VolumeName, metav1.GetOptions{})
 	if err != nil {
@@ -96,7 +97,7 @@ func RemoveClaimRefOfPV(ctx context.Context,k8sClient kubernetes.Interface, pvc 
 	return nil
 }
 
-func SetClaimRefOfPV(ctx context.Context,k8sClient kubernetes.Interface, volumeName string, claimRef v1.ObjectReference) error {
+func SetClaimRefOfPV(ctx context.Context, k8sClient kubernetes.Interface, volumeName string, claimRef v1.ObjectReference) error {
 	// Update the PVC to remove the claimRef
 	pv, err := k8sClient.CoreV1().PersistentVolumes().Get(ctx, volumeName, metav1.GetOptions{})
 	if err != nil {
