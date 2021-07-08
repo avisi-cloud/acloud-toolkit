@@ -48,7 +48,7 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 							Name:    "volume-migrator",
 							Image:   "centos:7",
 							Command: []string{"/bin/sh"},
-							Args:    []string{"-c", "cp -rp /mnt/old/ /mnt/new/"},
+							Args:    []string{"-c", "yum -y install rsync","rsync -r /mnt/old/ /mnt/new"},
 							VolumeMounts: []v1.VolumeMount{
 								*k8s.NewVolumeMount("old", "/mnt/old/", true),
 								*k8s.NewVolumeMount("new", "/mnt/new/", false),
