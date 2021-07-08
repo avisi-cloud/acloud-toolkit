@@ -1,18 +1,18 @@
 package cmd
 
 import (
-	"context"
-	"github.com/spf13/cobra"
-	flag "github.com/spf13/pflag"
-	"gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/ame/migrate-volume"
-	"time"
+    "context"
+    "github.com/spf13/cobra"
+    flag "github.com/spf13/pflag"
+    "gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/ame/migrate-volume"
+    "time"
 )
 
 type migrateVolumeOptions struct {
 	storageClassName string
 	pvcName          string
 	targetNamespace  string
-	timeout          time.Duration
+	timeout          int32
 }
 
 func NewMigrateVolumeOptions() *migrateVolumeOptions {
@@ -23,7 +23,7 @@ func AddMigrateVolumeOptions(flagSet *flag.FlagSet, opts *migrateVolumeOptions) 
 	flagSet.StringVarP(&opts.storageClassName, "storageClass", "s", "", "name of the new storageclass")
 	flagSet.StringVarP(&opts.pvcName, "pvc", "p", "", "name of the persitentvolumeclaim")
 	flagSet.StringVarP(&opts.targetNamespace, "target-namespace", "n", "default", "Namespace where de migrate job will be executed")
-	flagSet.DurationVarP(&opts.timeout, "timout", "t", 60, "Timeout for context in minutes")
+	flagSet.Int32VarP(&opts.timeout, "timeout","t", 60, "Timeout of the context in minutes")
 }
 
 // NewMigrateVolumeCmd returns the Cobra Bootstrap sub command
@@ -32,9 +32,8 @@ func NewMigrateVolumeCmd(ctx context.Context, runOptions *migrateVolumeOptions) 
 		runOptions = NewMigrateVolumeOptions()
 	}
 
-	ctxWithTimeout, cancel := context.WithTimeout(ctx, runOptions.timeout*time.Minute)
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Duration(runOptions.timeout)*time.Minute)
 	defer cancel()
-
 	var cmd = &cobra.Command{
 		Use:   "migrate",
 		Short: "Migrate a volume",
@@ -44,7 +43,9 @@ func NewMigrateVolumeCmd(ctx context.Context, runOptions *migrateVolumeOptions) 
 		},
 	}
 
+
 	AddMigrateVolumeOptions(cmd.Flags(), runOptions)
+
 
 	return cmd
 }

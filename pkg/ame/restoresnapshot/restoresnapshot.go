@@ -117,7 +117,7 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 		return err
 	}
 
-	err = k8s.SetPVReclaimPolicyToRetain(k8sclient, pvc)
+	err = k8s.SetPVReclaimPolicyToRetain(context.TODO(), k8sclient, pvc)
 	if err != nil {
 		return err
 	}
@@ -129,7 +129,7 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 	}
 	fmt.Printf("deleted the PVC %s...\n", restorePVCName)
 
-	err = k8s.RemoveClaimRefOfPV(k8sclient, pvc)
+	err = k8s.RemoveClaimRefOfPV(context.TODO(), k8sclient, pvc)
 	if err != nil {
 		return err
 	}

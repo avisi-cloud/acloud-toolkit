@@ -49,7 +49,7 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 							Command: []string{"/bin/sh"},
 							Args:    []string{"-c", "cp -rp /mnt/old/ /mnt/new/"},
 							VolumeMounts: []v1.VolumeMount{
-								*k8s.NewVolumeMount("old", "/mnt/old/", false),
+								*k8s.NewVolumeMount("old", "/mnt/old/", true),
 								*k8s.NewVolumeMount("new", "/mnt/new/", false),
 							},
 						},
@@ -90,12 +90,12 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 		return fmt.Errorf("failed to get persistent volume claim%q: %w", tmpPVCName, err)
 	}
 
-	err = k8s.SetPVReclaimPolicyToRetain(k8sClient, pvc)
+	err = k8s.SetPVReclaimPolicyToRetain(ctx, k8sClient, pvc)
 	if err != nil {
 		return err
 	}
 
-	err = k8s.SetPVReclaimPolicyToRetain(k8sClient, tmpPVC)
+	err = k8s.SetPVReclaimPolicyToRetain(ctx, k8sClient, tmpPVC)
 	if err != nil {
 		return err
 	}
@@ -112,7 +112,7 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 	}
 	fmt.Printf("Deleting pvc: %s\n", pvcName)
 
-	err = k8s.RemoveClaimRefOfPV(k8sClient, tmpPVC)
+	err = k8s.RemoveClaimRefOfPV(ctx, k8sClient, tmpPVC)
 	if err != nil {
 		return err
 	}
@@ -124,7 +124,7 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 	fmt.Printf("Creating pvc: %s\n", pvcName)
 
 	claimRef := v1.ObjectReference{Name: pvcName, Namespace: namespace}
-	err = k8s.SetClaimRefOfPV(k8sClient, tmpPVC.Spec.VolumeName, claimRef)
+	err = k8s.SetClaimRefOfPV(ctx, k8sClient, tmpPVC.Spec.VolumeName, claimRef)
 	if err != nil {
 		return err
 	}

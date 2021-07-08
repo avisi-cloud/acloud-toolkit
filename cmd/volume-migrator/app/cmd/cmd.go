@@ -19,6 +19,6 @@ func NewVolumeMigratorCmd(in io.Reader, out, err io.Writer) *cobra.Command {
 	}
 
 	cmds.ResetFlags()
-	cmds.AddCommand(NewMigrateVolumeCmd(context.TODO(), nil))
+	cmds.AddCommand(NewMigrateVolumeCmd(context.Background(), nil))
 	return cmds
 }

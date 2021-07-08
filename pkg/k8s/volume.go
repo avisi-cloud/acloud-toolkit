@@ -31,9 +31,9 @@ func NewPersistentVolumeClaimVolume(name, claimName string, readOnly bool) *v1.V
 	}
 }
 
-func SetPVReclaimPolicyToRetain(k8sClient kubernetes.Interface, pvc *v1.PersistentVolumeClaim) error {
+func SetPVReclaimPolicyToRetain(ctx context.Context,k8sClient kubernetes.Interface, pvc *v1.PersistentVolumeClaim) error {
 	// Get the persistent volume, ensure it's set to Retain.
-	pv, err := k8sClient.CoreV1().PersistentVolumes().Get(context.TODO(), pvc.Spec.VolumeName, metav1.GetOptions{})
+	pv, err := k8sClient.CoreV1().PersistentVolumes().Get(ctx, pvc.Spec.VolumeName, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to get persistent volume %q: %w", pvc.Name, err)
 	}
@@ -41,7 +41,7 @@ func SetPVReclaimPolicyToRetain(k8sClient kubernetes.Interface, pvc *v1.Persiste
 	if pv.Spec.PersistentVolumeReclaimPolicy != v1.PersistentVolumeReclaimRetain {
 		fmt.Printf("PV %s does not have retain as the reclaim policy, updating ...\n", pvc.Spec.VolumeName)
 		pv.Spec.PersistentVolumeReclaimPolicy = v1.PersistentVolumeReclaimRetain
-		_, err = k8sClient.CoreV1().PersistentVolumes().Update(context.TODO(), pv, metav1.UpdateOptions{})
+		_, err = k8sClient.CoreV1().PersistentVolumes().Update(ctx, pv, metav1.UpdateOptions{})
 		if err != nil {
 			return fmt.Errorf("failed to update reclaim policy persistent volume %q: %w", pvc.Name, err)
 		}
@@ -58,7 +58,7 @@ func SetPVReclaimPolicyToRetain(k8sClient kubernetes.Interface, pvc *v1.Persiste
 }
 
 func GetPersistentVolumeClaimAndCheckForVolumes(ctx context.Context, k8sClient kubernetes.Interface, pvcName string, namespace string) (*v1.PersistentVolumeClaim, error) {
-	pvc, err := k8sClient.CoreV1().PersistentVolumeClaims(namespace).Get(context.TODO(), pvcName, metav1.GetOptions{})
+	pvc, err := k8sClient.CoreV1().PersistentVolumeClaims(namespace).Get(ctx, pvcName, metav1.GetOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get persistent volume claim %q: %w", pvcName, err)
 	}
@@ -67,7 +67,7 @@ func GetPersistentVolumeClaimAndCheckForVolumes(ctx context.Context, k8sClient k
 			break
 		}
 
-		pvc, err = k8sClient.CoreV1().PersistentVolumeClaims(namespace).Get(context.TODO(), pvcName, metav1.GetOptions{})
+		pvc, err = k8sClient.CoreV1().PersistentVolumeClaims(namespace).Get(ctx, pvcName, metav1.GetOptions{})
 		if err != nil {
 			return nil, fmt.Errorf("failed to get persistent volume claim %q: %w", pvcName, err)
 		}
@@ -81,14 +81,14 @@ func GetPersistentVolumeClaimAndCheckForVolumes(ctx context.Context, k8sClient k
 	return pvc, err
 }
 
-func RemoveClaimRefOfPV(k8sClient kubernetes.Interface, pvc *v1.PersistentVolumeClaim) error {
+func RemoveClaimRefOfPV(ctx context.Context,k8sClient kubernetes.Interface, pvc *v1.PersistentVolumeClaim) error {
 	// Update the PVC to remove the claimRef
-	pv, err := k8sClient.CoreV1().PersistentVolumes().Get(context.TODO(), pvc.Spec.VolumeName, metav1.GetOptions{})
+	pv, err := k8sClient.CoreV1().PersistentVolumes().Get(ctx, pvc.Spec.VolumeName, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
 	pv.Spec.ClaimRef = nil
-	_, err = k8sClient.CoreV1().PersistentVolumes().Update(context.TODO(), pv, metav1.UpdateOptions{})
+	_, err = k8sClient.CoreV1().PersistentVolumes().Update(ctx, pv, metav1.UpdateOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to remove claimref of persistent volume claim %q: %w", pv.Name, err)
 	}
@@ -96,14 +96,14 @@ func RemoveClaimRefOfPV(k8sClient kubernetes.Interface, pvc *v1.PersistentVolume
 	return nil
 }
 
-func SetClaimRefOfPV(k8sClient kubernetes.Interface, volumeName string, claimRef v1.ObjectReference) error {
+func SetClaimRefOfPV(ctx context.Context,k8sClient kubernetes.Interface, volumeName string, claimRef v1.ObjectReference) error {
 	// Update the PVC to remove the claimRef
-	pv, err := k8sClient.CoreV1().PersistentVolumes().Get(context.TODO(), volumeName, metav1.GetOptions{})
+	pv, err := k8sClient.CoreV1().PersistentVolumes().Get(ctx, volumeName, metav1.GetOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to get persistent volume %q: %w", volumeName, err)
 	}
 	pv.Spec.ClaimRef = &claimRef
-	_, err = k8sClient.CoreV1().PersistentVolumes().Update(context.TODO(), pv, metav1.UpdateOptions{})
+	_, err = k8sClient.CoreV1().PersistentVolumes().Update(ctx, pv, metav1.UpdateOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to update claimref persistent volume claim %q: %w", volumeName, err)
 	}
