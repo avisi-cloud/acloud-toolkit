@@ -32,20 +32,19 @@ func NewMigrateVolumeCmd(ctx context.Context, runOptions *migrateVolumeOptions) 
 		runOptions = NewMigrateVolumeOptions()
 	}
 
-	ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Duration(runOptions.timeout)*time.Minute)
-	defer cancel()
+
 	var cmd = &cobra.Command{
 		Use:   "migrate",
 		Short: "Migrate a volume",
 		Long:  `Migrate a volume from one PVC to other PVC`,
 		RunE: func(cmd *cobra.Command, args []string) error {
+            ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Duration(runOptions.timeout)*time.Minute)
+            defer cancel()
 			return migrate_volume.MigrateVolumeJob(ctxWithTimeout, runOptions.storageClassName, runOptions.pvcName, runOptions.targetNamespace)
 		},
 	}
 
-
 	AddMigrateVolumeOptions(cmd.Flags(), runOptions)
-
 
 	return cmd
 }
