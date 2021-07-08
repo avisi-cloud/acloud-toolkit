@@ -1,0 +1,36 @@
+package k8s
+
+import (
+    "context"
+    "github.com/stretchr/testify/assert"
+    "gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/helpers"
+    v1 "k8s.io/api/core/v1"
+    "k8s.io/apimachinery/pkg/api/resource"
+    metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+    "k8s.io/client-go/kubernetes/fake"
+    "testing"
+)
+
+func TestCreatePersistentVolumeClaim(t *testing.T) {
+    k8sClient := fake.NewSimpleClientset()
+    assert.NotNil(t, k8sClient)
+
+    pvcName := "test-pvc"
+    namespace := "default"
+    storageClass := "ebs"
+
+    err := CreatePersistentVolumeClaim(context.TODO(), k8sClient, pvcName, namespace, storageClass, resource.MustParse("1"))
+    if !assert.NoError(t, err, "should not receive an error when creating the pvc") {
+        t.FailNow()
+    }
+
+    testPVC, err := k8sClient.CoreV1().PersistentVolumeClaims(namespace).Get(context.TODO(), pvcName, metav1.GetOptions{})
+    if !assert.NoError(t, err, "should not recieve an error when creating the pvc") {
+        t.FailNow()
+    }
+    assert.Equal(t, pvcName, testPVC.Name)
+    assert.Equal(t, namespace, testPVC.Namespace)
+    assert.Equal(t, helpers.String(storageClass), testPVC.Spec.StorageClassName)
+    assert.Equal(t, []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}, testPVC.Spec.AccessModes)
+    assert.Equal(t, resource.MustParse("1"), *testPVC.Spec.Resources.Requests.Storage())
+}
