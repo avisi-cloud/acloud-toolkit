@@ -20,7 +20,7 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 	jobName := "migrate-volume-" + pvcName
 	tmpPVCName := "tmp-" + pvcName
 
-	pvc, err := k8s.GetPersistentVolumeClaimAndCheckForVolumes(k8sClient, pvcName, namespace)
+	pvc, err := k8s.GetPersistentVolumeClaimAndCheckForVolumes(ctx, k8sClient, pvcName, namespace)
 	if err != nil {
 		return err
 	}

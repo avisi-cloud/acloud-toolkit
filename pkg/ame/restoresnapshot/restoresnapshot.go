@@ -110,12 +110,14 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 	}
 	fmt.Printf("PVC has volume %s...\n", pvc.Spec.VolumeName)
 
-	pvc, err = k8s.GetPersistentVolumeClaimAndCheckForVolumes(k8sclient, restorePVCName, sourceNamespace)
+	ctxWithTimeout, cancel := context.WithTimeout(context.TODO(), 1*time.Hour)
+	defer cancel()
+	pvc, err = k8s.GetPersistentVolumeClaimAndCheckForVolumes(ctxWithTimeout, k8sclient, restorePVCName, sourceNamespace)
 	if err != nil {
 		return err
 	}
 
-	err = k8s.SetPVReclaimPolicyToRetain(k8sclient, *pvc)
+	err = k8s.SetPVReclaimPolicyToRetain(k8sclient, pvc)
 	if err != nil {
 		return err
 	}
@@ -127,7 +129,7 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 	}
 	fmt.Printf("deleted the PVC %s...\n", restorePVCName)
 
-	err = k8s.RemoveClaimRefOfPV(k8sclient, *pvc)
+	err = k8s.RemoveClaimRefOfPV(k8sclient, pvc)
 	if err != nil {
 		return err
 	}

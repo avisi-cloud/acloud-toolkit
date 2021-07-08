@@ -5,14 +5,14 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/ame/migrate-volume"
-    "time"
+	"time"
 )
 
 type migrateVolumeOptions struct {
 	storageClassName string
 	pvcName          string
 	targetNamespace  string
-	timeout  time.Duration
+	timeout          time.Duration
 }
 
 func NewMigrateVolumeOptions() *migrateVolumeOptions {
@@ -27,15 +27,15 @@ func AddMigrateVolumeOptions(flagSet *flag.FlagSet, opts *migrateVolumeOptions) 
 }
 
 // NewMigrateVolumeCmd returns the Cobra Bootstrap sub command
-func NewMigrateVolumeCmd(ctx context.Context,runOptions *migrateVolumeOptions) *cobra.Command {
+func NewMigrateVolumeCmd(ctx context.Context, runOptions *migrateVolumeOptions) *cobra.Command {
 	if runOptions == nil {
 		runOptions = NewMigrateVolumeOptions()
 	}
 
-    ctxWithTimeout, cancel := context.WithTimeout(ctx, runOptions.timeout*time.Minute)
-    defer cancel()
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, runOptions.timeout*time.Minute)
+	defer cancel()
 
-    var cmd = &cobra.Command{
+	var cmd = &cobra.Command{
 		Use:   "migrate",
 		Short: "Migrate a volume",
 		Long:  `Migrate a volume from one PVC to other PVC`,
