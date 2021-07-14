@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/helpers"
 	"gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/k8s"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -30,7 +31,7 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Temporary pvc %s created\n", tmpPVCName)
+	fmt.Printf("Temporary pvc %q created\n", tmpPVCName)
 
 	ttlSecondsAfterFinished := int32(1000)
 
@@ -42,16 +43,26 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 		Spec: batchv1.JobSpec{
 			TTLSecondsAfterFinished: &ttlSecondsAfterFinished,
 			Template: v1.PodTemplateSpec{
+
 				Spec: v1.PodSpec{
+					SecurityContext: &v1.PodSecurityContext{
+						RunAsNonRoot: helpers.False(),
+					},
 					Containers: []v1.Container{
 						{
-							Name:    "volume-migrator",
-							Image:   "centos:7",
-							Command: []string{"/bin/sh"},
-							Args:    []string{"-c", "yum -y install rsync","rsync -a /mnt/old/ /mnt/new"},
+							Name:            "volume-migrator",
+							Image:           "registry.avisi.cloud/library/rsync:v1",
+							ImagePullPolicy: v1.PullAlways,
+							Command:         []string{"/bin/sh"},
+							Args:            []string{"-c", "rsync -a --stats --progress /mnt/old/ /mnt/new"},
 							VolumeMounts: []v1.VolumeMount{
 								*k8s.NewVolumeMount("old", "/mnt/old/", true),
 								*k8s.NewVolumeMount("new", "/mnt/new/", false),
+							},
+							SecurityContext: &v1.SecurityContext{
+								RunAsUser:              helpers.Int64(0),
+								RunAsGroup:             helpers.Int64(0),
+								ReadOnlyRootFilesystem: helpers.False(),
 							},
 						},
 					},
@@ -82,9 +93,9 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 		return fmt.Errorf("failed to delete job %q: %w", jobName, err)
 	}
 
-	fmt.Printf("Delete job: %s\n", jobName)
+	fmt.Printf("Deleting job: %q\n", jobName)
 	time.Sleep(5 * time.Second)
-	fmt.Printf("Job: %s deleted\n", jobName)
+	fmt.Printf("Job %q deleted\n", jobName)
 
 	tmpPVC, err := k8sClient.CoreV1().PersistentVolumeClaims(namespace).Get(ctx, tmpPVCName, metav1.GetOptions{})
 	if err != nil {
@@ -105,13 +116,13 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 	if err != nil {
 		return fmt.Errorf("failed to delete persistent volume claim%q: %w", tmpPVCName, err)
 	}
-	fmt.Printf("Deleting pvc: %s\n", tmpPVCName)
+	fmt.Printf("Deleting temp pvc %q (persistent volume is marked as retain)\n", tmpPVCName)
 
 	err = k8sClient.CoreV1().PersistentVolumeClaims(namespace).Delete(ctx, pvcName, metav1.DeleteOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to delete persistent volume claim%q: %w", pvcName, err)
 	}
-	fmt.Printf("Deleting pvc: %s\n", pvcName)
+	fmt.Printf("Deleting source pvc: %s (persistent volume is marked as retain)\n", pvcName)
 
 	err = k8s.RemoveClaimRefOfPV(ctx, k8sClient, tmpPVC)
 	if err != nil {
@@ -122,7 +133,7 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Creating pvc: %s\n", pvcName)
+	fmt.Printf("Created final pvc %q\n", pvcName)
 
 	claimRef := v1.ObjectReference{Name: pvcName, Namespace: namespace}
 	err = k8s.SetClaimRefOfPV(ctx, k8sClient, tmpPVC.Spec.VolumeName, claimRef)
@@ -143,7 +154,7 @@ func waitForJobToComplete(ctx context.Context, k8sClient kubernetes.Interface, n
 			fmt.Printf("%s job stil running\n", job.Name)
 		}
 		if job.Status.Failed > 0 {
-			return fmt.Errorf("%s job failed\n", job.Name)
+			return fmt.Errorf("%s job failed", job.Name)
 		}
 		if job.Status.Succeeded > 0 {
 			fmt.Printf("%s job succeeded\n", job.Name)
