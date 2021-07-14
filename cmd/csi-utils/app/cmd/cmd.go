@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// NewCSIUtilCmd returns cobra.Command to run the cik command
+// NewCSIUtilCmd returns cobra.Command to run the csi-utils command
 func NewCSIUtilCmd(in io.Reader, out, err io.Writer) *cobra.Command {
 	cmds := &cobra.Command{
 		Use:   "csi-utils",

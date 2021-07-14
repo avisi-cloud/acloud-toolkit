@@ -12,7 +12,7 @@ RUN make build
 
 # ----
 FROM registry.avisi.cloud/library/centos:7
-COPY --from=builder /data/bin/csi-snapshot-utils /usr/local/bin/csi-snapshot-utils
+COPY --from=builder /data/bin/csi-utils /usr/local/bin/csi-utils
 
 USER root
 # Install envsubst en kubectl
