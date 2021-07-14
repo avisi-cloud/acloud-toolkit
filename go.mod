@@ -3,7 +3,7 @@ module gitlab.avisi.cloud/ame/csi-snapshot-utils
 go 1.15
 
 require (
-	github.com/google/uuid v1.2.0
+	github.com/google/uuid v1.3.0
 	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/kubernetes-csi/external-snapshotter/client/v4 v4.1.0
 	github.com/spf13/cobra v1.1.3
