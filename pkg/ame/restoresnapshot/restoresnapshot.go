@@ -110,19 +110,16 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 	}
 	fmt.Printf("PVC has volume %s...\n", pvc.Spec.VolumeName)
 
-	// Get the persistent volume, ensure it's set to Retain.
-	pv, err := k8sclient.CoreV1().PersistentVolumes().Get(context.TODO(), pvc.Spec.VolumeName, metav1.GetOptions{})
+	ctxWithTimeout, cancel := context.WithTimeout(context.TODO(), 1*time.Hour)
+	defer cancel()
+	pvc, err = k8s.GetPersistentVolumeClaimAndCheckForVolumes(ctxWithTimeout, k8sclient, restorePVCName, sourceNamespace)
 	if err != nil {
 		return err
 	}
 
-	if pv.Spec.PersistentVolumeReclaimPolicy != apiv1.PersistentVolumeReclaimRetain {
-		fmt.Printf("PV %s does not have retain as the reclaim policy, updating ...\n", pvc.Spec.VolumeName)
-		pv.Spec.PersistentVolumeReclaimPolicy = apiv1.PersistentVolumeReclaimRetain
-		k8sclient.CoreV1().PersistentVolumes().Update(context.TODO(), pv, metav1.UpdateOptions{})
-
-		// give kube some time to catch up
-		time.Sleep(1 * time.Second)
+	err = k8s.SetPVReclaimPolicyToRetain(context.TODO(), k8sclient, pvc)
+	if err != nil {
+		return err
 	}
 
 	// Delete the PVC
@@ -132,20 +129,10 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 	}
 	fmt.Printf("deleted the PVC %s...\n", restorePVCName)
 
-	// Update the PVC to remove the claimRef
-	pv, err = k8sclient.CoreV1().PersistentVolumes().Get(context.TODO(), pvc.Spec.VolumeName, metav1.GetOptions{})
+	err = k8s.RemoveClaimRefOfPV(context.TODO(), k8sclient, pvc)
 	if err != nil {
 		return err
 	}
-	pv.Spec.ClaimRef = nil
-	_, err = k8sclient.CoreV1().PersistentVolumes().Update(context.TODO(), pv, metav1.UpdateOptions{})
-	if err != nil {
-		return err
-	}
-	fmt.Printf("removed the PV %s claim ref to %s...\n", pvc.Spec.VolumeName, restorePVCName)
-
-	// give kube some time to catch up
-	time.Sleep(1 * time.Second)
 
 	// Create a new PVC in the target namespace.
 	_, err = k8sclient.CoreV1().PersistentVolumeClaims(targetNamespace).Create(context.TODO(), &apiv1.PersistentVolumeClaim{

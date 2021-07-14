@@ -1,7 +1,7 @@
 package main
 
 import (
-	"gitlab.avisi.cloud/ame/csi-snapshot-utils/cmd/csi-snapshot-utils/app"
+	"gitlab.avisi.cloud/ame/csi-snapshot-utils/cmd/csi-utils/app"
 	versionpkg "gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/version"
 )
 

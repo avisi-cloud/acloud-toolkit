@@ -1,4 +1,4 @@
-BINARY = csi-snapshot-utils
+BINARY = csi-utils
 GOARCH = amd64
 
 COMMIT=$(shell git rev-parse HEAD)
@@ -6,7 +6,7 @@ BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 
 BUILD=0
 VERSION=0.0.0
-IMAGE=ame/csi-snapshot-utils
+IMAGE=ame/csi-utils
 
 ifneq (${BRANCH}, release)
 	BRANCH := -${BRANCH}

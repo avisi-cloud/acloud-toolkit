@@ -25,9 +25,9 @@ func NewListCmd(runOptions *listOptions) *cobra.Command {
 	}
 
 	var cmd = &cobra.Command{
-		Use:   "list",
-		Short: "List a snapshot",
-		Long:  `list a snapshot`,
+		Use:   "list-snapshots",
+		Short: "List CSI snapshots within the namespace",
+		Long:  `List all available CSI snapshots within the namespace`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return restoresnapshot.List(runOptions.sourceNamespace)
 		},
