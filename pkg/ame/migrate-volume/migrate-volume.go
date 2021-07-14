@@ -50,10 +50,11 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 					},
 					Containers: []v1.Container{
 						{
-							Name:    "volume-migrator",
-							Image:   "registry.avisi.cloud/library/rsync:v0.1.1",
-							Command: []string{"/bin/sh"},
-							Args:    []string{"-c", "rsync -a --stats --progress /mnt/old/ /mnt/new"},
+							Name:            "volume-migrator",
+							Image:           "registry.avisi.cloud/library/rsync:v1",
+							ImagePullPolicy: v1.PullAlways,
+							Command:         []string{"/bin/sh"},
+							Args:            []string{"-c", "rsync -a --stats --progress /mnt/old/ /mnt/new"},
 							VolumeMounts: []v1.VolumeMount{
 								*k8s.NewVolumeMount("old", "/mnt/old/", true),
 								*k8s.NewVolumeMount("new", "/mnt/new/", false),
