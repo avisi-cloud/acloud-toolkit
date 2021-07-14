@@ -36,8 +36,8 @@ func NewMigrateVolumeCmd(ctx context.Context, runOptions *migrateVolumeOptions) 
 
 	var cmd = &cobra.Command{
 		Use:   "migrate",
-		Short: "Migrate a volume",
-		Long:  `Migrate a volume from one PVC to other PVC`,
+		Short: "Migrate a volume to another storage class",
+		Long:  `Migrate a volume to another storage class. This will create a new PVC using the target storage class, and copy all file contents over to the new volume. The existing persistent volume will remain available in the cluster.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Duration(runOptions.timeout)*time.Minute)
 			defer cancel()

@@ -5,11 +5,11 @@ package app
 import (
 	"os"
 
-	"gitlab.avisi.cloud/ame/csi-snapshot-utils/cmd/csi-snapshot-utils/app/cmd"
+	"gitlab.avisi.cloud/ame/csi-snapshot-utils/cmd/csi-utils/app/cmd"
 )
 
 // Execute runs the cikcli application
 func Execute() error {
-	cmd := cmd.NewCikCmd(os.Stdin, os.Stdout, os.Stderr)
+	cmd := cmd.NewCSIUtilCmd(os.Stdin, os.Stdout, os.Stderr)
 	return cmd.Execute()
 }
