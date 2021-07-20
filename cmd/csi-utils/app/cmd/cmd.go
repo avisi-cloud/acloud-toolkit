@@ -25,5 +25,6 @@ func NewCSIUtilCmd(in io.Reader, out, err io.Writer) *cobra.Command {
 	cmds.AddCommand(NewRestoreCmd(nil))
 	cmds.AddCommand(NewSnapshotCreateCmd(nil))
 	cmds.AddCommand(NewMigrateVolumeCmd(context.Background(), nil))
+	cmds.AddCommand(NewBatchMigrateVolumeCmd(context.Background(), nil))
 	return cmds
 }

@@ -22,6 +22,10 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 	jobName := "migrate-volume-" + pvcName
 	tmpPVCName := "tmp-" + pvcName
 
+	if err := validateStorageClassExists(ctx, k8sClient, storageClassName); err != nil {
+		return err
+	}
+
 	pvc, err := k8s.GetPersistentVolumeClaimAndCheckForVolumes(ctx, k8sClient, pvcName, namespace)
 	if err != nil {
 		return err
@@ -129,36 +133,36 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 		return err
 	}
 
-    claimRef := v1.ObjectReference{Name: pvcName, Namespace: namespace}
-    err = k8s.SetClaimRefOfPV(ctx, k8sClient, tmpPVC.Spec.VolumeName, claimRef)
-    if err != nil {
-        return err
-    }
+	claimRef := v1.ObjectReference{Name: pvcName, Namespace: namespace}
+	err = k8s.SetClaimRefOfPV(ctx, k8sClient, tmpPVC.Spec.VolumeName, claimRef)
+	if err != nil {
+		return err
+	}
 
-    err = k8s.CreatePersistentVolumeClaim(ctx, k8sClient, pvcName, namespace, storageClassName, *pvc.Spec.Resources.Requests.Storage())
-    if err != nil {
-        return err
-    }
-    fmt.Printf("Created final pvc %q\n", pvcName)
+	err = k8s.CreatePersistentVolumeClaim(ctx, k8sClient, pvcName, namespace, storageClassName, *pvc.Spec.Resources.Requests.Storage())
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Created final pvc %q\n", pvcName)
 
-    finalPVC, err := k8s.GetPersistentVolumeClaimAndCheckForVolumes(ctx, k8sClient, pvcName, namespace)
-    if err != nil {
-        return fmt.Errorf("failed to get new persistent volume claim%q: %w", pvcName, err)
-    }
+	finalPVC, err := k8s.GetPersistentVolumeClaimAndCheckForVolumes(ctx, k8sClient, pvcName, namespace)
+	if err != nil {
+		return fmt.Errorf("failed to get new persistent volume claim%q: %w", pvcName, err)
+	}
 
-    if finalPVC.Status.Phase != v1.ClaimBound {
-        return fmt.Errorf("new persistent volume claim is not bound! %q", tmpPVC.Name)
-    }
+	if finalPVC.Status.Phase != v1.ClaimBound {
+		return fmt.Errorf("new persistent volume claim is not bound! %q", tmpPVC.Name)
+	}
 
-    if finalPVC.Spec.VolumeName != tmpPVC.Spec.VolumeName {
-        return fmt.Errorf("new persistent volume claim %q is not bound to the new persistentvolume! %q", finalPVC.Name, tmpPVC.Spec.VolumeName)
-    }
+	if finalPVC.Spec.VolumeName != tmpPVC.Spec.VolumeName {
+		return fmt.Errorf("new persistent volume claim %q is not bound to the new persistentvolume! %q", finalPVC.Name, tmpPVC.Spec.VolumeName)
+	}
 
-    if *finalPVC.Spec.StorageClassName != storageClassName {
-        return fmt.Errorf("new persistent volume claim %q has the storageclass %q and not the given storageclass %q", pvcName, *finalPVC.Spec.StorageClassName, storageClassName)
-    }
+	if *finalPVC.Spec.StorageClassName != storageClassName {
+		return fmt.Errorf("new persistent volume claim %q has the storageclass %q and not the given storageclass %q", pvcName, *finalPVC.Spec.StorageClassName, storageClassName)
+	}
 
-    fmt.Printf("Data in %q succesfully migrated to %q bound to PVC %q with storageclass %q", pvc.Spec.VolumeName, finalPVC.Spec.VolumeName, finalPVC.Name, *finalPVC.Spec.StorageClassName)
+	fmt.Printf("Data in %q succesfully migrated to %q bound to PVC %q with storageclass %q\n", pvc.Spec.VolumeName, finalPVC.Spec.VolumeName, finalPVC.Name, *finalPVC.Spec.StorageClassName)
 
 	return nil
 }
