@@ -3,13 +3,14 @@ package migrate_volume
 import (
 	"context"
 	"fmt"
-    kubeerrors "k8s.io/apimachinery/pkg/api/errors"
-    "time"
+	"time"
 
 	"gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/helpers"
 	"gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/k8s"
+
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
+	kubeerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
@@ -33,10 +34,14 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 	}
 
 	err = k8s.CreatePersistentVolumeClaim(ctx, k8sClient, tmpPVCName, namespace, storageClassName, *pvc.Spec.Resources.Requests.Storage())
-	if err != nil {
-		return err
-	}
-	fmt.Printf("Temporary pvc %q created\n", tmpPVCName)
+    if err != nil {
+        if !kubeerrors.IsAlreadyExists(err) {
+            return err
+        }
+        fmt.Printf("Using existing pvc %q\n", tmpPVCName)
+    } else {
+        fmt.Printf("Temporary pvc %q created\n", tmpPVCName)
+    }
 
 	ttlSecondsAfterFinished := int32(1000)
 
@@ -107,12 +112,13 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 		return fmt.Errorf("failed to get persistent volume claim%q: %w", tmpPVCName, err)
 	}
 
-	err = k8s.SetPVReclaimPolicyToRetain(ctx, k8sClient, pvc)
-	if err != nil {
-		return err
-	}
-
-	err = k8s.SetPVReclaimPolicyToRetain(ctx, k8sClient, tmpPVC)
+	err = helpers.RetryWithCancel(ctx, 3, 2*time.Second, func() error {
+		err = k8s.SetPVReclaimPolicyToRetain(ctx, k8sClient, pvc)
+		if err != nil {
+			return err
+		}
+		return k8s.SetPVReclaimPolicyToRetain(ctx, k8sClient, tmpPVC)
+	})
 	if err != nil {
 		return err
 	}
@@ -138,39 +144,47 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 	if err != nil {
 		return err
 	}
+	err = helpers.RetryWithCancel(ctx, 3, 2*time.Second, func() error {
+		err = k8s.RemoveClaimRefOfPV(ctx, k8sClient, tmpPVC)
+		if err != nil {
+			return err
+		}
 
-	claimRef := v1.ObjectReference{Name: pvcName, Namespace: namespace}
-	err = k8s.SetClaimRefOfPV(ctx, k8sClient, tmpPVC.Spec.VolumeName, claimRef)
+		claimRef := v1.ObjectReference{Name: pvcName, Namespace: namespace}
+		return k8s.SetClaimRefOfPV(ctx, k8sClient, tmpPVC.Spec.VolumeName, claimRef)
+	})
 	if err != nil {
 		return err
 	}
 
-	err = k8s.CreatePersistentVolumeClaim(ctx, k8sClient, pvcName, namespace, storageClassName, *pvc.Spec.Resources.Requests.Storage())
+	err = helpers.RetryWithCancel(ctx, 3, 2*time.Second, func() error {
+		return k8s.CreatePersistentVolumeClaim(ctx, k8sClient, pvcName, namespace, storageClassName, *pvc.Spec.Resources.Requests.Storage())
+	})
 	if err != nil {
 		return err
 	}
 	fmt.Printf("Created final pvc %q\n", pvcName)
 
-	finalPVC, err := k8s.GetPersistentVolumeClaimAndCheckForVolumes(ctx, k8sClient, pvcName, namespace)
-	if err != nil {
-		return fmt.Errorf("failed to get new persistent volume claim%q: %w", pvcName, err)
-	}
+	return helpers.RetryWithCancel(ctx, 3, 2*time.Second, func() error {
+		finalPVC, err := k8s.GetPersistentVolumeClaimAndCheckForVolumes(ctx, k8sClient, pvcName, namespace)
+		if err != nil {
+			return fmt.Errorf("failed to get new persistent volume claim%q: %w", pvcName, err)
+		}
 
-	if finalPVC.Status.Phase != v1.ClaimBound {
-		return fmt.Errorf("new persistent volume claim is not bound! %q", tmpPVC.Name)
-	}
+		if finalPVC.Status.Phase != v1.ClaimBound {
+			return fmt.Errorf("new persistent volume claim is not bound! %q", tmpPVC.Name)
+		}
 
-	if finalPVC.Spec.VolumeName != tmpPVC.Spec.VolumeName {
-		return fmt.Errorf("new persistent volume claim %q is not bound to the new persistentvolume! %q", finalPVC.Name, tmpPVC.Spec.VolumeName)
-	}
+		if finalPVC.Spec.VolumeName != tmpPVC.Spec.VolumeName {
+			return fmt.Errorf("new persistent volume claim %q is not bound to the new persistentvolume! %q", finalPVC.Name, tmpPVC.Spec.VolumeName)
+		}
 
-	if *finalPVC.Spec.StorageClassName != storageClassName {
-		return fmt.Errorf("new persistent volume claim %q has the storageclass %q and not the given storageclass %q", pvcName, *finalPVC.Spec.StorageClassName, storageClassName)
-	}
-
-	fmt.Printf("Data in %q succesfully migrated to %q bound to PVC %q with storageclass %q\n", pvc.Spec.VolumeName, finalPVC.Spec.VolumeName, finalPVC.Name, *finalPVC.Spec.StorageClassName)
-
-	return nil
+		if *finalPVC.Spec.StorageClassName != storageClassName {
+			return fmt.Errorf("new persistent volume claim %q has the storageclass %q and not the given storageclass %q", pvcName, *finalPVC.Spec.StorageClassName, storageClassName)
+		}
+		fmt.Printf("Data in %q succesfully migrated to %q bound to PVC %q with storageclass %q\n", pvc.Spec.VolumeName, finalPVC.Spec.VolumeName, finalPVC.Name, *finalPVC.Spec.StorageClassName)
+		return nil
+	})
 }
 
 func waitForPVCToBeDeleted(ctx context.Context, k8sClient kubernetes.Interface, namespace, pvc string) error {
