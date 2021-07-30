@@ -3,7 +3,8 @@ package migrate_volume
 import (
 	"context"
 	"fmt"
-	"time"
+    kubeerrors "k8s.io/apimachinery/pkg/api/errors"
+    "time"
 
 	"gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/helpers"
 	"gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/k8s"
@@ -128,6 +129,11 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 	}
 	fmt.Printf("Deleting source pvc: %s (persistent volume is marked as retain)\n", pvcName)
 
+	err = waitForPVCToBeDeleted(ctx, k8sClient, namespace, pvcName)
+	if err != nil {
+		return err
+	}
+
 	err = k8s.RemoveClaimRefOfPV(ctx, k8sClient, tmpPVC)
 	if err != nil {
 		return err
@@ -165,6 +171,25 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 	fmt.Printf("Data in %q succesfully migrated to %q bound to PVC %q with storageclass %q\n", pvc.Spec.VolumeName, finalPVC.Spec.VolumeName, finalPVC.Name, *finalPVC.Spec.StorageClassName)
 
 	return nil
+}
+
+func waitForPVCToBeDeleted(ctx context.Context, k8sClient kubernetes.Interface, namespace, pvc string) error {
+	for {
+		_, err := k8sClient.CoreV1().PersistentVolumeClaims(namespace).Get(ctx, pvc, metav1.GetOptions{})
+		if err != nil && kubeerrors.IsNotFound(err)  {
+			fmt.Printf("source pvc %s is deleted\n", pvc)
+			return nil
+		} else if err != nil {
+			return fmt.Errorf("error deleting source pvc: %s", err)
+		}
+		fmt.Printf("source pvc %s still in the proces of being deleted...\n", pvc)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(5 * time.Second):
+			continue
+		}
+	}
 }
 
 func waitForJobToComplete(ctx context.Context, k8sClient kubernetes.Interface, namespace, jobName string) error {
