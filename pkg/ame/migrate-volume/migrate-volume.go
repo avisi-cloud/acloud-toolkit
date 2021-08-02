@@ -34,14 +34,14 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 	}
 
 	err = k8s.CreatePersistentVolumeClaim(ctx, k8sClient, tmpPVCName, namespace, storageClassName, *pvc.Spec.Resources.Requests.Storage())
-    if err != nil {
-        if !kubeerrors.IsAlreadyExists(err) {
-            return err
-        }
-        fmt.Printf("Using existing pvc %q\n", tmpPVCName)
-    } else {
-        fmt.Printf("Temporary pvc %q created\n", tmpPVCName)
-    }
+	if err != nil {
+		if !kubeerrors.IsAlreadyExists(err) {
+			return err
+		}
+		fmt.Printf("Using existing pvc %q\n", tmpPVCName)
+	} else {
+		fmt.Printf("Temporary pvc %q created\n", tmpPVCName)
+	}
 
 	ttlSecondsAfterFinished := int32(1000)
 
@@ -140,10 +140,6 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 		return err
 	}
 
-	err = k8s.RemoveClaimRefOfPV(ctx, k8sClient, tmpPVC)
-	if err != nil {
-		return err
-	}
 	err = helpers.RetryWithCancel(ctx, 3, 2*time.Second, func() error {
 		err = k8s.RemoveClaimRefOfPV(ctx, k8sClient, tmpPVC)
 		if err != nil {
@@ -190,7 +186,7 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 func waitForPVCToBeDeleted(ctx context.Context, k8sClient kubernetes.Interface, namespace, pvc string) error {
 	for {
 		_, err := k8sClient.CoreV1().PersistentVolumeClaims(namespace).Get(ctx, pvc, metav1.GetOptions{})
-		if err != nil && kubeerrors.IsNotFound(err)  {
+		if err != nil && kubeerrors.IsNotFound(err) {
 			fmt.Printf("source pvc %s is deleted\n", pvc)
 			return nil
 		} else if err != nil {
