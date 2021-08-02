@@ -11,6 +11,7 @@ import (
 	"k8s.io/client-go/dynamic"
 
 	apiv1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
@@ -117,7 +118,9 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 		return err
 	}
 
-	err = k8s.SetPVReclaimPolicyToRetain(context.TODO(), k8sclient, pvc)
+	err = helpers.RetryWithCancel(ctxWithTimeout, 3, 2*time.Second, func() error {
+		return k8s.SetPVReclaimPolicyToRetain(context.TODO(), k8sclient, pvc)
+	})
 	if err != nil {
 		return err
 	}
@@ -129,7 +132,14 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 	}
 	fmt.Printf("deleted the PVC %s...\n", restorePVCName)
 
-	err = k8s.RemoveClaimRefOfPV(context.TODO(), k8sclient, pvc)
+	err = helpers.RetryWithCancel(ctxWithTimeout, 3, 2*time.Second, func() error {
+		err = k8s.RemoveClaimRefOfPV(ctxWithTimeout, k8sclient, pvc)
+		if err != nil {
+			return err
+		}
+		claimRef := v1.ObjectReference{Name: targetName, Namespace: targetNamespace}
+		return k8s.SetClaimRefOfPV(ctxWithTimeout, k8sclient, pvc.Spec.VolumeName, claimRef)
+	})
 	if err != nil {
 		return err
 	}
