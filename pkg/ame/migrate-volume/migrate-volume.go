@@ -11,12 +11,17 @@ import (
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	kubeerrors "k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 )
 
-func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName string, namespace string) error {
+const (
+	USE_EQUAL_SIZE = 0
+)
+
+func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName string, namespace string, newSize int64) error {
 	k8sClient := k8s.GetClientOrDie()
 
 	migrateVolumeJob := k8sClient.BatchV1().Jobs(namespace)
@@ -33,7 +38,12 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 		return err
 	}
 
-	err = k8s.CreatePersistentVolumeClaim(ctx, k8sClient, tmpPVCName, namespace, storageClassName, *pvc.Spec.Resources.Requests.Storage())
+	storageSize := *pvc.Spec.Resources.Requests.Storage()
+	if newSize > USE_EQUAL_SIZE {
+		storageSize = resource.MustParse(fmt.Sprintf("%dM", newSize))
+	}
+
+	err = k8s.CreatePersistentVolumeClaim(ctx, k8sClient, tmpPVCName, namespace, storageClassName, storageSize)
 	if err != nil {
 		if !kubeerrors.IsAlreadyExists(err) {
 			return err
@@ -154,7 +164,7 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 	}
 
 	err = helpers.RetryWithCancel(ctx, 3, 2*time.Second, func() error {
-		return k8s.CreatePersistentVolumeClaim(ctx, k8sClient, pvcName, namespace, storageClassName, *pvc.Spec.Resources.Requests.Storage())
+		return k8s.CreatePersistentVolumeClaim(ctx, k8sClient, pvcName, namespace, storageClassName, storageSize)
 	})
 	if err != nil {
 		return err

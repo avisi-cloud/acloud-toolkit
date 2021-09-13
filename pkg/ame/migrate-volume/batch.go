@@ -79,7 +79,7 @@ func BatchMigrateVolumes(ctx context.Context, sourceStorageClass, targetStorageC
 	for _, pvcName := range pvcsToMigrate {
 		fmt.Printf("-----\n")
 		fmt.Printf("starting volume migration job for PVC \"%s/%s\" ...\n", namespace, pvcName)
-		err = MigrateVolumeJob(ctx, targetStorageClass, pvcName, namespace)
+		err = MigrateVolumeJob(ctx, targetStorageClass, pvcName, namespace, USE_EQUAL_SIZE)
 		if err != nil {
 			return fmt.Errorf("failed to migrate volume job: %s", err)
 		}
