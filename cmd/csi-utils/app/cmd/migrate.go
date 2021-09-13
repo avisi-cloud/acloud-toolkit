@@ -15,6 +15,7 @@ type migrateVolumeOptions struct {
 	pvcName          string
 	targetNamespace  string
 	timeout          int32
+	newSize          int64
 }
 
 func NewMigrateVolumeOptions() *migrateVolumeOptions {
@@ -26,6 +27,7 @@ func AddMigrateVolumeOptions(flagSet *flag.FlagSet, opts *migrateVolumeOptions) 
 	flagSet.StringVarP(&opts.pvcName, "pvc", "p", "", "name of the persitentvolumeclaim")
 	flagSet.StringVarP(&opts.targetNamespace, "target-namespace", "n", "default", "Namespace where de migrate job will be executed")
 	flagSet.Int32VarP(&opts.timeout, "timeout", "t", 60, "Timeout of the context in minutes")
+	flagSet.Int64Var(&opts.newSize, "new-size", migrate_volume.USE_EQUAL_SIZE, "Use a different size for the new PVC. Value is in MB. Default 0 means use same size as current PVC")
 }
 
 // NewMigrateVolumeCmd returns the Cobra Bootstrap sub command
@@ -41,7 +43,7 @@ func NewMigrateVolumeCmd(ctx context.Context, runOptions *migrateVolumeOptions) 
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Duration(runOptions.timeout)*time.Minute)
 			defer cancel()
-			return migrate_volume.MigrateVolumeJob(ctxWithTimeout, runOptions.storageClassName, runOptions.pvcName, runOptions.targetNamespace)
+			return migrate_volume.MigrateVolumeJob(ctxWithTimeout, runOptions.storageClassName, runOptions.pvcName, runOptions.targetNamespace, runOptions.newSize)
 		},
 	}
 
