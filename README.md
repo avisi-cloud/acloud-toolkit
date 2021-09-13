@@ -55,4 +55,6 @@ created a new PVC test3 in namespace default...
 ```
 ./bin/csi-snapshot-utils restore --snapshot-name=jira-2021-04-14-110521 --target-name=jira-jira-0 --target-namespace=jira-acc --source-namespace=jira
 ./bin/csi-snapshot-utils restore --snapshot-name=jira-db-2021-04-14-110635 --target-name=data-jira-database-postgresql-0 --target-namespace=jira-acc --source-namespace=jira
+#Migrate a volume to a larger volume, as resizing a volume is not support yet. To do this, the pod using this volume should not be running!
+./bin/csi-utils migrate -p mysql-volume-sugarcrm-0 -s rbd -n brn --new-size 15360
 ```
