@@ -5,14 +5,14 @@ go 1.15
 require (
 	github.com/google/uuid v1.3.0
 	github.com/imdario/mergo v0.3.8 // indirect
-	github.com/kubernetes-csi/external-snapshotter/client/v4 v4.1.0
+	github.com/kubernetes-csi/external-snapshotter/client/v4 v4.2.0
 	github.com/spf13/cobra v1.1.3
 	github.com/spf13/pflag v1.0.5
 	github.com/stretchr/testify v1.7.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
-	k8s.io/api v0.21.3
-	k8s.io/apimachinery v0.21.3
-	k8s.io/client-go v0.21.3
+	k8s.io/api v0.22.2
+	k8s.io/apimachinery v0.22.2
+	k8s.io/client-go v0.22.2
 )
 
 replace (
