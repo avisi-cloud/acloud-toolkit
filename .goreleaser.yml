@@ -20,7 +20,7 @@ brews:
     # Default for gitlab is "https://gitlab.com/<repo_owner>/<repo_name>/-/releases/{{ .Tag }}/downloads/{{ .ArtifactName }}"
     # Default for gitea is "https://gitea.com/<repo_owner>/<repo_name>/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
     # url_template: "https://gitlab.avisi.cloud/ame/acloud-toolkit/-/releases/{{ .Tag }}/downloads/{{ .ArtifactName }}"
-    url_template: "https://avisi-cloud-brew-tap-public.s3.eu-west-1.amazonaws.com/releases/final/{{.Tag}}/{{ .ArtifactName }}"
+    url_template: "https://avisi-cloud-brew-tap-public.s3.eu-west-1.amazonaws.com/releases/{{ .ProjectName }}/{{.Version}}/{{ .ArtifactName }}"
 
     # Allows you to set a custom download strategy. Note that you'll need
     # to implement the strategy and add it to your tap repository.
@@ -115,5 +115,5 @@ brews:
 blobs:
 - provider: s3
   bucket: avisi-cloud-brew-tap-public
-  folder: "releases/final/{{.Version}}"
+  folder: "releases/{{ .ProjectName }}/{{.Version}}"
   region: eu-west-1

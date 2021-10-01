@@ -38,10 +38,12 @@ code_quality:
   artifacts:
     paths: [gl-code-quality-report.json]
   tags: [docker]
+  except: [tags]
 
 go:code_review:
   stage: review
   extends: .go:code_review
+  except: [tags]
 
 code_navigation:
   extends: .go:code_navigation
