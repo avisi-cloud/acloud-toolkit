@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/helpers"
-	"gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/k8s"
+	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/helpers"
+	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/k8s"
 
 	"k8s.io/client-go/dynamic"
 
@@ -67,10 +67,10 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 			Name:      restorePVCName,
 			Namespace: sourceNamespace,
 			Labels: map[string]string{
-				"csi-snapshot-utils.k8s.avisi.cloud/snapshot-reference": string(snapshot.GetUID()),
-				"csi-snapshot-utils.k8s.avisi.cloud/target-pvc":         fmt.Sprintf("%s", targetName),
-				"csi-snapshot-utils.k8s.avisi.cloud/source-snapshot":    fmt.Sprintf("%s", snapshotName),
-				"csi-snapshot-utils.k8s.avisi.cloud/source-pvc":         fmt.Sprintf("%s", sourcePVC),
+				"acloud-toolkit.k8s.avisi.cloud/snapshot-reference": string(snapshot.GetUID()),
+				"acloud-toolkit.k8s.avisi.cloud/target-pvc":         targetName,
+				"acloud-toolkit.k8s.avisi.cloud/source-snapshot":    snapshotName,
+				"acloud-toolkit.k8s.avisi.cloud/source-pvc":         sourcePVC,
 			},
 		},
 		Spec: apiv1.PersistentVolumeClaimSpec{
@@ -150,11 +150,11 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 			Name:      targetName,
 			Namespace: targetNamespace,
 			Labels: map[string]string{
-				"csi-snapshot-utils.k8s.avisi.cloud/restored":           "true",
-				"csi-snapshot-utils.k8s.avisi.cloud/snapshot-reference": string(snapshot.GetUID()),
-				"csi-snapshot-utils.k8s.avisi.cloud/target-pvc":         fmt.Sprintf("%s", targetName),
-				"csi-snapshot-utils.k8s.avisi.cloud/source-snapshot":    fmt.Sprintf("%s", snapshotName),
-				"csi-snapshot-utils.k8s.avisi.cloud/source-pvc":         fmt.Sprintf("%s", sourcePVC),
+				"acloud-toolkit.k8s.avisi.cloud/restored":           "true",
+				"acloud-toolkit.k8s.avisi.cloud/snapshot-reference": string(snapshot.GetUID()),
+				"acloud-toolkit.k8s.avisi.cloud/target-pvc":         fmt.Sprintf("%s", targetName),
+				"acloud-toolkit.k8s.avisi.cloud/source-snapshot":    fmt.Sprintf("%s", snapshotName),
+				"acloud-toolkit.k8s.avisi.cloud/source-pvc":         fmt.Sprintf("%s", sourcePVC),
 			},
 		},
 		Spec: apiv1.PersistentVolumeClaimSpec{

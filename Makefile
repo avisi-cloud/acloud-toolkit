@@ -1,4 +1,4 @@
-BINARY = csi-utils
+BINARY = acloud-toolkit
 GOARCH = amd64
 
 COMMIT=$(shell git rev-parse HEAD)
@@ -6,7 +6,7 @@ BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 
 BUILD=0
 VERSION=0.0.0
-IMAGE=ame/csi-utils
+IMAGE=ame/acloud-toolkit
 
 ifneq (${BRANCH}, release)
 	BRANCH := -${BRANCH}
@@ -20,16 +20,16 @@ LDFLAGS = -ldflags "-X main.Version=${VERSION} -X main.Commit=${COMMIT} -X main.
 all: link clean linux darwin
 
 linux:
-	CGO_ENABLED=0 GOOS=linux GOARCH=${GOARCH} go build ${LDFLAGS} -o bin/${BINARY}-linux-${GOARCH} ./cmd/${BINARY} ;
+	CGO_ENABLED=0 GOOS=linux GOARCH=${GOARCH} go build ${LDFLAGS} -o bin/${BINARY}-linux-${GOARCH} . ;
 
 darwin:
-	CGO_ENABLED=0 GOOS=darwin GOARCH=${GOARCH} go build ${LDFLAGS} -o bin/${BINARY}-darwin-${GOARCH} ./cmd/${BINARY} ;
+	CGO_ENABLED=0 GOOS=darwin GOARCH=${GOARCH} go build ${LDFLAGS} -o bin/${BINARY}-darwin-${GOARCH} . ;
 
 windows:
-	CGO_ENABLED=0 GOOS=windows GOARCH=${GOARCH} go build ${LDFLAGS} -o bin/${BINARY}-windows-${GOARCH}.exe ./cmd/${BINARY} ;
+	CGO_ENABLED=0 GOOS=windows GOARCH=${GOARCH} go build ${LDFLAGS} -o bin/${BINARY}-windows-${GOARCH}.exe . ;
 
 build:
-	CGO_ENABLED=0 go build ${LDFLAGS} -o bin/${BINARY} ./cmd/${BINARY} ;
+	CGO_ENABLED=0 go build ${LDFLAGS} -o bin/${BINARY} . ;
 	chmod +x bin/${BINARY};
 
 lint: ## Lint the files

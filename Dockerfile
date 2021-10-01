@@ -12,7 +12,7 @@ RUN make build
 
 # ----
 FROM registry.avisi.cloud/library/centos:7
-COPY --from=builder /data/bin/csi-utils /usr/local/bin/csi-utils
+COPY --from=builder /data/bin/acloud-toolkit /usr/local/bin/acloud-toolkit
 
 USER root
 # Install envsubst en kubectl

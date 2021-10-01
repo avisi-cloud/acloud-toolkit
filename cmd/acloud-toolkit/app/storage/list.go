@@ -1,9 +1,9 @@
-package cmd
+package storage
 
 import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
-	"gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/ame/restoresnapshot"
+	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/ame/restoresnapshot"
 )
 
 type listOptions struct {

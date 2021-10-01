@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/k8s"
+	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/k8s"
+	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/table"
 
 	"k8s.io/client-go/dynamic"
 
@@ -41,10 +42,38 @@ func List(sourceNamespace string) error {
 	if err != nil {
 		return err
 	}
+
+	body := make([][]string, 0, len(snapshotUnstructued.Items))
 	for _, snapshotItem := range snapshotUnstructued.Items {
 		snapshot := volumesnapshotv1.VolumeSnapshot{}
 		runtime.DefaultUnstructuredConverter.FromUnstructured(snapshotItem.Object, &snapshot)
-		fmt.Printf("%s\t\n", snapshot.GetName())
+
+		sourceName := ""
+		if snapshot.Spec.Source.PersistentVolumeClaimName != nil {
+			sourceName = *snapshot.Spec.Source.PersistentVolumeClaimName
+		}
+		contentName := ""
+		if snapshot.Spec.Source.VolumeSnapshotContentName != nil {
+			contentName = *snapshot.Spec.Source.VolumeSnapshotContentName
+		}
+
+		body = append(body, []string{
+			snapshot.Name,
+			sourceName,
+			contentName,
+			snapshot.Status.RestoreSize.String(),
+			fmt.Sprintf("%v", snapshot.Status != nil && snapshot.Status.ReadyToUse != nil && *snapshot.Status.ReadyToUse),
+			*snapshot.Spec.VolumeSnapshotClassName,
+		})
 	}
+	table.Print([]string{
+		"Name",
+		"Source",
+		"Content",
+		"Size",
+		"Ready",
+		"Classname",
+	}, body)
+
 	return nil
 }

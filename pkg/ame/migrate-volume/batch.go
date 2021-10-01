@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/k8s"
+	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/k8s"
 
 	v1 "k8s.io/api/core/v1"
 	kubeerrors "k8s.io/apimachinery/pkg/api/errors"

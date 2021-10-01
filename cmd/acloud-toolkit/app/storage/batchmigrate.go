@@ -1,10 +1,10 @@
-package cmd
+package storage
 
 import (
 	"context"
 	"time"
 
-	migrate_volume "gitlab.avisi.cloud/ame/csi-snapshot-utils/pkg/ame/migrate-volume"
+	migrate_volume "gitlab.avisi.cloud/ame/acloud-toolkit/pkg/ame/migrate-volume"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -25,8 +25,8 @@ func NewBatchMigrateVolumeOptions() *batchMigrateVolumeOptions {
 func AddBatchMigrateVolumeOptions(flagSet *flag.FlagSet, opts *batchMigrateVolumeOptions) {
 	flagSet.StringVarP(&opts.sourceStorageClassName, "source-storage-class", "s", "", "name of the source storageclass")
 	flagSet.StringVarP(&opts.targetStorageClassName, "target-storage-class", "t", "", "name of the target storageclass")
-    flagSet.StringVarP(&opts.targetNamespace, "target-namespace", "n", "default", "Namespace where the migrate job will be executed")
-    flagSet.Int32Var(&opts.timeout, "timeout", 300, "Timeout of the context in minutes")
+	flagSet.StringVarP(&opts.targetNamespace, "target-namespace", "n", "default", "Namespace where the migrate job will be executed")
+	flagSet.Int32Var(&opts.timeout, "timeout", 300, "Timeout of the context in minutes")
 	flagSet.BoolVar(&opts.dryRun, "dry-run", false, "Perform a dry run of the batch migrate")
 }
 

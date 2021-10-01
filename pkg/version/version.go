@@ -4,43 +4,44 @@ import (
 	"fmt"
 )
 
-var (
-	appVersion string
-	gitCommit  string
-	gitBranch  string
-)
+type VersionInfo struct {
+	version string
+	commit  string
+	date    string
+	builtBy string
+}
 
-// Print outputs the version information to stdout
+var versionInfo VersionInfo
+
+func Init(version, commit, date, builtBy string) {
+	versionInfo = VersionInfo{
+		version: version,
+		commit:  commit,
+		date:    date,
+		builtBy: builtBy,
+	}
+}
+
+// Print version info
 func Print() {
-	fmt.Printf("Version information\nVersion: %s, Commit %s, Branch, %s\n", Version(), Commit(), Branch())
+	fmt.Printf("Version information\nVersion: %s, Commit: %s\n", Version(), Commit())
+	fmt.Printf("Build date: %s, Build by: %s\n", BuildDate(), BuiltBy())
 }
 
-// Commit returns the commit ref
+// Commit returns git commit
 func Commit() string {
-	return gitCommit
+	return versionInfo.commit
 }
 
-// Version returns the application version
+// Version returns application version
 func Version() string {
-	return appVersion
+	return versionInfo.version
 }
 
-// Branch returns the git branch name
-func Branch() string {
-	return gitBranch
+func BuildDate() string {
+	return versionInfo.date
 }
 
-// SetVersion will set the application version
-func SetVersion(version string) {
-	appVersion = version
-}
-
-// SetCommit will set the commit ref
-func SetCommit(commit string) {
-	gitCommit = commit
-}
-
-// SetBranch will set the git branch name
-func SetBranch(branch string) {
-	gitBranch = branch
+func BuiltBy() string {
+	return versionInfo.builtBy
 }

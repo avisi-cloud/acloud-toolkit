@@ -1,11 +1,9 @@
-// Copyright 2019 Thomas Kooi
-
-package cmd
+package version
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
+
+	versionpkg "gitlab.avisi.cloud/ame/acloud-toolkit/pkg/version"
 )
 
 var (
@@ -21,7 +19,7 @@ func NewVersionCmd() *cobra.Command {
 		Short: "Print version information",
 		Long:  `version information`,
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf("well this didn't do anything ... \n")
+			versionpkg.Print()
 		},
 	}
 

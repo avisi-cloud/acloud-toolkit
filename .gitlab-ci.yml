@@ -1,54 +1,85 @@
 stages:
-  - lint
   - test
+  - review
   - build
-  - publish
+  - release
 
 include:
-  - 'https://gitlab.avisi.cloud/ame/ci/raw/master/.templates/docker.yaml'
+  - template: Code-Quality.gitlab-ci.yml
+  - 'https://gitlab.avisi.cloud/ame/ci/raw/master/.templates/danger.yaml'
   - 'https://gitlab.avisi.cloud/ame/ci/raw/master/.templates/golang.yaml'
-
-cache:
-  paths:
-    - /go/pkg/mod
+  - 'https://gitlab.avisi.cloud/ame/ci/raw/master/.templates/sonar-qube.yaml'
 
 variables:
+  BRANCH: $CI_COMMIT_BRANCH
+  COMMIT: $CI_COMMIT_SHA
   VERSION: $CI_COMMIT_TAG
-  IMAGE_NAME: 'library/csi-snapshot-utils'
 
 go:test:
   extends: .go:test
+  variables:
+    GOPATH: $CI_PROJECT_DIR/.go
+  before_script:
+    - mkdir -p .go
+    - go mod download
+  cache:
+    paths:
+      - .go/pkg/mod/
   stage: test
 
-go:lint:
-  extends: .go:make:golint
-  stage: lint
-  allow_failure: true
-
-go:race_detector:
-  extends: .go:make:race_detector
+sonar:scanner:
+  extends: .sonar:scanner
   stage: test
+  only: [master,tags]
   allow_failure: true
 
-docker:build-pr:
-  extends: .docker:build-and-push
+code_quality:
+  stage: test
+  artifacts:
+    paths: [gl-code-quality-report.json]
+  tags: [docker]
+
+go:code_review:
+  stage: review
+  extends: .go:code_review
+
+code_navigation:
+  extends: .go:code_navigation
   stage: build
-  tags: [docker]
-  except: [tags]
+  needs: []
 
-docker:build:
-  extends: .docker:build-and-push-version
+go:build:
+  extends: .go:make:build
+  variables:
+    GOPATH: $CI_PROJECT_DIR/.go
+  cache:
+    policy: pull
+    paths:
+      - .go/pkg/mod/
   stage: build
-  only: [tags]
-  tags: [docker]
+  before_script:
+    - mkdir -p .go
+    - go mod download
+  script:
+    - make linux
+    - make darwin
+  artifacts:
+    paths:
+      - bin/acloud-toolkit-linux-amd64
+      - bin/acloud-toolkit-darwin-amd64
 
-docker:lint:
-  stage: lint
-  extends: .docker:lint
-  allow_failure: true
-
-docker:promote:
-  extends: .docker:promote-to-registry
-  stage: publish
-  only: [tags]
-  tags: [docker]
+release:
+  stage: release
+  image:
+    name: goreleaser/goreleaser:v0.180.3
+    entrypoint: ['']
+  only:
+    - tags
+  variables:
+    # Disable shallow cloning so that goreleaser can diff between tags to
+    # generate a changelog.
+    GIT_DEPTH: 0
+    GORELEASER_CURRENT_TAG: ${CI_COMMIT_TAG}
+  script:
+    - goreleaser release --rm-dist
+  dependencies: []
