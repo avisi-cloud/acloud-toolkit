@@ -1,4 +1,4 @@
-package storage
+package snapshot
 
 import (
 	"github.com/spf13/cobra"
@@ -8,6 +8,7 @@ import (
 
 type listOptions struct {
 	sourceNamespace string
+	allNamespaces   bool
 }
 
 func newListOptions() *listOptions {
@@ -15,7 +16,8 @@ func newListOptions() *listOptions {
 }
 
 func AddListFlags(flagSet *flag.FlagSet, opts *listOptions) {
-	flagSet.StringVar(&opts.sourceNamespace, "source-namespace", "default", "")
+	flagSet.StringVarP(&opts.sourceNamespace, "namespace", "n", "", "return snapshots from a specific namespace. Default is the configured namespace in your kubecontext.")
+	flagSet.BoolVarP(&opts.allNamespaces, "all-namespaces", "A", false, "return results for all namespaces")
 }
 
 // NewListCmd returns the Cobra Bootstrap sub command
@@ -25,11 +27,15 @@ func NewListCmd(runOptions *listOptions) *cobra.Command {
 	}
 
 	var cmd = &cobra.Command{
-		Use:   "list-snapshots",
-		Short: "List CSI snapshots within the namespace",
-		Long:  `List all available CSI snapshots within the namespace`,
+		Use:     "list",
+		Short:   "List CSI snapshots within the namespace",
+		Long:    `List all available CSI snapshots within the namespace`,
+		Aliases: []string{"ls"},
+		Example: `
+acloud-toolkit snapshot list
+		`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return restoresnapshot.List(runOptions.sourceNamespace)
+			return restoresnapshot.List(runOptions.sourceNamespace, runOptions.allNamespaces)
 		},
 	}
 

@@ -18,10 +18,8 @@ func NewStorageCmd() *cobra.Command {
 	}
 
 	cmds.ResetFlags()
-	cmds.AddCommand(NewListCmd(nil))
-	cmds.AddCommand(NewRestoreCmd(nil))
-	cmds.AddCommand(NewSnapshotCreateCmd(nil))
 	cmds.AddCommand(NewMigrateVolumeCmd(context.Background(), nil))
 	cmds.AddCommand(NewBatchMigrateVolumeCmd(context.Background(), nil))
+	cmds.AddCommand(NewvolumeResizeCmd(nil))
 	return cmds
 }

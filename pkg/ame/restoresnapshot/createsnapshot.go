@@ -18,7 +18,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func SnapshotCreate(snapshotName string, targetName string, targetNamespace string, snapshotClassName string) error {
+func SnapshotCreate(snapshotName string, targetNamespace string, targetName string, snapshotClassName string) error {
 	config, err := k8s.GetKubeConfigOrInCluster()
 	if err != nil {
 		return err
