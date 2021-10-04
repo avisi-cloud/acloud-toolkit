@@ -63,3 +63,14 @@ kubectl get pv --no-headers | grep Released|awk '{print $1}'|xargs kubectl  patc
 ```
 
 kubectl get pv --no-headers | grep Available|awk '{print $1}'|xargs kubectl  patch pv -p '{"spec":{"persistentVolumeReclaimPolicy":"Delete"}}'
+
+### Documentation
+
+- [documentation](docs/acloud-toolkit.md)
+
+Documentation is auto generated through running:
+```bash
+go run tools/docs.go
+```
+
+Please check out `docs/`.

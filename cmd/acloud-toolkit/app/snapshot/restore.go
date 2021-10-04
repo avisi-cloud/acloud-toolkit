@@ -1,4 +1,4 @@
-package storage
+package snapshot
 
 import (
 	"github.com/spf13/cobra"
@@ -7,7 +7,6 @@ import (
 )
 
 type restoreOptions struct {
-	snapshotName        string
 	sourceNamespace     string
 	targetNamespace     string
 	targetName          string
@@ -19,7 +18,6 @@ func newRestoreOptions() *restoreOptions {
 }
 
 func AddRestoreFlags(flagSet *flag.FlagSet, opts *restoreOptions) {
-	flagSet.StringVar(&opts.snapshotName, "snapshot-name", "", "name of the snapshot")
 	flagSet.StringVar(&opts.sourceNamespace, "source-namespace", "default", "")
 	flagSet.StringVar(&opts.targetNamespace, "target-namespace", "default", "")
 	flagSet.StringVar(&opts.targetName, "target-name", "", "")
@@ -33,11 +31,15 @@ func NewRestoreCmd(runOptions *restoreOptions) *cobra.Command {
 	}
 
 	var cmd = &cobra.Command{
-		Use:   "restore",
+		Use:   "restore <snapshot>",
+		Args:  cobra.ExactArgs(1),
 		Short: "Restore a snapshot",
 		Long:  `restore a snapshot`,
+		Example: `
+acloud-toolkit snapshot restore my-snapshot --target-name my-pvc --restore-storage-class ebs-restore
+		`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return restoresnapshot.Restore(runOptions.snapshotName, runOptions.sourceNamespace, runOptions.targetName, runOptions.targetNamespace, runOptions.restoreStorageClass)
+			return restoresnapshot.Restore(args[0], runOptions.sourceNamespace, runOptions.targetName, runOptions.targetNamespace, runOptions.restoreStorageClass)
 		},
 	}
 
