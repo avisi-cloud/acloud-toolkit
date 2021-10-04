@@ -1,8 +1,6 @@
 package snapshot
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/ame/restoresnapshot"
@@ -39,9 +37,6 @@ func NewSnapshotCreateCmd(runOptions *snapshotCreateOptions) *cobra.Command {
 acloud-toolkit snapshot create my-snapshot --pvc my-pvc
 		`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 1 {
-				return fmt.Errorf("missing persistent volume name")
-			}
 			return restoresnapshot.SnapshotCreate(args[0], runOptions.persistentVolumeClaimNamespace, runOptions.persistentVolumeClaimName, runOptions.snapshotCreateStorageClass)
 		},
 	}

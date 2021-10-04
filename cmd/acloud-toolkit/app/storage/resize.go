@@ -2,7 +2,6 @@ package storage
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -32,14 +31,11 @@ func NewvolumeResizeCmd(runOptions *volumeResizeOptions) *cobra.Command {
 	}
 
 	var cmd = &cobra.Command{
-		Use:   "resize",
+		Use:   "resize <persistent-volume-claim>",
 		Short: "resize adjusts the volume size of the pvc",
 		Long:  `resize adjusts the volume size of the pvc`,
+		Args:  cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) < 1 {
-				return fmt.Errorf("missing persistent volume name")
-			}
-
 			for _, arg := range args {
 				if err := resize.ResizeVolume(context.Background(), runOptions.namespace, arg, runOptions.newSize); err != nil {
 					return err
