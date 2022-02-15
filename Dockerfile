@@ -11,7 +11,7 @@ COPY . .
 RUN make build
 
 # ----
-FROM registry.avisi.cloud/library/centos:7
+FROM registry.avisi.cloud/library/centos:8
 COPY --from=builder /data/bin/acloud-toolkit /usr/local/bin/acloud-toolkit
 
 USER root
