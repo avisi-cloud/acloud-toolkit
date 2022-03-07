@@ -71,7 +71,7 @@ go:build:
 release:
   stage: release
   image:
-    name: goreleaser/goreleaser:v1.6.0
+    name: goreleaser/goreleaser:v1.6.1
     entrypoint: ['']
   only:
     - tags
