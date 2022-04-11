@@ -13,6 +13,7 @@ require (
 	k8s.io/api v0.23.3
 	k8s.io/apimachinery v0.23.3
 	k8s.io/client-go v0.23.3
+	k8s.io/kubectl v0.0.0-00010101000000-000000000000
 )
 
 replace (
