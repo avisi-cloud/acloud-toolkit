@@ -3,7 +3,7 @@ package snapshot
 import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/ame/restoresnapshot"
+	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/ame/snapshots"
 )
 
 type listOptions struct {
@@ -35,7 +35,7 @@ func NewListCmd(runOptions *listOptions) *cobra.Command {
 acloud-toolkit snapshot list
 		`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return restoresnapshot.List(runOptions.sourceNamespace, runOptions.allNamespaces)
+			return snapshots.List(runOptions.sourceNamespace, runOptions.allNamespaces)
 		},
 	}
 

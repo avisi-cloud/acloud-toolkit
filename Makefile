@@ -47,11 +47,11 @@ msan: ## Run memory sanitizer
 fmt:
 	@go fmt ${PKG_LIST};
 
-install:
-	go mod download;
+review:
+	reviewdog -diff="git diff FETCH_HEAD" -tee
 
-update-deps:
-	go mod vendor;
+docs:
+	go run tools/docs.go
 
 docker:
 	docker build -t registry.avisi.cloud/library/${BINARY}:dev .
@@ -59,4 +59,4 @@ docker:
 clean:
 	-rm -f bin/${BINARY}-* bin/${BINARY}
 
-.PHONY: link linux darwin windows test vet fmt clean
+.PHONY: link linux darwin windows test vet fmt clean review docs

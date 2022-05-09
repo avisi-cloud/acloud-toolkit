@@ -1,4 +1,4 @@
-package restoresnapshot
+package snapshots
 
 import (
 	"context"
@@ -56,8 +56,8 @@ func List(sourceNamespace string, allNamespaces bool) error {
 		namespaces = append(namespaces, namespace)
 	}
 
-	// collect all snapshots for each namespace
-	snapshots := []volumesnapshotv1.VolumeSnapshot{}
+	// collect all listSnapshots for each namespace
+	listSnapshots := []volumesnapshotv1.VolumeSnapshot{}
 	for _, namespace := range namespaces {
 		volumesnapshotRes := schema.GroupVersionResource{Group: "snapshot.storage.k8s.io", Version: "v1", Resource: "volumesnapshots"}
 		snapshotUnstructured, err := client.Resource(volumesnapshotRes).Namespace(namespace).List(context.TODO(), metav1.ListOptions{})
@@ -69,13 +69,13 @@ func List(sourceNamespace string, allNamespaces bool) error {
 			snapshot := volumesnapshotv1.VolumeSnapshot{}
 
 			runtime.DefaultUnstructuredConverter.FromUnstructured(snapshotItem.Object, &snapshot)
-			snapshots = append(snapshots, snapshot)
+			listSnapshots = append(listSnapshots, snapshot)
 		}
 	}
 
 	// Format output
-	body := make([][]string, 0, len(snapshots))
-	for _, snapshot := range snapshots {
+	body := make([][]string, 0, len(listSnapshots))
+	for _, snapshot := range listSnapshots {
 		sourceName := ""
 		if snapshot.Spec.Source.PersistentVolumeClaimName != nil {
 			sourceName = *snapshot.Spec.Source.PersistentVolumeClaimName
@@ -85,6 +85,11 @@ func List(sourceNamespace string, allNamespaces bool) error {
 			contentName = *snapshot.Spec.Source.VolumeSnapshotContentName
 		}
 
+		snapshotClassName := ""
+		if snapshot.Spec.VolumeSnapshotClassName != nil {
+			snapshotClassName = *snapshot.Spec.VolumeSnapshotClassName
+		}
+
 		body = append(body, []string{
 			snapshot.GetNamespace(),
 			snapshot.Name,
@@ -92,7 +97,7 @@ func List(sourceNamespace string, allNamespaces bool) error {
 			contentName,
 			snapshot.Status.RestoreSize.String(),
 			fmt.Sprintf("%v", snapshot.Status != nil && snapshot.Status.ReadyToUse != nil && *snapshot.Status.ReadyToUse),
-			*snapshot.Spec.VolumeSnapshotClassName,
+			snapshotClassName,
 		})
 	}
 

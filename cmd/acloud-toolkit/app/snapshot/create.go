@@ -3,7 +3,7 @@ package snapshot
 import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/ame/restoresnapshot"
+	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/ame/snapshots"
 )
 
 type snapshotCreateOptions struct {
@@ -37,7 +37,7 @@ func NewSnapshotCreateCmd(runOptions *snapshotCreateOptions) *cobra.Command {
 acloud-toolkit snapshot create my-snapshot --pvc my-pvc
 		`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return restoresnapshot.SnapshotCreate(args[0], runOptions.persistentVolumeClaimNamespace, runOptions.persistentVolumeClaimName, runOptions.snapshotCreateStorageClass)
+			return snapshots.SnapshotCreate(args[0], runOptions.persistentVolumeClaimNamespace, runOptions.persistentVolumeClaimName, runOptions.snapshotCreateStorageClass)
 		},
 	}
 

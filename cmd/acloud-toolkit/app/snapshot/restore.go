@@ -3,7 +3,7 @@ package snapshot
 import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/ame/restoresnapshot"
+	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/ame/snapshots"
 )
 
 type restoreOptions struct {
@@ -39,7 +39,7 @@ func NewRestoreCmd(runOptions *restoreOptions) *cobra.Command {
 acloud-toolkit snapshot restore my-snapshot --target-name my-pvc --restore-storage-class ebs-restore
 		`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return restoresnapshot.Restore(args[0], runOptions.sourceNamespace, runOptions.targetName, runOptions.targetNamespace, runOptions.restoreStorageClass)
+			return snapshots.Restore(args[0], runOptions.sourceNamespace, runOptions.targetName, runOptions.targetNamespace, runOptions.restoreStorageClass)
 		},
 	}
 
