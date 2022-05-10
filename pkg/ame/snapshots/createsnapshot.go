@@ -1,4 +1,4 @@
-package restoresnapshot
+package snapshots
 
 import (
 	"context"
