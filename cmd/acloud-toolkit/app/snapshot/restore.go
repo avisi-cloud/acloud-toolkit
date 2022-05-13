@@ -18,8 +18,8 @@ func newRestoreOptions() *restoreOptions {
 }
 
 func AddRestoreFlags(flagSet *flag.FlagSet, opts *restoreOptions) {
-	flagSet.StringVar(&opts.sourceNamespace, "source-namespace", "default", "")
-	flagSet.StringVar(&opts.targetNamespace, "target-namespace", "default", "")
+	flagSet.StringVar(&opts.sourceNamespace, "source-namespace", "", "If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context")
+	flagSet.StringVar(&opts.targetNamespace, "target-namespace", "", "")
 	flagSet.StringVar(&opts.targetName, "target-name", "", "")
 	flagSet.StringVar(&opts.restoreStorageClass, "restore-storage-class", "ebs-restore", "")
 }

@@ -17,9 +17,9 @@ func newSnapshotCreateOptions() *snapshotCreateOptions {
 }
 
 func AddSnapshotCreateFlags(flagSet *flag.FlagSet, opts *snapshotCreateOptions) {
-	flagSet.StringVarP(&opts.persistentVolumeClaimNamespace, "namespace", "n", "default", "Namespace of the PVC. Snapshot will be created within this namespace as well")
+	flagSet.StringVarP(&opts.persistentVolumeClaimNamespace, "namespace", "n", "", "If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context")
 	flagSet.StringVarP(&opts.persistentVolumeClaimName, "pvc", "p", "", "Name of the persistent volume to snapshot")
-	flagSet.StringVarP(&opts.snapshotCreateStorageClass, "snapshot-class", "s", "csi-aws-vsc", "CSI snapshot class")
+	flagSet.StringVarP(&opts.snapshotCreateStorageClass, "snapshot-class", "s", "", "CSI volume snapshot class. If empty, use deafult volume snapshot class")
 }
 
 // NewSnapshotCreateCmd returns the Cobra Bootstrap sub command

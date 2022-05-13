@@ -23,7 +23,7 @@ lead: ""
 draft: false
 images: []
 menu:
-  docs:
+  references:
     parent: "%s-ref"
 weight: %d
 toc: true

@@ -1,5 +1,5 @@
 ---
-date: 2022-04-12T15:34:08+02:00
+date: 2022-05-12T16:20:23+02:00
 title: "acloud-toolkit snapshot restore"
 displayName: "snapshot restore"
 slug: acloud-toolkit_snapshot_restore
@@ -9,7 +9,7 @@ lead: ""
 draft: false
 images: []
 menu:
-  docs:
+  references:
     parent: "acloud-toolkit-ref"
 weight: 755
 toc: true
@@ -39,9 +39,9 @@ acloud-toolkit snapshot restore my-snapshot --target-name my-pvc --restore-stora
 ```
   -h, --help                           help for restore
       --restore-storage-class string    (default "ebs-restore")
-      --source-namespace string         (default "default")
+      --source-namespace string        If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context
       --target-name string             
-      --target-namespace string         (default "default")
+      --target-namespace string        
 ```
 
 ### SEE ALSO

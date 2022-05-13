@@ -16,7 +16,7 @@ func newListOptions() *listOptions {
 }
 
 func AddListFlags(flagSet *flag.FlagSet, opts *listOptions) {
-	flagSet.StringVarP(&opts.sourceNamespace, "namespace", "n", "", "return snapshots from a specific namespace. Default is the configured namespace in your kubecontext.")
+	flagSet.StringVarP(&opts.sourceNamespace, "namespace", "n", "", "If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context")
 	flagSet.BoolVarP(&opts.allNamespaces, "all-namespaces", "A", false, "return results for all namespaces")
 }
 

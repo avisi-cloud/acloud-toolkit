@@ -3,6 +3,7 @@ package snapshots
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/helpers"
@@ -19,7 +20,11 @@ import (
 )
 
 func SnapshotCreate(snapshotName string, targetNamespace string, targetName string, snapshotClassName string) error {
-	config, err := k8s.GetKubeConfigOrInCluster()
+	kubeconfig, err := k8s.GetClientCmd()
+	if err != nil {
+		return err
+	}
+	config, err := kubeconfig.ClientConfig()
 	if err != nil {
 		return err
 	}
@@ -27,7 +32,17 @@ func SnapshotCreate(snapshotName string, targetNamespace string, targetName stri
 	if err != nil {
 		return err
 	}
-	k8sclient := k8s.GetClientOrDie()
+	k8sclient, err := k8s.GetClientWithConfig(config)
+	if err != nil {
+		return err
+	}
+	if targetNamespace == "" {
+		contextNamespace, _, err := kubeconfig.Namespace()
+		if err != nil {
+			return err
+		}
+		targetNamespace = contextNamespace
+	}
 
 	// wait until PVC has a persistent volume
 	pvc, err := k8sclient.CoreV1().PersistentVolumeClaims(targetNamespace).Get(context.TODO(), targetName, metav1.GetOptions{})
@@ -38,6 +53,10 @@ func SnapshotCreate(snapshotName string, targetNamespace string, targetName stri
 
 	volumesnapshotRes := schema.GroupVersionResource{Group: "snapshot.storage.k8s.io", Version: "v1", Resource: "volumesnapshots"}
 
+	var volumeSnapshotClassName *string
+	if strings.TrimSpace(snapshotClassName) != "" {
+		volumeSnapshotClassName = helpers.String(strings.TrimSpace(snapshotClassName))
+	}
 	// convert to the snapshot object
 	createSnapshot := volumesnapshotv1.VolumeSnapshot{
 		TypeMeta: metav1.TypeMeta{
@@ -52,7 +71,7 @@ func SnapshotCreate(snapshotName string, targetNamespace string, targetName stri
 			Source: volumesnapshotv1.VolumeSnapshotSource{
 				PersistentVolumeClaimName: helpers.String(targetName),
 			},
-			VolumeSnapshotClassName: helpers.String(snapshotClassName),
+			VolumeSnapshotClassName: volumeSnapshotClassName,
 		},
 	}
 	snapshotUnstructued, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&createSnapshot)

@@ -21,7 +21,25 @@ const (
 )
 
 func ResizeVolume(ctx context.Context, namespace string, pvcName string, newSize string) error {
-	k8sClient := k8s.GetClientOrDie()
+	kubeconfig, err := k8s.GetClientCmd()
+	if err != nil {
+		return err
+	}
+	config, err := kubeconfig.ClientConfig()
+	if err != nil {
+		return err
+	}
+	k8sClient, err := k8s.GetClientWithConfig(config)
+	if err != nil {
+		return err
+	}
+	if namespace == "" {
+		contextNamespace, _, err := kubeconfig.Namespace()
+		if err != nil {
+			return err
+		}
+		namespace = contextNamespace
+	}
 
 	pvc, err := k8s.GetPersistentVolumeClaimAndCheckForVolumes(ctx, k8sClient, pvcName, namespace)
 	if err != nil {

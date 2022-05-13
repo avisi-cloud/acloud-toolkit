@@ -37,6 +37,13 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 	if err != nil {
 		return err
 	}
+	if targetNamespace == "" {
+		contextNamespace, _, err := kubeconfig.Namespace()
+		if err != nil {
+			return err
+		}
+		targetNamespace = contextNamespace
+	}
 
 	volumesnapshotRes := schema.GroupVersionResource{Group: "snapshot.storage.k8s.io", Version: "v1", Resource: "volumesnapshots"}
 	snapshotUnstructued, err := client.Resource(volumesnapshotRes).Namespace(sourceNamespace).Get(context.TODO(), snapshotName, metav1.GetOptions{})

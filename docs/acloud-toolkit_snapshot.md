@@ -1,5 +1,5 @@
 ---
-date: 2022-04-12T15:34:08+02:00
+date: 2022-05-12T16:20:23+02:00
 title: "acloud-toolkit snapshot"
 displayName: "snapshot"
 slug: acloud-toolkit_snapshot
@@ -9,7 +9,7 @@ lead: ""
 draft: false
 images: []
 menu:
-  docs:
+  references:
     parent: "acloud-toolkit-ref"
 weight: 754
 toc: true
