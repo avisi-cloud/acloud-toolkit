@@ -1,5 +1,5 @@
 ---
-date: 2022-04-12T15:34:08+02:00
+date: 2022-05-12T16:20:23+02:00
 title: "acloud-toolkit storage resize"
 displayName: "storage resize"
 slug: acloud-toolkit_storage_resize
@@ -9,7 +9,7 @@ lead: ""
 draft: false
 images: []
 menu:
-  docs:
+  references:
     parent: "acloud-toolkit-ref"
 weight: 751
 toc: true
@@ -30,7 +30,7 @@ acloud-toolkit storage resize <persistent-volume-claim> [flags]
 
 ```
   -h, --help               help for resize
-  -n, --namespace string   Namespace of the PVC. Snapshot will be created within this namespace as well (default "default")
+  -n, --namespace string   If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context
   -p, --pvc string         Name of the persistent volume to snapshot
       --size string        New size. Example: 10G
 ```

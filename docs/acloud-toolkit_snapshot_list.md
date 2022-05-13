@@ -1,5 +1,5 @@
 ---
-date: 2022-04-12T15:34:08+02:00
+date: 2022-05-12T16:20:23+02:00
 title: "acloud-toolkit snapshot list"
 displayName: "snapshot list"
 slug: acloud-toolkit_snapshot_list
@@ -9,7 +9,7 @@ lead: ""
 draft: false
 images: []
 menu:
-  docs:
+  references:
     parent: "acloud-toolkit-ref"
 weight: 756
 toc: true
@@ -39,7 +39,7 @@ acloud-toolkit snapshot list
 ```
   -A, --all-namespaces     return results for all namespaces
   -h, --help               help for list
-  -n, --namespace string   return snapshots from a specific namespace. Default is the configured namespace in your kubecontext.
+  -n, --namespace string   If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context
 ```
 
 ### SEE ALSO

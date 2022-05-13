@@ -20,7 +20,7 @@ func newvolumeResizeOptions() *volumeResizeOptions {
 
 func AddvolumeResizeFlags(flagSet *flag.FlagSet, opts *volumeResizeOptions) {
 	flagSet.StringVar(&opts.newSize, "size", "", "New size. Example: 10G")
-	flagSet.StringVarP(&opts.namespace, "namespace", "n", "default", "Namespace of the PVC. Snapshot will be created within this namespace as well")
+	flagSet.StringVarP(&opts.namespace, "namespace", "n", "", "If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context")
 	flagSet.StringVarP(&opts.name, "pvc", "p", "", "Name of the persistent volume to snapshot")
 }
 

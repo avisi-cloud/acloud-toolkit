@@ -1,5 +1,5 @@
 ---
-date: 2022-04-12T15:34:08+02:00
+date: 2022-05-12T16:20:23+02:00
 title: "acloud-toolkit snapshot create"
 displayName: "snapshot create"
 slug: acloud-toolkit_snapshot_create
@@ -9,7 +9,7 @@ lead: ""
 draft: false
 images: []
 menu:
-  docs:
+  references:
     parent: "acloud-toolkit-ref"
 weight: 757
 toc: true
@@ -38,9 +38,9 @@ acloud-toolkit snapshot create my-snapshot --pvc my-pvc
 
 ```
   -h, --help                    help for create
-  -n, --namespace string        Namespace of the PVC. Snapshot will be created within this namespace as well (default "default")
+  -n, --namespace string        If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context
   -p, --pvc string              Name of the persistent volume to snapshot
-  -s, --snapshot-class string   CSI snapshot class (default "csi-aws-vsc")
+  -s, --snapshot-class string   CSI volume snapshot class. If empty, use deafult volume snapshot class
 ```
 
 ### SEE ALSO
