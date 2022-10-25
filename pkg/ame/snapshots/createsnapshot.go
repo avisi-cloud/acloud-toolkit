@@ -20,7 +20,7 @@ import (
 )
 
 func SnapshotCreate(snapshotName string, targetNamespace string, targetName string, snapshotClassName string) error {
-	kubeconfig, err := k8s.GetClientCmd()
+	kubeconfig, err := k8s.GetClientConfig()
 	if err != nil {
 		return err
 	}

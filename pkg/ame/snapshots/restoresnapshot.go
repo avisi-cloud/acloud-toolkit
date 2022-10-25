@@ -21,7 +21,7 @@ import (
 )
 
 func Restore(snapshotName string, sourceNamespace string, targetName string, targetNamespace string, restoreStorageClass string) error {
-	kubeconfig, err := k8s.GetClientCmd()
+	kubeconfig, err := k8s.GetClientConfig()
 	if err != nil {
 		return err
 	}
