@@ -12,26 +12,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-func NewVolumeMount(name, path string, readOnly bool) *v1.VolumeMount {
-	return &v1.VolumeMount{
-		Name:      name,
-		MountPath: path,
-		ReadOnly:  readOnly,
-	}
-}
-
-func NewPersistentVolumeClaimVolume(name, claimName string, readOnly bool) *v1.Volume {
-	return &v1.Volume{
-		Name: name,
-		VolumeSource: v1.VolumeSource{
-			PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
-				ClaimName: claimName,
-				ReadOnly:  readOnly,
-			},
-		},
-	}
-}
-
 func SetPVReclaimPolicyToRetain(ctx context.Context, k8sClient kubernetes.Interface, pvc *v1.PersistentVolumeClaim) error {
 	// Get the persistent volume, ensure it's set to Retain.
 	pv, err := k8sClient.CoreV1().PersistentVolumes().Get(ctx, pvc.Spec.VolumeName, metav1.GetOptions{})

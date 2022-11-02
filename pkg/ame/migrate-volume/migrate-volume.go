@@ -76,8 +76,8 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 							Command:         []string{"/bin/sh"},
 							Args:            []string{"-c", "rsync -a --stats --progress /mnt/old/ /mnt/new"},
 							VolumeMounts: []v1.VolumeMount{
-								*k8s.NewVolumeMount("old", "/mnt/old/", true),
-								*k8s.NewVolumeMount("new", "/mnt/new/", false),
+								k8s.NewVolumeMount("old", "/mnt/old/", true),
+								k8s.NewVolumeMount("new", "/mnt/new/", false),
 							},
 							SecurityContext: &v1.SecurityContext{
 								RunAsUser:              helpers.Int64(0),
@@ -88,8 +88,8 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 					},
 					RestartPolicy: v1.RestartPolicyNever,
 					Volumes: []v1.Volume{
-						*k8s.NewPersistentVolumeClaimVolume("old", pvcName, false),
-						*k8s.NewPersistentVolumeClaimVolume("new", tmpPVCName, false),
+						k8s.NewPersistentVolumeClaimVolume("old", pvcName, false),
+						k8s.NewPersistentVolumeClaimVolume("new", tmpPVCName, false),
 					},
 				},
 			},

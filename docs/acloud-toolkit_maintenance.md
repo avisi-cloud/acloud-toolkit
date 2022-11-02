@@ -1,5 +1,5 @@
 ---
-date: 2022-10-17T15:00:02+02:00
+date: 2022-11-02T21:41:26+01:00
 title: "acloud-toolkit maintenance"
 displayName: "maintenance"
 slug: acloud-toolkit_maintenance
@@ -11,7 +11,7 @@ images: []
 menu:
   references:
     parent: "acloud-toolkit-ref"
-weight: 758
+weight: 756
 toc: true
 ---
 ## acloud-toolkit maintenance
@@ -32,4 +32,6 @@ Perform maintenance actions on Kubernetes clusters
 
 * [acloud-toolkit](/references/acloud-toolkit/acloud-toolkit/)	 - acloud-toolkit for working with Kubernetes
 * [acloud-toolkit maintenance drain](/references/acloud-toolkit/acloud-toolkit_maintenance_drain/)	 - drain a kubernetes node
+* [acloud-toolkit maintenance node-reboot](/references/acloud-toolkit/acloud-toolkit_maintenance_node-reboot/)	 - reboot a kubernetes node within an Avisi Cloud Kubernetes cluster if required
+* [acloud-toolkit maintenance node-upgrade](/references/acloud-toolkit/acloud-toolkit_maintenance_node-upgrade/)	 - upgrade a kubernetes node within an Avisi Cloud Kubernetes cluster (Bring Your Own Node only)
 
