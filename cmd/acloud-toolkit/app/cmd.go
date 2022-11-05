@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	"gitlab.avisi.cloud/ame/acloud-toolkit/cmd/acloud-toolkit/app/docs"
 	"gitlab.avisi.cloud/ame/acloud-toolkit/cmd/acloud-toolkit/app/maintenance"
 	"gitlab.avisi.cloud/ame/acloud-toolkit/cmd/acloud-toolkit/app/resources"
 	"gitlab.avisi.cloud/ame/acloud-toolkit/cmd/acloud-toolkit/app/snapshot"
@@ -37,6 +38,7 @@ func NewACloudToolKitCmd(in io.Reader, out, err io.Writer) *cobra.Command {
 	cmds.AddCommand(storage.NewStorageCmd())
 	cmds.AddCommand(maintenance.NewMaintenanceCmd())
 	cmds.AddCommand(resources.NewResourcesCmd())
+	cmds.AddCommand(docs.NewOpenDocs())
 
 	return cmds
 }
