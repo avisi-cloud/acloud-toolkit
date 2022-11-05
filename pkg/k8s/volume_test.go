@@ -38,7 +38,7 @@ func TestCreatePersistentVolumeClaim(t *testing.T) {
 
 func TestNewVolumeMount(t *testing.T) {
 
-	volumeMount := &v1.VolumeMount{
+	volumeMount := v1.VolumeMount{
 		Name:      "name",
 		MountPath: "path",
 		ReadOnly:  false,
@@ -51,7 +51,7 @@ func TestNewVolumeMount(t *testing.T) {
 }
 
 func TestNewPersistentVolumeClaimVolume(t *testing.T) {
-	volume := &v1.Volume{
+	volume := v1.Volume{
 		Name: "name",
 		VolumeSource: v1.VolumeSource{
 			PersistentVolumeClaim: &v1.PersistentVolumeClaimVolumeSource{
