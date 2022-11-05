@@ -85,6 +85,33 @@ func (c *NodeUpgraderClient) runMaintenanceJobOnNode(ctx context.Context, mainte
 					HostNetwork:                   true,
 					HostPID:                       true,
 					TerminationGracePeriodSeconds: helpers.Int64(30),
+					Tolerations: []v1.Toleration{
+						{
+							Key:      "node.kubernetes.io/memory-pressure",
+							Operator: v1.TolerationOpExists,
+							Effect:   v1.TaintEffectNoSchedule,
+						},
+						{
+							Key:      "node.kubernetes.io/disk-pressure",
+							Operator: v1.TolerationOpExists,
+							Effect:   v1.TaintEffectNoSchedule,
+						},
+						{
+							Key:      "node.kubernetes.io/pid-pressure",
+							Operator: v1.TolerationOpExists,
+							Effect:   v1.TaintEffectNoSchedule,
+						},
+						{
+							Key:      "node.kubernetes.io/unschedulable",
+							Operator: v1.TolerationOpExists,
+							Effect:   v1.TaintEffectNoSchedule,
+						},
+						{
+							Key:      "node.kubernetes.io/network-unavailable",
+							Operator: v1.TolerationOpExists,
+							Effect:   v1.TaintEffectNoSchedule,
+						},
+					},
 					Containers: []v1.Container{
 						{
 							Name:            "node-maintenance",
