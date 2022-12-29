@@ -5,7 +5,7 @@ stages:
   - release
 
 include:
-  - template: Code-Quality.gitlab-ci.yml
+  - 'https://gitlab.avisi.cloud/ame/ci/raw/master/.templates/docker-20.yaml'
   - 'https://gitlab.avisi.cloud/ame/ci/raw/master/.templates/danger.yaml'
   - 'https://gitlab.avisi.cloud/ame/ci/raw/master/.templates/golang.yaml'
   - 'https://gitlab.avisi.cloud/ame/ci/raw/master/.templates/sonar-qube.yaml'
@@ -32,12 +32,6 @@ sonar:scanner:
   stage: test
   only: [master,tags]
   allow_failure: true
-
-code_quality:
-  stage: test
-  artifacts:
-    paths: [gl-code-quality-report.json]
-  tags: [docker]
 
 go:code_review:
   stage: review
