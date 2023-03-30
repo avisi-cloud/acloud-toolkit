@@ -1,5 +1,5 @@
 ---
-date: 2022-10-17T15:00:02+02:00
+date: 2023-03-30T21:41:02+02:00
 title: "acloud-toolkit storage batch-migrate"
 displayName: "storage batch-migrate"
 slug: acloud-toolkit_storage_batch-migrate
@@ -11,7 +11,7 @@ images: []
 menu:
   references:
     parent: "acloud-toolkit-ref"
-weight: 753
+weight: 752
 toc: true
 ---
 ## acloud-toolkit storage batch-migrate

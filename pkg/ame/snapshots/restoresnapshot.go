@@ -12,6 +12,7 @@ import (
 
 	apiv1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
+	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 
@@ -21,7 +22,7 @@ import (
 )
 
 func Restore(snapshotName string, sourceNamespace string, targetName string, targetNamespace string, restoreStorageClass string) error {
-	kubeconfig, err := k8s.GetClientCmd()
+	kubeconfig, err := k8s.GetClientConfig()
 	if err != nil {
 		return err
 	}
@@ -43,6 +44,41 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 			return err
 		}
 		targetNamespace = contextNamespace
+	}
+
+	ctx := context.Background()
+
+	storageClasses, err := k8sclient.StorageV1().StorageClasses().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("error validating storage classes: %w", err)
+	}
+	if len(storageClasses.Items) == 0 {
+		return fmt.Errorf("no storage classes present in this cluster")
+	}
+
+	if restoreStorageClass == "" {
+		for _, sc := range storageClasses.Items {
+			value, ok := sc.Annotations["storageclass.kubernetes.io/is-default-class"]
+			if ok && value == "true" {
+				restoreStorageClass = sc.Name
+				break
+			}
+		}
+		if restoreStorageClass == "" {
+			return fmt.Errorf("no default storage class installed in cluster")
+		}
+	}
+
+	// make sure the storage class can be used for restore purposes
+	foundStorageClass, err := k8sclient.StorageV1().StorageClasses().Get(ctx, restoreStorageClass, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to retrieve storage class: %w", err)
+	}
+	if foundStorageClass.VolumeBindingMode == nil {
+		return fmt.Errorf("failed to detect volume binding mode of storage class: requires Immediate")
+	}
+	if *foundStorageClass.VolumeBindingMode != storagev1.VolumeBindingImmediate {
+		return fmt.Errorf("storage class volume binding mode is not immedidate")
 	}
 
 	volumesnapshotRes := schema.GroupVersionResource{Group: "snapshot.storage.k8s.io", Version: "v1", Resource: "volumesnapshots"}

@@ -21,7 +21,7 @@ const (
 )
 
 func ResizeVolume(ctx context.Context, namespace string, pvcName string, newSize string) error {
-	kubeconfig, err := k8s.GetClientCmd()
+	kubeconfig, err := k8s.GetClientConfig()
 	if err != nil {
 		return err
 	}

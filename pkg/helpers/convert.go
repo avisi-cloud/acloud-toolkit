@@ -1,5 +1,7 @@
 package helpers
 
+import "k8s.io/apimachinery/pkg/util/intstr"
+
 func Int64(v int64) *int64 {
 	return &v
 }
@@ -26,4 +28,18 @@ func True() *bool {
 
 func False() *bool {
 	return Bool(false)
+}
+
+func IntOrStr(v intstr.IntOrString) *intstr.IntOrString {
+	return &v
+}
+
+func IntOrStrFromStr(v string) *intstr.IntOrString {
+	intorstr := intstr.FromString(v)
+	return &intorstr
+}
+
+func IntOrStrFromInt(v int) *intstr.IntOrString {
+	intorstr := intstr.FromInt(v)
+	return &intorstr
 }

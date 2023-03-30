@@ -32,9 +32,16 @@ func NewvolumeResizeCmd(runOptions *volumeResizeOptions) *cobra.Command {
 
 	var cmd = &cobra.Command{
 		Use:   "resize <persistent-volume-claim>",
-		Short: "resize adjusts the volume size of the pvc",
-		Long:  `resize adjusts the volume size of the pvc`,
-		Args:  cobra.MinimumNArgs(1),
+		Short: "resize adjusts the volume size of a persistent volume claim",
+		Long:  `The 'resize' command adjusts the size of a persistent volume claim (PVC). The command takes a PVC name as input along with an optional namespace parameter and a new size in gigabytes.`,
+		Example: `
+# Resize a PVC named 'data' in the default namespace to 20 gigabytes
+acloud-toolkit storage resize data --size 20G
+
+# Resize a PVC named 'data' in the 'prod' namespace to 50 gigabytes
+acloud-toolkit storage resize data --namespace prod --size 50G	  
+`,
+		Args: cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			for _, arg := range args {
 				if err := resize.ResizeVolume(context.Background(), runOptions.namespace, arg, runOptions.newSize); err != nil {

@@ -1,5 +1,5 @@
 ---
-date: 2022-10-17T15:00:02+02:00
+date: 2023-03-30T21:41:02+02:00
 title: "acloud-toolkit storage"
 displayName: "storage"
 slug: acloud-toolkit_storage
@@ -11,7 +11,7 @@ images: []
 menu:
   references:
     parent: "acloud-toolkit-ref"
-weight: 750
+weight: 749
 toc: true
 ---
 ## acloud-toolkit storage
@@ -33,5 +33,5 @@ storage for working with Kubernetes CSI, volumes and snapshots to automate vario
 * [acloud-toolkit](/references/acloud-toolkit/acloud-toolkit/)	 - acloud-toolkit for working with Kubernetes
 * [acloud-toolkit storage batch-migrate](/references/acloud-toolkit/acloud-toolkit_storage_batch-migrate/)	 - Batch migrate all volumes within a namespace to another storage class
 * [acloud-toolkit storage migrate](/references/acloud-toolkit/acloud-toolkit_storage_migrate/)	 - Migrate a volume to another storage class
-* [acloud-toolkit storage resize](/references/acloud-toolkit/acloud-toolkit_storage_resize/)	 - resize adjusts the volume size of the pvc
+* [acloud-toolkit storage resize](/references/acloud-toolkit/acloud-toolkit_storage_resize/)	 - resize adjusts the volume size of a persistent volume claim
 

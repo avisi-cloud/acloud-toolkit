@@ -1,7 +1,8 @@
-package maintenance
+package nodes
 
 import (
 	"context"
+	_ "embed"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -30,6 +31,9 @@ func AddMaintenanceCreateFlags(flagSet *flag.FlagSet, opts *maintenanceDrainOpti
 	flagSet.DurationVar(&opts.timeout, "timeout", 0*time.Second, "The length of time to wait before giving up, zero means infinite")
 }
 
+//go:embed examples/drain.txt
+var drainExamples string
+
 // NewDrainCmd returns the Cobra Bootstrap sub command
 func NewDrainCmd(runOptions *maintenanceDrainOptions) *cobra.Command {
 	if runOptions == nil {
@@ -37,13 +41,11 @@ func NewDrainCmd(runOptions *maintenanceDrainOptions) *cobra.Command {
 	}
 
 	var cmd = &cobra.Command{
-		Use:   "drain <node>",
-		Args:  cobra.MinimumNArgs(0),
-		Short: "drain a kubernetes node",
-		Long:  `drain a kubernetes node with additional options not supported by kubectl`,
-		Example: `
-acloud-toolkit maintenance drain mynode --namespace-only default
-		`,
+		Use:     "drain <node>",
+		Args:    cobra.MinimumNArgs(0),
+		Short:   `drain a kubernetes node with additional options not supported by kubectl`,
+		Long:    `The acloud-toolkit nodes drain command is a CLI tool that allows you to gracefully remove a Kubernetes node from service, ensuring that all workloads running on the node are rescheduled to other nodes in the cluster before the node is taken offline for maintenance or other purposes. This command provides additional options that are not supported by the standard kubectl drain command.`,
+		Example: drainExamples,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx, cancel := context.WithCancel(context.Background())
 			defer cancel()

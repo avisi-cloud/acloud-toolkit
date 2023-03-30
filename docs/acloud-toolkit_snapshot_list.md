@@ -1,5 +1,5 @@
 ---
-date: 2022-10-17T15:00:02+02:00
+date: 2023-03-30T21:41:02+02:00
 title: "acloud-toolkit snapshot list"
 displayName: "snapshot list"
 slug: acloud-toolkit_snapshot_list
@@ -11,16 +11,18 @@ images: []
 menu:
   references:
     parent: "acloud-toolkit-ref"
-weight: 756
+weight: 755
 toc: true
 ---
 ## acloud-toolkit snapshot list
 
-List CSI snapshots within the namespace
+List all available CSI snapshots within the current namespace
 
 ### Synopsis
 
-List all available CSI snapshots within the namespace
+This command lists all available CSI snapshots within the current namespace. CSI snapshots are used to capture a point-in-time copy of a Kubernetes PVC, allowing you to preserve the data stored in the PVC for backup, disaster recovery, or other purposes.
+
+By default, this command lists all snapshots in the current namespace. You can also specify a different namespace if needed.
 
 ```
 acloud-toolkit snapshot list [flags]
@@ -30,7 +32,14 @@ acloud-toolkit snapshot list [flags]
 
 ```
 
+# List all available CSI snapshots within the current namespace:
 acloud-toolkit snapshot list
+
+# List all available CSI snapshots within the "my-namespace" namespace:
+acloud-toolkit snapshot list --namespace=my-namespace
+
+# List all available CSI snapshots within all namespaces:
+acloud-toolkit snapshot list -A
 		
 ```
 
