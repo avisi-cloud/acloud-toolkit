@@ -1,5 +1,5 @@
 ---
-date: 2022-10-17T15:00:02+02:00
+date: 2023-03-30T21:41:02+02:00
 title: "acloud-toolkit snapshot create"
 displayName: "snapshot create"
 slug: acloud-toolkit_snapshot_create
@@ -11,16 +11,18 @@ images: []
 menu:
   references:
     parent: "acloud-toolkit-ref"
-weight: 757
+weight: 756
 toc: true
 ---
 ## acloud-toolkit snapshot create
 
-create creates a snapshot for a pvc
+Create a snapshot of a Kubernetes PVC (persistent volume claim).
 
 ### Synopsis
 
-create creates a snapshot for a pvc
+This command creates a snapshot of a Kubernetes PVC, allowing you to capture a point-in-time copy of the data stored in the PVC. Snapshots can be used for data backup, disaster recovery, and other purposes.
+
+To create a snapshot, you need to provide the name of the PVC to snapshot, as well as a name for the snapshot. You can also specify a namespace if the PVC is not in the current namespace context. If no snapshot class is specified, the default snapshot class will be used.
 
 ```
 acloud-toolkit snapshot create <snapshot> [flags]
@@ -30,7 +32,11 @@ acloud-toolkit snapshot create <snapshot> [flags]
 
 ```
 
-acloud-toolkit snapshot create my-snapshot --pvc my-pvc
+# Create a snapshot of the PVC "my-pvc" with the name "my-snapshot":
+acloud-toolkit snapshot create my-snapshot --pvc=my-pvc
+
+#Create a snapshot of the PVC "my-pvc" with the name "my-snapshot" in the namespace "my-namespace":
+acloud-toolkit snapshot create my-snapshot --pvc=my-pvc --namespace=my-namespace
 		
 ```
 
@@ -39,8 +45,8 @@ acloud-toolkit snapshot create my-snapshot --pvc my-pvc
 ```
   -h, --help                    help for create
   -n, --namespace string        If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context
-  -p, --pvc string              Name of the persistent volume to snapshot
-  -s, --snapshot-class string   CSI volume snapshot class. If empty, use deafult volume snapshot class
+  -p, --pvc string              Name of the PVC to snapshot. (required)
+  -s, --snapshot-class string   Name of the CSI volume snapshot class to use. (default: use default snapshot class)
 ```
 
 ### SEE ALSO

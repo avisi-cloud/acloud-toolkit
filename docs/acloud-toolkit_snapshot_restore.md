@@ -1,5 +1,5 @@
 ---
-date: 2022-10-17T15:00:02+02:00
+date: 2023-03-30T21:41:02+02:00
 title: "acloud-toolkit snapshot restore"
 displayName: "snapshot restore"
 slug: acloud-toolkit_snapshot_restore
@@ -11,16 +11,19 @@ images: []
 menu:
   references:
     parent: "acloud-toolkit-ref"
-weight: 755
+weight: 754
 toc: true
 ---
 ## acloud-toolkit snapshot restore
 
-Restore a snapshot
+Restore a Kubernetes PVC from a CSI snapshot.
 
 ### Synopsis
 
-restore a snapshot
+This command restores a Kubernetes PVC from a CSI snapshot. To restore a PVC, you need to provide the name of the snapshot, the name of the PVC to restore to, and the namespace of the target PVC. You can also specify a different namespace for the snapshot if needed.
+
+By default, this command restores the PVC to the default storage class installed within the cluster. You can specify a different storage class if needed by using the --restore-storage-class option. Please note that this command requires the volume mode to be set to "Immediate".
+		
 
 ```
 acloud-toolkit snapshot restore <snapshot> [flags]
@@ -30,7 +33,7 @@ acloud-toolkit snapshot restore <snapshot> [flags]
 
 ```
 
-acloud-toolkit snapshot restore my-snapshot --target-name my-pvc --restore-storage-class ebs-restore
+acloud-toolkit snapshot restore my-snapshot --restore-pvc-name my-pvc --restore-storage-class ebs-restore
 		
 ```
 
@@ -38,10 +41,10 @@ acloud-toolkit snapshot restore my-snapshot --target-name my-pvc --restore-stora
 
 ```
   -h, --help                           help for restore
+      --restore-pvc-name string        
+      --restore-pvc-namespace string   
       --restore-storage-class string    (default "ebs-restore")
       --source-namespace string        If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context
-      --target-name string             
-      --target-namespace string        
 ```
 
 ### SEE ALSO

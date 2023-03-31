@@ -48,6 +48,16 @@ func DrainNode(ctx context.Context, nodeNames []string, opts DrainOptions) error
 	return nil
 }
 
+func UncordonNode(ctx context.Context, nodeNames []string, opts DrainOptions) error {
+	k8sClient := k8s.GetClientOrDie()
+	for _, nodeName := range nodeNames {
+		if err := uncordonNode(ctx, k8sClient, nodeName, opts); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func cordonNode(ctx context.Context, k8sClient *kubernetes.Clientset, nodeName string, opts DrainOptions) error {
 	fmt.Printf("[acloud-toolkit] cordoning node %q\n", nodeName)
 	drainHelper := drain.Helper{

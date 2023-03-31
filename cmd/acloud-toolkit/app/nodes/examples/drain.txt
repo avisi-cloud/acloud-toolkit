@@ -1,0 +1,17 @@
+# Drain a node without uncordoning it afterwards:
+acloud-toolkit nodes drain mynode
+
+# Drain a node and uncordon it afterwards:
+acloud-toolkit nodes drain mynode --uncordon
+
+# Drain a node and only evict pods from a specific namespace:
+acloud-toolkit nodes drain mynode --namespace mynamespace
+
+# Drain a node and only evict stateless workloads:
+acloud-toolkit nodes drain mynode --ignore-statefulset-pods
+
+# Drain a node and set the grace period to 120 seconds:
+acloud-toolkit nodes drain mynode --grace-period 120
+
+# Drain a node and set the timeout to 10 minutes:
+acloud-toolkit nodes drain mynode --timeout 10m

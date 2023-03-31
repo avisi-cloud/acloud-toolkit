@@ -18,8 +18,8 @@ func newSnapshotCreateOptions() *snapshotCreateOptions {
 
 func AddSnapshotCreateFlags(flagSet *flag.FlagSet, opts *snapshotCreateOptions) {
 	flagSet.StringVarP(&opts.persistentVolumeClaimNamespace, "namespace", "n", "", "If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context")
-	flagSet.StringVarP(&opts.persistentVolumeClaimName, "pvc", "p", "", "Name of the persistent volume to snapshot")
-	flagSet.StringVarP(&opts.snapshotCreateStorageClass, "snapshot-class", "s", "", "CSI volume snapshot class. If empty, use deafult volume snapshot class")
+	flagSet.StringVarP(&opts.persistentVolumeClaimName, "pvc", "p", "", "Name of the PVC to snapshot. (required)")
+	flagSet.StringVarP(&opts.snapshotCreateStorageClass, "snapshot-class", "s", "", "Name of the CSI volume snapshot class to use. (default: use default snapshot class)")
 }
 
 // NewSnapshotCreateCmd returns the Cobra Bootstrap sub command
@@ -31,10 +31,16 @@ func NewSnapshotCreateCmd(runOptions *snapshotCreateOptions) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "create <snapshot>",
 		Args:  cobra.ExactArgs(1),
-		Short: "create creates a snapshot for a pvc",
-		Long:  `create creates a snapshot for a pvc`,
+		Short: "Create a snapshot of a Kubernetes PVC (persistent volume claim).",
+		Long: `This command creates a snapshot of a Kubernetes PVC, allowing you to capture a point-in-time copy of the data stored in the PVC. Snapshots can be used for data backup, disaster recovery, and other purposes.
+
+To create a snapshot, you need to provide the name of the PVC to snapshot, as well as a name for the snapshot. You can also specify a namespace if the PVC is not in the current namespace context. If no snapshot class is specified, the default snapshot class will be used.`,
 		Example: `
-acloud-toolkit snapshot create my-snapshot --pvc my-pvc
+# Create a snapshot of the PVC "my-pvc" with the name "my-snapshot":
+acloud-toolkit snapshot create my-snapshot --pvc=my-pvc
+
+#Create a snapshot of the PVC "my-pvc" with the name "my-snapshot" in the namespace "my-namespace":
+acloud-toolkit snapshot create my-snapshot --pvc=my-pvc --namespace=my-namespace
 		`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return snapshots.SnapshotCreate(args[0], runOptions.persistentVolumeClaimNamespace, runOptions.persistentVolumeClaimName, runOptions.snapshotCreateStorageClass)
