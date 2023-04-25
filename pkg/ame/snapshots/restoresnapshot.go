@@ -45,6 +45,13 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 		}
 		targetNamespace = contextNamespace
 	}
+	if sourceNamespace == "" {
+		contextNamespace, _, err := kubeconfig.Namespace()
+		if err != nil {
+			return err
+		}
+		sourceNamespace = contextNamespace
+	}
 
 	ctx := context.Background()
 
