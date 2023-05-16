@@ -13,6 +13,10 @@ import (
 )
 
 func SetPVReclaimPolicyToRetain(ctx context.Context, k8sClient kubernetes.Interface, pvc *v1.PersistentVolumeClaim) error {
+	return SetPVReclaimPolicy(ctx, k8sClient, pvc, v1.PersistentVolumeReclaimRetain)
+}
+
+func SetPVReclaimPolicy(ctx context.Context, k8sClient kubernetes.Interface, pvc *v1.PersistentVolumeClaim, policy v1.PersistentVolumeReclaimPolicy) error {
 	// Get the persistent volume, ensure it's set to Retain.
 	pv, err := k8sClient.CoreV1().PersistentVolumes().Get(ctx, pvc.Spec.VolumeName, metav1.GetOptions{})
 	if err != nil {
@@ -20,8 +24,8 @@ func SetPVReclaimPolicyToRetain(ctx context.Context, k8sClient kubernetes.Interf
 	}
 
 	if pv.Spec.PersistentVolumeReclaimPolicy != v1.PersistentVolumeReclaimRetain {
-		fmt.Printf("PV %s does not have retain as the reclaim policy, updating ...\n", pvc.Spec.VolumeName)
-		pv.Spec.PersistentVolumeReclaimPolicy = v1.PersistentVolumeReclaimRetain
+		fmt.Printf("PV %s does not have %s as the reclaim policy, updating ...\n", pvc.Spec.VolumeName, policy)
+		pv.Spec.PersistentVolumeReclaimPolicy = policy
 		_, err = k8sClient.CoreV1().PersistentVolumes().Update(ctx, pv, metav1.UpdateOptions{})
 		if err != nil {
 			return fmt.Errorf("failed to update reclaim policy persistent volume %q: %w", pvc.Name, err)

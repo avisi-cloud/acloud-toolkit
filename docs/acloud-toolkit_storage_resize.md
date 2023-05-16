@@ -1,5 +1,5 @@
 ---
-date: 2023-03-30T21:41:02+02:00
+date: 2023-05-23T11:48:19+02:00
 title: "acloud-toolkit storage resize"
 displayName: "storage resize"
 slug: acloud-toolkit_storage_resize
@@ -11,7 +11,7 @@ images: []
 menu:
   references:
     parent: "acloud-toolkit-ref"
-weight: 750
+weight: 749
 toc: true
 ---
 ## acloud-toolkit storage resize
