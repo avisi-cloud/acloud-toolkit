@@ -64,7 +64,9 @@ func List(sourceNamespace string, allNamespaces bool) error {
 		if err != nil {
 			return err
 		}
-
+		if snapshotUnstructured == nil {
+			continue
+		}
 		for _, snapshotItem := range snapshotUnstructured.Items {
 			snapshot := volumesnapshotv1.VolumeSnapshot{}
 
