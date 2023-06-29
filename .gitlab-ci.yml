@@ -64,6 +64,6 @@ go:build:
 
 release:
   stage: release
-  extends: .go:release
+  extends: .go:release-docker
   only:
     - tags
