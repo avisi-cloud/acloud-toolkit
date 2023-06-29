@@ -1,0 +1,4 @@
+FROM registry.avisi.cloud/library/ubuntu:22.04
+COPY acloud-toolkit /usr/local/bin/acloud-toolkit
+
+USER root
