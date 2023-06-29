@@ -131,6 +131,44 @@ blobs:
     folder: "releases/{{ .ProjectName }}/{{.Version}}"
     region: eu-west-1
 
+dockers:
+  - image_templates: ["registry.avisi.cloud/library/{{ .ProjectName }}:{{ .Version }}-amd64"] 
+    use: buildx
+    dockerfile: Dockerfile.goreleaser
+    goos: linux
+    goarch: amd64
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.created={{ .Date }}"
+  - image_templates: ["registry.avisi.cloud/library/{{ .ProjectName }}:{{ .Version }}-arm64v8"]
+    use: buildx
+    dockerfile: Dockerfile.goreleaser
+    goos: linux
+    goarch: arm64
+    build_flag_templates:
+      - "--platform=linux/arm64/v8"
+      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--label=org.opencontainers.image.created={{ .Date }}"
+
+docker_manifests:
+  - name_template: "registry.avisi.cloud/library/{{ .ProjectName }}:{{ .Version }}"
+    image_templates:
+      - "registry.avisi.cloud/library/{{ .ProjectName }}:{{ .Version }}-amd64"
+      - "registry.avisi.cloud/library/{{ .ProjectName }}:{{ .Version }}-arm64v8"
+  - name_template: "registry.avisi.cloud/library/{{ .ProjectName }}:v{{ .Version }}"
+    image_templates:
+      - "registry.avisi.cloud/library/{{ .ProjectName }}:{{ .Version }}-amd64"
+      - "registry.avisi.cloud/library/{{ .ProjectName }}:{{ .Version }}-arm64v8"
+
+docker_signs:
+  - artifacts: all
+    args: ["sign", "--key=$COSIGN_KEY", "-a", "builder=gitlab-promote", "${artifact}"]
+
 # Documentation: https://goreleaser.com/customization/changelog/
 changelog:
   use: gitlab

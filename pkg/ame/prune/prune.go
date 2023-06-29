@@ -31,15 +31,31 @@ func PruneVolumes(ctx context.Context, dryRun bool) error {
 		return err
 	}
 
-	pvsToPrune := []v1.PersistentVolume{}
+	orphanedPVs := []v1.PersistentVolume{}
 	// collect PVs
 	for _, pv := range pvs.Items {
 		if pv.Status.Phase != v1.VolumeReleased {
 			continue
 		}
 		if pv.Spec.PersistentVolumeReclaimPolicy != v1.PersistentVolumeReclaimDelete {
-			pvsToPrune = append(pvsToPrune, pv)
+			orphanedPVs = append(orphanedPVs, pv)
 		}
+	}
+
+	pvsToPrune := []v1.PersistentVolume{}
+	for _, pv := range orphanedPVs {
+		if pv.Spec.CSI == nil {
+			continue
+		}
+
+		if !containsVolumeIdMultipleTimes(pv.Spec.CSI.VolumeHandle, pvs.Items) {
+			pvsToPrune = append(pvsToPrune, pv)
+		} else if pv.Spec.ClaimRef != nil {
+			fmt.Printf("[warning] pruning persistent volume %q (\"%s/%s\")  has volumeHandle that is found multiple times\n", pv.Name, pv.Spec.ClaimRef.Namespace, pv.Spec.ClaimRef.Name)
+		} else {
+			fmt.Printf("[warning] pruning persistent volume %q has volumeHandle that is found multiple times\n", pv.Name)
+		}
+
 	}
 
 	if dryRun {
@@ -83,4 +99,18 @@ func PruneVolumes(ctx context.Context, dryRun bool) error {
 	q := kresource.NewQuantity(totalSize, kresource.BinarySI)
 	fmt.Printf("total storage pruned: %s\n", q.String())
 	return nil
+}
+
+func containsVolumeIdMultipleTimes(volumeId string, pvs []v1.PersistentVolume) bool {
+	numberOfMatches := 0
+	for _, pv := range pvs {
+		if pv.Spec.CSI != nil && pv.Spec.CSI.VolumeHandle == volumeId {
+			numberOfMatches++
+
+			if numberOfMatches > 1 {
+				return true
+			}
+		}
+	}
+	return numberOfMatches > 1
 }
