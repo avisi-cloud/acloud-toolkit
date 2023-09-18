@@ -15,7 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func List(sourceNamespace string, allNamespaces bool) error {
+func List(ctx context.Context, sourceNamespace string, allNamespaces, fetchSnapshotHandle bool) error {
 	kubeconfig, err := k8s.GetClientConfig()
 	if err != nil {
 		return err
@@ -80,16 +80,28 @@ func List(sourceNamespace string, allNamespaces bool) error {
 	for _, snapshot := range listSnapshots {
 		sourceName := ""
 		if snapshot.Spec.Source.PersistentVolumeClaimName != nil {
-			sourceName = *snapshot.Spec.Source.PersistentVolumeClaimName
+			sourceName = fmt.Sprintf("pvc/%s", *snapshot.Spec.Source.PersistentVolumeClaimName)
 		}
-		contentName := ""
 		if snapshot.Spec.Source.VolumeSnapshotContentName != nil {
-			contentName = *snapshot.Spec.Source.VolumeSnapshotContentName
+			sourceName = fmt.Sprintf("volumesnapshot/%s", *snapshot.Spec.Source.VolumeSnapshotContentName)
 		}
+		contentName := getVolumeSnapshotContentNameForSnapshot(snapshot)
 
 		snapshotClassName := ""
 		if snapshot.Spec.VolumeSnapshotClassName != nil {
 			snapshotClassName = *snapshot.Spec.VolumeSnapshotClassName
+		}
+		size := ""
+		if snapshot.Status != nil && snapshot.Status.RestoreSize != nil {
+			size = snapshot.Status.RestoreSize.String()
+		}
+
+		snapshotHandle := ""
+		if fetchSnapshotHandle {
+			snapshotHandle, err = getSnapshotHandle(ctx, contentName, client)
+			if err != nil {
+				return err
+			}
 		}
 
 		body = append(body, []string{
@@ -97,9 +109,10 @@ func List(sourceNamespace string, allNamespaces bool) error {
 			snapshot.Name,
 			sourceName,
 			contentName,
-			snapshot.Status.RestoreSize.String(),
+			size,
 			fmt.Sprintf("%v", snapshot.Status != nil && snapshot.Status.ReadyToUse != nil && *snapshot.Status.ReadyToUse),
 			snapshotClassName,
+			snapshotHandle,
 		})
 	}
 
@@ -111,7 +124,34 @@ func List(sourceNamespace string, allNamespaces bool) error {
 		"Size",
 		"Ready",
 		"Classname",
+		"Snapshot Handle",
 	}, body)
 
 	return nil
+}
+
+func getSnapshotHandle(ctx context.Context, contentName string, client *dynamic.DynamicClient) (string, error) {
+	if contentName != "" {
+		content, err := geVolumeSnapshotContent(ctx, client, contentName)
+		if err != nil && err != ErrNoVolumeSnapshotContentFound {
+			return "", err
+		}
+		if content.Status.SnapshotHandle != nil {
+			return *content.Status.SnapshotHandle, nil
+		} else if content.Spec.Source.SnapshotHandle != nil {
+			return *content.Spec.Source.SnapshotHandle, nil
+		}
+	}
+	return "", nil
+}
+
+func getVolumeSnapshotContentNameForSnapshot(snapshot volumesnapshotv1.VolumeSnapshot) string {
+	contentName := ""
+	if snapshot.Spec.Source.VolumeSnapshotContentName != nil {
+		contentName = *snapshot.Spec.Source.VolumeSnapshotContentName
+	}
+	if snapshot.Status != nil && snapshot.Status.BoundVolumeSnapshotContentName != nil {
+		contentName = *snapshot.Status.BoundVolumeSnapshotContentName
+	}
+	return contentName
 }
