@@ -1,5 +1,5 @@
 ---
-date: 2023-05-23T11:48:19+02:00
+date: 2023-09-18T14:42:04+02:00
 title: "acloud-toolkit storage prune"
 displayName: "storage prune"
 slug: acloud-toolkit_storage_prune
@@ -11,7 +11,7 @@ images: []
 menu:
   references:
     parent: "acloud-toolkit-ref"
-weight: 750
+weight: 749
 toc: true
 ---
 ## acloud-toolkit storage prune

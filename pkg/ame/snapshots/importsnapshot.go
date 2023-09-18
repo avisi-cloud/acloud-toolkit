@@ -1,0 +1,193 @@
+package snapshots
+
+import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/google/uuid"
+	volumesnapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v6/apis/volumesnapshot/v1"
+	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/helpers"
+	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/k8s"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
+)
+
+var (
+	ErrNoVolumeSnapshotClassFound = fmt.Errorf("no default volume snapshot class found")
+)
+
+var (
+	volumesnapshotResource        = schema.GroupVersionResource{Group: "snapshot.storage.k8s.io", Version: "v1", Resource: "volumesnapshots"}
+	volumesnapshotContentResource = schema.GroupVersionResource{Group: "snapshot.storage.k8s.io", Version: "v1", Resource: "volumesnapshotcontents"}
+	volumesnapshotClassResource   = schema.GroupVersionResource{Group: "snapshot.storage.k8s.io", Version: "v1", Resource: "volumesnapshotclasses"}
+)
+
+func ImportSnapshotFromRawID(ctx context.Context, snapshotName, targetNamespace, snapshotClassName string, rawID string) error {
+	kubeconfig, err := k8s.GetClientConfig()
+	if err != nil {
+		return fmt.Errorf("error getting kubeconfig: %w", err)
+	}
+	config, err := kubeconfig.ClientConfig()
+	if err != nil {
+		return fmt.Errorf("error loading kubeconfig client: %w", err)
+	}
+	client, err := dynamic.NewForConfig(config)
+	if err != nil {
+		return fmt.Errorf("error loading dynamic client: %w", err)
+	}
+	if targetNamespace == "" {
+		contextNamespace, _, err := kubeconfig.Namespace()
+		if err != nil {
+			return fmt.Errorf("error checking namespace: %w", err)
+		}
+		targetNamespace = contextNamespace
+	}
+
+	snapshotContentName := fmt.Sprintf("%s-%s", snapshotName, uuid.NewString())
+
+	volumeSnapshotClassName := ""
+	if strings.TrimSpace(snapshotClassName) != "" {
+		// TODO: add validation for snapshot classname
+		volumeSnapshotClassName = strings.TrimSpace(snapshotClassName)
+	}
+
+	volumeSnapshotClass, err := geVolumeSnapshotClassOrDefault(ctx, client, volumeSnapshotClassName)
+	if err != nil {
+		return fmt.Errorf("no volume snapshot class found: %w", err)
+	}
+
+	// Restore the volumesnapshot content
+	snapshotContent := volumesnapshotv1.VolumeSnapshotContent{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: volumesnapshotv1.SchemeGroupVersion.String(),
+			Kind:       "VolumeSnapshotContent",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name: snapshotContentName,
+			Labels: map[string]string{
+				"k8s.avisi.cloud/snapshot-import": "true",
+			},
+		},
+		Spec: volumesnapshotv1.VolumeSnapshotContentSpec{
+			VolumeSnapshotClassName: &volumeSnapshotClass.Name,
+			// make sure the deletion policy is retain - snapshot is imported and may not be managed by this cluster
+			DeletionPolicy: volumesnapshotv1.VolumeSnapshotContentRetain,
+			Driver:         volumeSnapshotClass.Driver,
+			Source: volumesnapshotv1.VolumeSnapshotContentSource{
+				SnapshotHandle: helpers.String(rawID),
+			},
+			VolumeSnapshotRef: v1.ObjectReference{
+				APIVersion: volumesnapshotv1.SchemeGroupVersion.String(),
+				Kind:       "VolumeSnapshot",
+				Name:       snapshotName,
+				Namespace:  targetNamespace,
+			},
+		},
+	}
+
+	snapshotContentUnstructured, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&snapshotContent)
+	if err != nil {
+		return fmt.Errorf("error setting up snapshotContent unstructured resource: %w", err)
+	}
+	fmt.Printf("Creating snapshotcontent %q..\n", snapshotContentName)
+	_, err = client.Resource(volumesnapshotContentResource).Create(ctx, &unstructured.Unstructured{
+		Object: snapshotContentUnstructured,
+	}, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("error creating volumesnapshotcontent: %w", err)
+	}
+
+	// convert to the snapshot object
+	createSnapshot := volumesnapshotv1.VolumeSnapshot{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: volumesnapshotv1.SchemeGroupVersion.String(),
+			Kind:       "VolumeSnapshot",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      snapshotName,
+			Namespace: targetNamespace,
+			Labels: map[string]string{
+				"k8s.avisi.cloud/snapshot-import": "true",
+			},
+		},
+		Spec: volumesnapshotv1.VolumeSnapshotSpec{
+			Source: volumesnapshotv1.VolumeSnapshotSource{
+				VolumeSnapshotContentName: helpers.String(snapshotContentName),
+			},
+			VolumeSnapshotClassName: &volumeSnapshotClass.Name,
+		},
+	}
+	snapshotUnstructued, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&createSnapshot)
+	if err != nil {
+		return fmt.Errorf("error setting up snapshot unstructured resource: %w", err)
+	}
+
+	fmt.Printf("Creating snapshot %q..\n", snapshotName)
+	_, err = client.Resource(volumesnapshotResource).Namespace(targetNamespace).Create(ctx, &unstructured.Unstructured{
+		Object: snapshotUnstructued,
+	}, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("error creating volumesnapshot: %w", err)
+	}
+
+	fmt.Printf("Completed importing snapshot %q into CSI snapshot %s..\n", rawID, snapshotName)
+	return nil
+}
+
+func geVolumeSnapshotClassOrDefault(ctx context.Context, client *dynamic.DynamicClient, volumeSnapshotClassName string) (*volumesnapshotv1.VolumeSnapshotClass, error) {
+	if volumeSnapshotClassName != "" {
+		volumeSnapshotClass, err := geVolumeSnapshotClass(ctx, client, volumeSnapshotClassName)
+		if err != nil {
+			return nil, fmt.Errorf("volume snapshot class not found: %w", err)
+		}
+		return volumeSnapshotClass, nil
+	}
+
+	volumeSnapshotClass, err := getDefaultVolumeSnapshotClass(ctx, client)
+	if err != nil && err != ErrNoVolumeSnapshotClassFound {
+		return nil, fmt.Errorf("failed to find default volumesnapshotclass: %w", err)
+	}
+	return volumeSnapshotClass, nil
+
+}
+
+func geVolumeSnapshotClass(ctx context.Context, client *dynamic.DynamicClient, className string) (*volumesnapshotv1.VolumeSnapshotClass, error) {
+	snapshotClass, err := client.Resource(volumesnapshotClassResource).Get(ctx, className, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	if snapshotClass != nil {
+		volumeSnapshotClass := volumesnapshotv1.VolumeSnapshotClass{}
+		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(snapshotClass.UnstructuredContent(), &volumeSnapshotClass); err != nil {
+			return nil, fmt.Errorf("failed to convert: %w", err)
+		}
+		return &volumeSnapshotClass, nil
+	}
+	return nil, ErrNoVolumeSnapshotClassFound
+}
+
+func getDefaultVolumeSnapshotClass(ctx context.Context, client *dynamic.DynamicClient) (*volumesnapshotv1.VolumeSnapshotClass, error) {
+	snapshotClassNames, err := client.Resource(volumesnapshotClassResource).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	defaultSnapshotClass := volumesnapshotv1.VolumeSnapshotClass{}
+	for _, vsc := range snapshotClassNames.Items {
+		annotations := vsc.GetAnnotations()
+
+		value, ok := annotations["snapshot.storage.kubernetes.io/is-default-class"]
+		if ok && value == "true" {
+
+			runtime.DefaultUnstructuredConverter.FromUnstructured(vsc.UnstructuredContent(), &defaultSnapshotClass)
+			return &defaultSnapshotClass, nil
+		}
+	}
+	return nil, ErrNoVolumeSnapshotClassFound
+}
