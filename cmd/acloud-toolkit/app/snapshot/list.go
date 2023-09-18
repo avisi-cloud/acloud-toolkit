@@ -7,8 +7,9 @@ import (
 )
 
 type listOptions struct {
-	sourceNamespace string
-	allNamespaces   bool
+	sourceNamespace      string
+	allNamespaces        bool
+	fetchSnapshotHandles bool
 }
 
 func newListOptions() *listOptions {
@@ -18,6 +19,7 @@ func newListOptions() *listOptions {
 func AddListFlags(flagSet *flag.FlagSet, opts *listOptions) {
 	flagSet.StringVarP(&opts.sourceNamespace, "namespace", "n", "", "If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context")
 	flagSet.BoolVarP(&opts.allNamespaces, "all-namespaces", "A", false, "return results for all namespaces")
+	flagSet.BoolVarP(&opts.fetchSnapshotHandles, "handles", "S", true, "show snapshot content handle")
 }
 
 // NewListCmd returns the Cobra Bootstrap sub command
@@ -44,7 +46,7 @@ acloud-toolkit snapshot list --namespace=my-namespace
 acloud-toolkit snapshot list -A
 		`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return snapshots.List(runOptions.sourceNamespace, runOptions.allNamespaces)
+			return snapshots.List(cmd.Context(), runOptions.sourceNamespace, runOptions.allNamespaces, runOptions.fetchSnapshotHandles)
 		},
 	}
 
