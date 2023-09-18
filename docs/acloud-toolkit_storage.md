@@ -1,5 +1,5 @@
 ---
-date: 2023-05-23T11:48:19+02:00
+date: 2023-09-18T14:42:04+02:00
 title: "acloud-toolkit storage"
 displayName: "storage"
 slug: acloud-toolkit_storage
@@ -11,7 +11,7 @@ images: []
 menu:
   references:
     parent: "acloud-toolkit-ref"
-weight: 748
+weight: 747
 toc: true
 ---
 ## acloud-toolkit storage
