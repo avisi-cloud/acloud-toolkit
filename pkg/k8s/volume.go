@@ -7,6 +7,7 @@ import (
 
 	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/helpers"
 	v1 "k8s.io/api/core/v1"
+	kubeerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -117,5 +118,16 @@ func CreatePersistentVolumeClaim(ctx context.Context, k8sClient kubernetes.Inter
 	}
 
 	fmt.Printf("created a new PVC %s in namespace %s...\n", pvcName, namespace)
+	return nil
+}
+
+func ValidateStorageClassExists(ctx context.Context, client *kubernetes.Clientset, storageClassName string) error {
+	_, err := client.StorageV1().StorageClasses().Get(ctx, storageClassName, metav1.GetOptions{})
+	if err != nil {
+		if kubeerrors.IsNotFound(err) {
+			return fmt.Errorf("storage class %q does not exist", storageClassName)
+		}
+		return fmt.Errorf("error while checking storage class: %s", err)
+	}
 	return nil
 }

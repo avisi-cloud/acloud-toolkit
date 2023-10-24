@@ -1,0 +1,11 @@
+# Sync two existing volumes
+acloud-toolkit storage sync --source-pvc pvc-a --target-pvc pvc-b
+
+# Passing rsync options
+acloud-toolkit storage sync --source-pvc pvc-a --target-pvc pvc-b -- --dry-run
+
+# Including and excluding files using rsync options
+acloud-toolkit storage sync --source-pvc pvc-a --target-pvc pvc-b -- --exclude /tmp
+
+# Debug job by retaining it after completion and setting the ttl to 3600 seconds
+acloud-toolkit storage sync --source-pvc pvc-a --target-pvc pvc-b --ttl 3600 --retain-job -- --dry-run
