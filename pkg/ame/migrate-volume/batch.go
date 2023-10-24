@@ -9,19 +9,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	kubeerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
 )
-
-func validateStorageClassExists(ctx context.Context, client *kubernetes.Clientset, storageClassName string) error {
-	_, err := client.StorageV1().StorageClasses().Get(ctx, storageClassName, metav1.GetOptions{})
-	if err != nil {
-		if kubeerrors.IsNotFound(err) {
-			return fmt.Errorf("storage class %q does not exist", storageClassName)
-		}
-		return fmt.Errorf("error while checking storage class: %s", err)
-	}
-	return nil
-}
 
 func BatchMigrateVolumes(ctx context.Context, sourceStorageClass, targetStorageClass, namespace string, dryRun bool) error {
 	k8sClient := k8s.GetClientOrDie()
@@ -29,10 +17,10 @@ func BatchMigrateVolumes(ctx context.Context, sourceStorageClass, targetStorageC
 	if err != nil {
 		return fmt.Errorf("failed to get persistent volumes in namespace %q: %s", namespace, err)
 	}
-	if err := validateStorageClassExists(ctx, k8sClient, sourceStorageClass); err != nil {
+	if err := k8s.ValidateStorageClassExists(ctx, k8sClient, sourceStorageClass); err != nil {
 		return err
 	}
-	if err := validateStorageClassExists(ctx, k8sClient, targetStorageClass); err != nil {
+	if err := k8s.ValidateStorageClassExists(ctx, k8sClient, targetStorageClass); err != nil {
 		return err
 	}
 

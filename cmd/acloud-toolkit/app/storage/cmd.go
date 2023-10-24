@@ -22,5 +22,6 @@ func NewStorageCmd() *cobra.Command {
 	cmds.AddCommand(NewBatchMigrateVolumeCmd(context.Background(), nil))
 	cmds.AddCommand(NewvolumeResizeCmd(nil))
 	cmds.AddCommand(NewvolumePruneCmd(nil))
+	cmds.AddCommand(NewSyncVolumeCmd(context.Background(), nil))
 	return cmds
 }

@@ -29,7 +29,7 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 	jobName := "migrate-volume-" + pvcName
 	tmpPVCName := "tmp-" + pvcName
 
-	if err := validateStorageClassExists(ctx, k8sClient, storageClassName); err != nil {
+	if err := k8s.ValidateStorageClassExists(ctx, k8sClient, storageClassName); err != nil {
 		return err
 	}
 
@@ -101,21 +101,16 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 		return fmt.Errorf("failed to create job %q: %w", jobName, err)
 	}
 
-	err = waitForJobToComplete(ctx, k8sClient, namespace, jobName)
+	err = k8s.WaitForJobToComplete(ctx, k8sClient, namespace, jobName)
 	if err != nil {
 		return err
 	}
 
-	background := metav1.DeletePropagationBackground
-	err = migrateVolumeJob.Delete(ctx, jobName, metav1.DeleteOptions{
-		PropagationPolicy: &background})
-	if err != nil {
+	fmt.Printf("deleting job %q\n", jobName)
+	if err := k8s.DeleteJobAndWaitForDeletion(ctx, k8sClient, namespace, jobName); err != nil {
 		return fmt.Errorf("failed to delete job %q: %w", jobName, err)
 	}
-
-	fmt.Printf("Deleting job: %q\n", jobName)
-	time.Sleep(5 * time.Second)
-	fmt.Printf("Job %q deleted\n", jobName)
+	fmt.Printf("job %q deleted\n", jobName)
 
 	tmpPVC, err := k8sClient.CoreV1().PersistentVolumeClaims(namespace).Get(ctx, tmpPVCName, metav1.GetOptions{})
 	if err != nil {
@@ -207,31 +202,6 @@ func waitForPVCToBeDeleted(ctx context.Context, k8sClient kubernetes.Interface, 
 		case <-ctx.Done():
 			return ctx.Err()
 		case <-time.After(5 * time.Second):
-			continue
-		}
-	}
-}
-
-func waitForJobToComplete(ctx context.Context, k8sClient kubernetes.Interface, namespace, jobName string) error {
-	for {
-		job, err := k8sClient.BatchV1().Jobs(namespace).Get(ctx, jobName, metav1.GetOptions{})
-		if err != nil {
-			return err
-		}
-		if job.Status.Active > 0 {
-			fmt.Printf("%s job stil running\n", job.Name)
-		}
-		if job.Status.Failed > 0 {
-			return fmt.Errorf("%s job failed", job.Name)
-		}
-		if job.Status.Succeeded > 0 {
-			fmt.Printf("%s job succeeded\n", job.Name)
-			return nil
-		}
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-time.After(10 * time.Second):
 			continue
 		}
 	}
