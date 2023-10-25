@@ -177,7 +177,7 @@ docker_manifests:
 
 docker_signs:
   - artifacts: all
-    args: ["sign", "--key=$COSIGN_KEY", "-a", "builder=gitlab-promote", "${artifact}"]
+    args: ["sign", "--key=${COSIGN_KEY}", "--tlog-upload=false", "-a", "builder=gitlab-promote", "${artifact}@${digest}"]
 
 # Documentation: https://goreleaser.com/customization/changelog/
 changelog:
