@@ -3,7 +3,7 @@ module gitlab.avisi.cloud/ame/acloud-toolkit
 go 1.20
 
 require (
-	github.com/google/uuid v1.3.1
+	github.com/google/uuid v1.4.0
 	github.com/kubernetes-csi/external-snapshotter/client/v6 v6.3.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pkg/errors v0.9.1
