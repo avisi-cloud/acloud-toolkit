@@ -1,0 +1,8 @@
+# List all persistent volumes of a specific storage class within the cluster:
+acloud-toolkit volumes list -s my-storage-class
+
+# List all unattached persistent volumes:
+acloud-toolkit volumes list --unattached-only
+
+# List all unattached CSI persistent volumes:
+acloud-toolkit volumes list --unattached-only --csi-only

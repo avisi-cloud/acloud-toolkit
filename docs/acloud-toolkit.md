@@ -1,5 +1,5 @@
 ---
-date: 2023-09-18T14:42:04+02:00
+date: 2023-11-13T16:20:39+01:00
 title: "acloud-toolkit"
 displayName: "acloud-toolkit"
 slug: acloud-toolkit
@@ -11,7 +11,7 @@ images: []
 menu:
   references:
     parent: "acloud-toolkit-ref"
-weight: 745
+weight: 743
 toc: true
 ---
 ## acloud-toolkit
@@ -32,7 +32,7 @@ acloud-toolkit for working with Kubernetes to automate various common tasks and 
 
 * [acloud-toolkit nodes](/references/acloud-toolkit/acloud-toolkit_nodes/)	 - Perform actions on Kubernetes cluster nodes
 * [acloud-toolkit online-docs](/references/acloud-toolkit/acloud-toolkit_online-docs/)	 - Open the online documentation for acloud-toolkit
-* [acloud-toolkit snapshot](/references/acloud-toolkit/acloud-toolkit_snapshot/)	 - snapshot for working with Kubernetes CSI snapshot
-* [acloud-toolkit storage](/references/acloud-toolkit/acloud-toolkit_storage/)	 - storage for working with Kubernetes CSI
+* [acloud-toolkit snapshots](/references/acloud-toolkit/acloud-toolkit_snapshots/)	 - snapshot for working with Kubernetes CSI snapshot
 * [acloud-toolkit version](/references/acloud-toolkit/acloud-toolkit_version/)	 - Print version information
+* [acloud-toolkit volumes](/references/acloud-toolkit/acloud-toolkit_volumes/)	 - Various commands for working with Kubernetes CSI volumes
 

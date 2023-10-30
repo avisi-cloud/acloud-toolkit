@@ -1,4 +1,4 @@
-package storage
+package volumes
 
 import (
 	"context"
@@ -31,7 +31,7 @@ func AddMigrateVolumeOptions(flagSet *flag.FlagSet, opts *migrateVolumeOptions) 
 }
 
 // NewMigrateVolumeCmd returns the Cobra Bootstrap sub command
-func NewMigrateVolumeCmd(ctx context.Context, runOptions *migrateVolumeOptions) *cobra.Command {
+func NewMigrateVolumeCmd(runOptions *migrateVolumeOptions) *cobra.Command {
 	if runOptions == nil {
 		runOptions = NewMigrateVolumeOptions()
 	}
@@ -41,7 +41,7 @@ func NewMigrateVolumeCmd(ctx context.Context, runOptions *migrateVolumeOptions) 
 		Short: "Migrate a volume to another storage class",
 		Long:  `Migrate a volume to another storage class. This will create a new PVC using the target storage class, and copy all file contents over to the new volume. The existing persistent volume will remain available in the cluster.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Duration(runOptions.timeout)*time.Minute)
+			ctxWithTimeout, cancel := context.WithTimeout(cmd.Context(), time.Duration(runOptions.timeout)*time.Minute)
 			defer cancel()
 			return migrate_volume.MigrateVolumeJob(ctxWithTimeout, runOptions.storageClassName, runOptions.pvcName, runOptions.targetNamespace, runOptions.newSize)
 		},

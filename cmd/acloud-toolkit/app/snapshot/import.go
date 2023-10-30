@@ -32,7 +32,7 @@ func NewImportCmd(runOptions *importOptions) *cobra.Command {
 	var cmd = &cobra.Command{
 		Use:   "import <snapshot>",
 		Args:  cobra.ExactArgs(1),
-		Short: "Import raw Snapshot ID into a CSI snapshot.",
+		Short: "Import a raw snapshot ID into a CSI snapshot.",
 		Long: `This command creates Kubernetes CSI snapshot resources using a snapshot ID from the backend storage, for example AWS EBS, or Ceph RBD.
 		`,
 		Example: `
@@ -42,8 +42,6 @@ acloud-toolkit snapshot import --name example snap-12345
 			return snapshots.ImportSnapshotFromRawID(context.Background(), runOptions.snapshotName, runOptions.namespace, runOptions.snapshotStorageClass, args[0])
 		},
 	}
-
 	AddImportFlags(cmd.Flags(), runOptions)
-
 	return cmd
 }

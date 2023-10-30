@@ -7,10 +7,10 @@ import (
 // NewSnapshotCmd returns cobra.Command to run the acloud-toolkit Snapshot sub command
 func NewSnapshotCmd() *cobra.Command {
 	cmds := &cobra.Command{
-		Use:     "snapshot",
+		Use:     "snapshots",
 		Short:   "snapshot for working with Kubernetes CSI snapshot",
 		Long:    "snapshot for working with Kubernetes CSI snapshots to automate various workflows",
-		Aliases: []string{"snapshots"},
+		Aliases: []string{"snapshot", "volumesnapshots"},
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			return nil
 		},

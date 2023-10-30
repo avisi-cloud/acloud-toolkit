@@ -13,13 +13,12 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	volumesnapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v6/apis/volumesnapshot/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func SnapshotCreate(snapshotName string, targetNamespace string, targetName string, snapshotClassName string) error {
+func SnapshotCreate(ctx context.Context, snapshotName string, targetNamespace string, targetName string, snapshotClassName string) error {
 	kubeconfig, err := k8s.GetClientConfig()
 	if err != nil {
 		return err
@@ -45,13 +44,11 @@ func SnapshotCreate(snapshotName string, targetNamespace string, targetName stri
 	}
 
 	// wait until PVC has a persistent volume
-	pvc, err := k8sclient.CoreV1().PersistentVolumeClaims(targetNamespace).Get(context.TODO(), targetName, metav1.GetOptions{})
+	pvc, err := k8sclient.CoreV1().PersistentVolumeClaims(targetNamespace).Get(ctx, targetName, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
 	fmt.Printf("PVC with volume %s found...\n", pvc.Spec.VolumeName)
-
-	volumesnapshotRes := schema.GroupVersionResource{Group: "snapshot.storage.k8s.io", Version: "v1", Resource: "volumesnapshots"}
 
 	var volumeSnapshotClassName *string
 	if strings.TrimSpace(snapshotClassName) != "" {
@@ -80,7 +77,7 @@ func SnapshotCreate(snapshotName string, targetNamespace string, targetName stri
 	}
 
 	fmt.Printf("Creating snapshot %q for PVC %q...\n", snapshotName, targetName)
-	_, err = client.Resource(volumesnapshotRes).Namespace(targetNamespace).Create(context.TODO(), &unstructured.Unstructured{
+	_, err = client.Resource(volumesnapshotResource).Namespace(targetNamespace).Create(ctx, &unstructured.Unstructured{
 		Object: snapshotUnstructued,
 	}, metav1.CreateOptions{})
 	if err != nil {
@@ -89,7 +86,7 @@ func SnapshotCreate(snapshotName string, targetNamespace string, targetName stri
 	fmt.Printf("Snapshot %q created for PVC %q...\n", snapshotName, targetName)
 	fmt.Printf("Waiting until %q is ready for use...\n", snapshotName)
 	for {
-		snapshotUnstructued, err := client.Resource(volumesnapshotRes).Namespace(targetNamespace).Get(context.TODO(), snapshotName, metav1.GetOptions{})
+		snapshotUnstructued, err := client.Resource(volumesnapshotResource).Namespace(targetNamespace).Get(ctx, snapshotName, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
@@ -103,7 +100,12 @@ func SnapshotCreate(snapshotName string, targetNamespace string, targetName stri
 			fmt.Printf("Snapshot %q is ready for use...\n", snapshotName)
 			break
 		}
-		time.Sleep(1 * time.Second)
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(1 * time.Second):
+			continue
+		}
 	}
 	fmt.Printf("Snapshot %q completed...\n", snapshotName)
 

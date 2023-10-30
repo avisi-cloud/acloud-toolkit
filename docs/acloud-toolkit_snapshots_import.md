@@ -1,9 +1,9 @@
 ---
-date: 2023-09-18T14:42:04+02:00
-title: "acloud-toolkit snapshot import"
-displayName: "snapshot import"
-slug: acloud-toolkit_snapshot_import
-url: /references/acloud-toolkit/acloud-toolkit_snapshot_import/
+date: 2023-11-13T16:20:39+01:00
+title: "acloud-toolkit snapshots import"
+displayName: "snapshots import"
+slug: acloud-toolkit_snapshots_import
+url: /references/acloud-toolkit/acloud-toolkit_snapshots_import/
 description: ""
 lead: ""
 draft: false
@@ -14,9 +14,9 @@ menu:
 weight: 755
 toc: true
 ---
-## acloud-toolkit snapshot import
+## acloud-toolkit snapshots import
 
-Import raw Snapshot ID into a CSI snapshot.
+Import a raw snapshot ID into a CSI snapshot.
 
 ### Synopsis
 
@@ -24,7 +24,7 @@ This command creates Kubernetes CSI snapshot resources using a snapshot ID from 
 		
 
 ```
-acloud-toolkit snapshot import <snapshot> [flags]
+acloud-toolkit snapshots import <snapshot> [flags]
 ```
 
 ### Examples
@@ -46,5 +46,5 @@ acloud-toolkit snapshot import --name example snap-12345
 
 ### SEE ALSO
 
-* [acloud-toolkit snapshot](/references/acloud-toolkit/acloud-toolkit_snapshot/)	 - snapshot for working with Kubernetes CSI snapshot
+* [acloud-toolkit snapshots](/references/acloud-toolkit/acloud-toolkit_snapshots/)	 - snapshot for working with Kubernetes CSI snapshot
 

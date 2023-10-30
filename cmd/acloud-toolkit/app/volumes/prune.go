@@ -1,8 +1,6 @@
-package storage
+package volumes
 
 import (
-	"context"
-
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/ame/prune"
@@ -29,7 +27,7 @@ func NewvolumePruneCmd(runOptions *volumePruneOptions) *cobra.Command {
 
 	var cmd = &cobra.Command{
 		Use:   "prune <persistent-volume-claim>",
-		Short: "prune removes any unused and released persistent volumes",
+		Short: "Prune removes any unused and released persistent volumes",
 		Long:  `The 'prune' command removes any released persistent volumes.`,
 		Example: `
 # Prune all persistent volumes that are set to Released
@@ -37,7 +35,7 @@ acloud-toolkit storage prune
 `,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := prune.PruneVolumes(context.Background(), runOptions.dryRun); err != nil {
+			if err := prune.PruneVolumes(cmd.Context(), runOptions.dryRun); err != nil {
 				return err
 			}
 			return nil
