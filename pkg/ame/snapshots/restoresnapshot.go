@@ -7,6 +7,7 @@ import (
 
 	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/helpers"
 	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/k8s"
+	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/kubestorageclasses"
 
 	"k8s.io/client-go/dynamic"
 
@@ -14,14 +15,13 @@ import (
 	v1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 
 	"github.com/google/uuid"
 	volumesnapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v6/apis/volumesnapshot/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
 
-func Restore(snapshotName string, sourceNamespace string, targetName string, targetNamespace string, restoreStorageClass string) error {
+func RestoreSnapshot(ctx context.Context, snapshotName string, sourceNamespace string, targetName string, targetNamespace string, restoreStorageClass string) error {
 	kubeconfig, err := k8s.GetClientConfig()
 	if err != nil {
 		return err
@@ -53,26 +53,10 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 		sourceNamespace = contextNamespace
 	}
 
-	ctx := context.Background()
-
-	storageClasses, err := k8sclient.StorageV1().StorageClasses().List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return fmt.Errorf("error validating storage classes: %w", err)
-	}
-	if len(storageClasses.Items) == 0 {
-		return fmt.Errorf("no storage classes present in this cluster")
-	}
-
 	if restoreStorageClass == "" {
-		for _, sc := range storageClasses.Items {
-			value, ok := sc.Annotations["storageclass.kubernetes.io/is-default-class"]
-			if ok && value == "true" {
-				restoreStorageClass = sc.Name
-				break
-			}
-		}
-		if restoreStorageClass == "" {
-			return fmt.Errorf("no default storage class installed in cluster")
+		restoreStorageClass, err = kubestorageclasses.GetDefaultStorageClassName(ctx, k8sclient)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -88,8 +72,7 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 		return fmt.Errorf("storage class volume binding mode is not immedidate")
 	}
 
-	volumesnapshotRes := schema.GroupVersionResource{Group: "snapshot.storage.k8s.io", Version: "v1", Resource: "volumesnapshots"}
-	snapshotUnstructued, err := client.Resource(volumesnapshotRes).Namespace(sourceNamespace).Get(context.TODO(), snapshotName, metav1.GetOptions{})
+	snapshotUnstructued, err := client.Resource(volumesnapshotResource).Namespace(sourceNamespace).Get(ctx, snapshotName, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -112,7 +95,7 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 	if snapshot.Spec.Source.PersistentVolumeClaimName != nil {
 		sourcePVC = *snapshot.Spec.Source.PersistentVolumeClaimName
 	}
-	_, err = k8sclient.CoreV1().PersistentVolumeClaims(sourceNamespace).Create(context.TODO(), &apiv1.PersistentVolumeClaim{
+	_, err = k8sclient.CoreV1().PersistentVolumeClaims(sourceNamespace).Create(ctx, &apiv1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      restorePVCName,
 			Namespace: sourceNamespace,
@@ -144,7 +127,7 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 	fmt.Printf("created PVC %s...\n", restorePVCName)
 
 	// wait until PVC has a persistent volume
-	pvc, err := k8sclient.CoreV1().PersistentVolumeClaims(sourceNamespace).Get(context.TODO(), restorePVCName, metav1.GetOptions{})
+	pvc, err := k8sclient.CoreV1().PersistentVolumeClaims(sourceNamespace).Get(ctx, restorePVCName, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -154,14 +137,14 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 		}
 		time.Sleep(1 * time.Second)
 
-		pvc, err = k8sclient.CoreV1().PersistentVolumeClaims(sourceNamespace).Get(context.TODO(), restorePVCName, metav1.GetOptions{})
+		pvc, err = k8sclient.CoreV1().PersistentVolumeClaims(sourceNamespace).Get(ctx, restorePVCName, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}
 	}
 	fmt.Printf("PVC has volume %s...\n", pvc.Spec.VolumeName)
 
-	ctxWithTimeout, cancel := context.WithTimeout(context.TODO(), 1*time.Hour)
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, 1*time.Hour)
 	defer cancel()
 	pvc, err = k8s.GetPersistentVolumeClaimAndCheckForVolumes(ctxWithTimeout, k8sclient, restorePVCName, sourceNamespace)
 	if err != nil {
@@ -169,14 +152,14 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 	}
 
 	err = helpers.RetryWithCancel(ctxWithTimeout, 3, 2*time.Second, func() error {
-		return k8s.SetPVReclaimPolicyToRetain(context.TODO(), k8sclient, pvc)
+		return k8s.SetPVReclaimPolicyToRetain(ctx, k8sclient, pvc)
 	})
 	if err != nil {
 		return err
 	}
 
 	// Delete the PVC
-	err = k8sclient.CoreV1().PersistentVolumeClaims(sourceNamespace).Delete(context.TODO(), restorePVCName, metav1.DeleteOptions{})
+	err = k8sclient.CoreV1().PersistentVolumeClaims(sourceNamespace).Delete(ctx, restorePVCName, metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
@@ -195,7 +178,7 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 	}
 
 	// Create a new PVC in the target namespace.
-	_, err = k8sclient.CoreV1().PersistentVolumeClaims(targetNamespace).Create(context.TODO(), &apiv1.PersistentVolumeClaim{
+	_, err = k8sclient.CoreV1().PersistentVolumeClaims(targetNamespace).Create(ctx, &apiv1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      targetName,
 			Namespace: targetNamespace,
@@ -223,7 +206,7 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 	fmt.Printf("created a new PVC %s in namespace %s...\n", targetName, targetNamespace)
 
 	// validate that the new PVC has the correct persistent volume claimed.
-	targetPVC, err := k8sclient.CoreV1().PersistentVolumeClaims(targetNamespace).Get(context.TODO(), targetName, metav1.GetOptions{})
+	targetPVC, err := k8sclient.CoreV1().PersistentVolumeClaims(targetNamespace).Get(ctx, targetName, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
@@ -233,7 +216,7 @@ func Restore(snapshotName string, sourceNamespace string, targetName string, tar
 		}
 		time.Sleep(1 * time.Second)
 
-		targetPVC, err = k8sclient.CoreV1().PersistentVolumeClaims(targetNamespace).Get(context.TODO(), targetName, metav1.GetOptions{})
+		targetPVC, err = k8sclient.CoreV1().PersistentVolumeClaims(targetNamespace).Get(ctx, targetName, metav1.GetOptions{})
 		if err != nil {
 			return err
 		}

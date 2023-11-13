@@ -60,9 +60,7 @@ func ResizeVolume(ctx context.Context, namespace string, pvcName string, newSize
 
 	fmt.Printf("current size in cluster: %s\n", storageSize.String())
 	fmt.Printf("new size in cluster: %s\n", newStorageSize.String())
-	// if newStorageSize != storageSize {
-	// 	return nil
-	// }
+
 	pvc.Spec.Resources.Requests = corev1.ResourceList{
 		corev1.ResourceStorage: newStorageSize,
 	}

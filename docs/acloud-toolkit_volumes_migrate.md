@@ -1,9 +1,9 @@
 ---
-date: 2023-09-18T14:42:04+02:00
-title: "acloud-toolkit storage migrate"
-displayName: "storage migrate"
-slug: acloud-toolkit_storage_migrate
-url: /references/acloud-toolkit/acloud-toolkit_storage_migrate/
+date: 2023-11-13T16:20:39+01:00
+title: "acloud-toolkit volumes migrate"
+displayName: "volumes migrate"
+slug: acloud-toolkit_volumes_migrate
+url: /references/acloud-toolkit/acloud-toolkit_volumes_migrate/
 description: ""
 lead: ""
 draft: false
@@ -11,10 +11,10 @@ images: []
 menu:
   references:
     parent: "acloud-toolkit-ref"
-weight: 750
+weight: 748
 toc: true
 ---
-## acloud-toolkit storage migrate
+## acloud-toolkit volumes migrate
 
 Migrate a volume to another storage class
 
@@ -23,7 +23,7 @@ Migrate a volume to another storage class
 Migrate a volume to another storage class. This will create a new PVC using the target storage class, and copy all file contents over to the new volume. The existing persistent volume will remain available in the cluster.
 
 ```
-acloud-toolkit storage migrate [flags]
+acloud-toolkit volumes migrate [flags]
 ```
 
 ### Options
@@ -39,5 +39,5 @@ acloud-toolkit storage migrate [flags]
 
 ### SEE ALSO
 
-* [acloud-toolkit storage](/references/acloud-toolkit/acloud-toolkit_storage/)	 - storage for working with Kubernetes CSI
+* [acloud-toolkit volumes](/references/acloud-toolkit/acloud-toolkit_volumes/)	 - Various commands for working with Kubernetes CSI volumes
 

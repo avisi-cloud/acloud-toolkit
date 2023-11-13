@@ -12,10 +12,9 @@ import (
 	volumesnapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v6/apis/volumesnapshot/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-func List(ctx context.Context, sourceNamespace string, allNamespaces, fetchSnapshotHandle bool) error {
+func List(ctx context.Context, namespace string, allNamespaces, fetchSnapshotHandle bool) error {
 	kubeconfig, err := k8s.GetClientConfig()
 	if err != nil {
 		return err
@@ -28,16 +27,12 @@ func List(ctx context.Context, sourceNamespace string, allNamespaces, fetchSnaps
 	if err != nil {
 		return err
 	}
-
-	namespace, _, err := kubeconfig.Namespace()
-	if err != nil {
-		return err
-	}
 	if namespace == "" {
-		return nil
-	}
-	if sourceNamespace != "" {
-		namespace = sourceNamespace
+		contextNamespace, _, err := kubeconfig.Namespace()
+		if err != nil {
+			return err
+		}
+		namespace = contextNamespace
 	}
 
 	// Collect namespaces, either based a single (default) namespace, or collect all namespaces in the cluster
@@ -59,8 +54,7 @@ func List(ctx context.Context, sourceNamespace string, allNamespaces, fetchSnaps
 	// collect all listSnapshots for each namespace
 	listSnapshots := []volumesnapshotv1.VolumeSnapshot{}
 	for _, namespace := range namespaces {
-		volumesnapshotRes := schema.GroupVersionResource{Group: "snapshot.storage.k8s.io", Version: "v1", Resource: "volumesnapshots"}
-		snapshotUnstructured, err := client.Resource(volumesnapshotRes).Namespace(namespace).List(context.TODO(), metav1.ListOptions{})
+		snapshotUnstructured, err := client.Resource(volumesnapshotResource).Namespace(namespace).List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
 			return err
 		}

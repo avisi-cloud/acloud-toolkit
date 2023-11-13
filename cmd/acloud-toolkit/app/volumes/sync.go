@@ -1,4 +1,4 @@
-package storage
+package volumes
 
 import (
 	"context"
@@ -32,21 +32,21 @@ func AddSyncVolumeOptions(flagSet *flag.FlagSet, opts *syncVolumeOptions) {
 }
 
 //go:embed examples/sync.txt
-var drainExamples string
+var syncExamples string
 
 // NewSyncVolumeCmd returns the Cobra Bootstrap sub command
-func NewSyncVolumeCmd(ctx context.Context, runOptions *syncVolumeOptions) *cobra.Command {
+func NewSyncVolumeCmd(runOptions *syncVolumeOptions) *cobra.Command {
 	if runOptions == nil {
 		runOptions = NewSyncVolumeOptions()
 	}
 
 	var cmd = &cobra.Command{
 		Use:     "sync",
-		Short:   "sync a volume to another existing volume, or create a new volume",
+		Short:   "Sync a volume to another existing volume, or create a new volume",
 		Long:    `Sync a volume to another existing volume, or create a new volume. This will create a new PVC using the target storage class or use an existing one, and copy all file contents over to the new volume using rsync. The existing persistent volume and persistent volume claim will remain available in the cluster.`,
-		Example: drainExamples,
+		Example: syncExamples,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Duration(runOptions.timeout)*time.Minute)
+			ctxWithTimeout, cancel := context.WithTimeout(cmd.Context(), time.Duration(runOptions.timeout)*time.Minute)
 			defer cancel()
 
 			runOptions.ExtraRsyncArgs = args

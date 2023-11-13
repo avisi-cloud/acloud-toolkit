@@ -1,9 +1,9 @@
 ---
-date: 2023-09-18T14:42:04+02:00
-title: "acloud-toolkit snapshot list"
-displayName: "snapshot list"
-slug: acloud-toolkit_snapshot_list
-url: /references/acloud-toolkit/acloud-toolkit_snapshot_list/
+date: 2023-11-13T16:20:39+01:00
+title: "acloud-toolkit snapshots list"
+displayName: "snapshots list"
+slug: acloud-toolkit_snapshots_list
+url: /references/acloud-toolkit/acloud-toolkit_snapshots_list/
 description: ""
 lead: ""
 draft: false
@@ -14,7 +14,7 @@ menu:
 weight: 754
 toc: true
 ---
-## acloud-toolkit snapshot list
+## acloud-toolkit snapshots list
 
 List all available CSI snapshots within the current namespace
 
@@ -25,7 +25,7 @@ This command lists all available CSI snapshots within the current namespace. CSI
 By default, this command lists all snapshots in the current namespace. You can also specify a different namespace if needed.
 
 ```
-acloud-toolkit snapshot list [flags]
+acloud-toolkit snapshots list [flags]
 ```
 
 ### Examples
@@ -47,11 +47,12 @@ acloud-toolkit snapshot list -A
 
 ```
   -A, --all-namespaces     return results for all namespaces
+  -S, --handles            show snapshot content handle (default true)
   -h, --help               help for list
   -n, --namespace string   If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context
 ```
 
 ### SEE ALSO
 
-* [acloud-toolkit snapshot](/references/acloud-toolkit/acloud-toolkit_snapshot/)	 - snapshot for working with Kubernetes CSI snapshot
+* [acloud-toolkit snapshots](/references/acloud-toolkit/acloud-toolkit_snapshots/)	 - snapshot for working with Kubernetes CSI snapshot
 

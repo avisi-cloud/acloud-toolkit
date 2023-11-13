@@ -9,8 +9,8 @@ import (
 	"gitlab.avisi.cloud/ame/acloud-toolkit/cmd/acloud-toolkit/app/docs"
 	"gitlab.avisi.cloud/ame/acloud-toolkit/cmd/acloud-toolkit/app/nodes"
 	"gitlab.avisi.cloud/ame/acloud-toolkit/cmd/acloud-toolkit/app/snapshot"
-	"gitlab.avisi.cloud/ame/acloud-toolkit/cmd/acloud-toolkit/app/storage"
 	"gitlab.avisi.cloud/ame/acloud-toolkit/cmd/acloud-toolkit/app/version"
+	"gitlab.avisi.cloud/ame/acloud-toolkit/cmd/acloud-toolkit/app/volumes"
 )
 
 // Execute runs the acloud-toolkit application
@@ -34,7 +34,7 @@ func NewACloudToolKitCmd(in io.Reader, out, err io.Writer) *cobra.Command {
 
 	cmds.AddCommand(version.NewVersionCmd())
 	cmds.AddCommand(snapshot.NewSnapshotCmd())
-	cmds.AddCommand(storage.NewStorageCmd())
+	cmds.AddCommand(volumes.NewStorageCmd())
 	cmds.AddCommand(nodes.NewNodesCmd())
 	cmds.AddCommand(docs.NewOpenDocs())
 

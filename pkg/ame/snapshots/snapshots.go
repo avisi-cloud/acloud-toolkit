@@ -37,7 +37,6 @@ func geVolumeSnapshotClassOrDefault(ctx context.Context, client *dynamic.Dynamic
 		return nil, fmt.Errorf("failed to find default volumesnapshotclass: %w", err)
 	}
 	return volumeSnapshotClass, nil
-
 }
 
 func geVolumeSnapshotClass(ctx context.Context, client *dynamic.DynamicClient, className string) (*volumesnapshotv1.VolumeSnapshotClass, error) {

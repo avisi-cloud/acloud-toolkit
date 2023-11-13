@@ -1,6 +1,9 @@
 package snapshot
 
 import (
+	"context"
+	"time"
+
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/ame/snapshots"
@@ -11,6 +14,7 @@ type restoreOptions struct {
 	targetNamespace     string
 	targetName          string
 	restoreStorageClass string
+	timeout             time.Duration
 }
 
 func newRestoreOptions() *restoreOptions {
@@ -21,7 +25,8 @@ func AddRestoreFlags(flagSet *flag.FlagSet, opts *restoreOptions) {
 	flagSet.StringVar(&opts.sourceNamespace, "source-namespace", "", "If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context")
 	flagSet.StringVar(&opts.targetNamespace, "restore-pvc-namespace", "", "")
 	flagSet.StringVar(&opts.targetName, "restore-pvc-name", "", "")
-	flagSet.StringVar(&opts.restoreStorageClass, "restore-storage-class", "ebs-restore", "")
+	flagSet.StringVar(&opts.restoreStorageClass, "restore-storage-class", "", "")
+	flagSet.DurationVarP(&opts.timeout, "timeout", "t", 10*time.Minute, "Duration to wait for the restored snapshot to complete")
 }
 
 // NewRestoreCmd returns the Cobra Bootstrap sub command
@@ -42,7 +47,9 @@ By default, this command restores the PVC to the default storage class installed
 acloud-toolkit snapshot restore my-snapshot --restore-pvc-name my-pvc --restore-storage-class ebs-restore
 		`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return snapshots.Restore(args[0], runOptions.sourceNamespace, runOptions.targetName, runOptions.targetNamespace, runOptions.restoreStorageClass)
+			ctxWithTimeout, cancel := context.WithTimeout(cmd.Context(), time.Duration(runOptions.timeout)*time.Minute)
+			defer cancel()
+			return snapshots.RestoreSnapshot(ctxWithTimeout, args[0], runOptions.sourceNamespace, runOptions.targetName, runOptions.targetNamespace, runOptions.restoreStorageClass)
 		},
 	}
 

@@ -1,6 +1,9 @@
 package snapshot
 
 import (
+	"context"
+	"time"
+
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/ame/snapshots"
@@ -10,6 +13,7 @@ type snapshotCreateOptions struct {
 	persistentVolumeClaimName      string
 	persistentVolumeClaimNamespace string
 	snapshotCreateStorageClass     string
+	timeout                        time.Duration
 }
 
 func newSnapshotCreateOptions() *snapshotCreateOptions {
@@ -19,7 +23,8 @@ func newSnapshotCreateOptions() *snapshotCreateOptions {
 func AddSnapshotCreateFlags(flagSet *flag.FlagSet, opts *snapshotCreateOptions) {
 	flagSet.StringVarP(&opts.persistentVolumeClaimNamespace, "namespace", "n", "", "If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context")
 	flagSet.StringVarP(&opts.persistentVolumeClaimName, "pvc", "p", "", "Name of the PVC to snapshot. (required)")
-	flagSet.StringVarP(&opts.snapshotCreateStorageClass, "snapshot-class", "s", "", "Name of the CSI volume snapshot class to use. (default: use default snapshot class)")
+	flagSet.StringVarP(&opts.snapshotCreateStorageClass, "snapshot-class", "s", "", "Name of the CSI volume snapshot class to use. Uses the default VolumeSnapshotClass by default")
+	flagSet.DurationVarP(&opts.timeout, "timeout", "t", 60*time.Minute, "Duration to wait for the created snapshot to be ready for use")
 }
 
 // NewSnapshotCreateCmd returns the Cobra Bootstrap sub command
@@ -43,7 +48,9 @@ acloud-toolkit snapshot create my-snapshot --pvc=my-pvc
 acloud-toolkit snapshot create my-snapshot --pvc=my-pvc --namespace=my-namespace
 		`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return snapshots.SnapshotCreate(args[0], runOptions.persistentVolumeClaimNamespace, runOptions.persistentVolumeClaimName, runOptions.snapshotCreateStorageClass)
+			ctxWithTimeout, cancel := context.WithTimeout(cmd.Context(), time.Duration(runOptions.timeout)*time.Minute)
+			defer cancel()
+			return snapshots.SnapshotCreate(ctxWithTimeout, args[0], runOptions.persistentVolumeClaimNamespace, runOptions.persistentVolumeClaimName, runOptions.snapshotCreateStorageClass)
 		},
 	}
 

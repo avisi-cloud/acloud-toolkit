@@ -1,9 +1,9 @@
 ---
-date: 2023-09-18T14:42:04+02:00
-title: "acloud-toolkit snapshot create"
-displayName: "snapshot create"
-slug: acloud-toolkit_snapshot_create
-url: /references/acloud-toolkit/acloud-toolkit_snapshot_create/
+date: 2023-11-13T16:20:39+01:00
+title: "acloud-toolkit snapshots create"
+displayName: "snapshots create"
+slug: acloud-toolkit_snapshots_create
+url: /references/acloud-toolkit/acloud-toolkit_snapshots_create/
 description: ""
 lead: ""
 draft: false
@@ -14,7 +14,7 @@ menu:
 weight: 756
 toc: true
 ---
-## acloud-toolkit snapshot create
+## acloud-toolkit snapshots create
 
 Create a snapshot of a Kubernetes PVC (persistent volume claim).
 
@@ -25,7 +25,7 @@ This command creates a snapshot of a Kubernetes PVC, allowing you to capture a p
 To create a snapshot, you need to provide the name of the PVC to snapshot, as well as a name for the snapshot. You can also specify a namespace if the PVC is not in the current namespace context. If no snapshot class is specified, the default snapshot class will be used.
 
 ```
-acloud-toolkit snapshot create <snapshot> [flags]
+acloud-toolkit snapshots create <snapshot> [flags]
 ```
 
 ### Examples
@@ -46,10 +46,11 @@ acloud-toolkit snapshot create my-snapshot --pvc=my-pvc --namespace=my-namespace
   -h, --help                    help for create
   -n, --namespace string        If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context
   -p, --pvc string              Name of the PVC to snapshot. (required)
-  -s, --snapshot-class string   Name of the CSI volume snapshot class to use. (default: use default snapshot class)
+  -s, --snapshot-class string   Name of the CSI volume snapshot class to use. Uses the default VolumeSnapshotClass by default
+  -t, --timeout duration        Duration to wait for the created snapshot to be ready for use (default 1h0m0s)
 ```
 
 ### SEE ALSO
 
-* [acloud-toolkit snapshot](/references/acloud-toolkit/acloud-toolkit_snapshot/)	 - snapshot for working with Kubernetes CSI snapshot
+* [acloud-toolkit snapshots](/references/acloud-toolkit/acloud-toolkit_snapshots/)	 - snapshot for working with Kubernetes CSI snapshot
 

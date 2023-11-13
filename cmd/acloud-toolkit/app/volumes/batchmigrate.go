@@ -1,4 +1,4 @@
-package storage
+package volumes
 
 import (
 	"context"
@@ -31,7 +31,7 @@ func AddBatchMigrateVolumeOptions(flagSet *flag.FlagSet, opts *batchMigrateVolum
 }
 
 // NewMigrateVolumeCmd returns the Cobra Bootstrap sub command
-func NewBatchMigrateVolumeCmd(ctx context.Context, runOptions *batchMigrateVolumeOptions) *cobra.Command {
+func NewBatchMigrateVolumeCmd(runOptions *batchMigrateVolumeOptions) *cobra.Command {
 	if runOptions == nil {
 		runOptions = NewBatchMigrateVolumeOptions()
 	}
@@ -41,7 +41,7 @@ func NewBatchMigrateVolumeCmd(ctx context.Context, runOptions *batchMigrateVolum
 		Short: "Batch migrate all volumes within a namespace to another storage class",
 		Long:  `Batch migrate all volumes from a source storage class within a namespace to another storage class. For each PVC that has the source storage class within the namespace, this will create a new PVC using the target storage class, and copy all file contents over to the new volume. The existing persistent volume will remain available in the cluster.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctxWithTimeout, cancel := context.WithTimeout(ctx, time.Duration(runOptions.timeout)*time.Minute)
+			ctxWithTimeout, cancel := context.WithTimeout(cmd.Context(), time.Duration(runOptions.timeout)*time.Minute)
 			defer cancel()
 			return migrate_volume.BatchMigrateVolumes(ctxWithTimeout, runOptions.sourceStorageClassName, runOptions.targetStorageClassName, runOptions.targetNamespace, runOptions.dryRun)
 		},

@@ -1,9 +1,9 @@
 ---
-date: 2023-09-18T14:42:04+02:00
-title: "acloud-toolkit snapshot restore"
-displayName: "snapshot restore"
-slug: acloud-toolkit_snapshot_restore
-url: /references/acloud-toolkit/acloud-toolkit_snapshot_restore/
+date: 2023-11-13T16:20:39+01:00
+title: "acloud-toolkit snapshots restore"
+displayName: "snapshots restore"
+slug: acloud-toolkit_snapshots_restore
+url: /references/acloud-toolkit/acloud-toolkit_snapshots_restore/
 description: ""
 lead: ""
 draft: false
@@ -14,7 +14,7 @@ menu:
 weight: 753
 toc: true
 ---
-## acloud-toolkit snapshot restore
+## acloud-toolkit snapshots restore
 
 Restore a Kubernetes PVC from a CSI snapshot.
 
@@ -26,7 +26,7 @@ By default, this command restores the PVC to the default storage class installed
 		
 
 ```
-acloud-toolkit snapshot restore <snapshot> [flags]
+acloud-toolkit snapshots restore <snapshot> [flags]
 ```
 
 ### Examples
@@ -43,11 +43,12 @@ acloud-toolkit snapshot restore my-snapshot --restore-pvc-name my-pvc --restore-
   -h, --help                           help for restore
       --restore-pvc-name string        
       --restore-pvc-namespace string   
-      --restore-storage-class string    (default "ebs-restore")
+      --restore-storage-class string   
       --source-namespace string        If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context
+  -t, --timeout duration               Duration to wait for the restored snapshot to complete (default 10m0s)
 ```
 
 ### SEE ALSO
 
-* [acloud-toolkit snapshot](/references/acloud-toolkit/acloud-toolkit_snapshot/)	 - snapshot for working with Kubernetes CSI snapshot
+* [acloud-toolkit snapshots](/references/acloud-toolkit/acloud-toolkit_snapshots/)	 - snapshot for working with Kubernetes CSI snapshot
 
