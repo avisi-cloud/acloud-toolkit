@@ -5,10 +5,14 @@ stages:
   - release
 
 include:
-  - 'https://gitlab.avisi.cloud/ame/ci/raw/master/.templates/docker-20.yaml'
-  - 'https://gitlab.avisi.cloud/ame/ci/raw/master/.templates/danger.yaml'
-  - 'https://gitlab.avisi.cloud/ame/ci/raw/master/.templates/golang.yaml'
-  - 'https://gitlab.avisi.cloud/ame/ci/raw/master/.templates/sonar-qube.yaml'
+  - project: ame/ci
+    file: /.templates/docker-20.yaml
+  - project: ame/ci
+    file: /.templates/danger.yaml
+  - project: ame/ci
+    file: /.templates/golang.yaml
+  - project: ame/ci
+    file: /.templates/sonar-qube.yaml
 
 variables:
   BRANCH: $CI_COMMIT_BRANCH
