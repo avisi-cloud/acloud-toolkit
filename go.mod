@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/andanhm/go-prettytime v1.1.0
-	github.com/google/uuid v1.5.0
+	github.com/google/uuid v1.6.0
 	github.com/kubernetes-csi/external-snapshotter/client/v6 v6.3.0
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/pkg/errors v0.9.1
