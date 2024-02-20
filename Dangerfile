@@ -13,4 +13,17 @@ unless gitlab.mr_json["assignee"]
     warn "This merge request does not have any assignee yet. Setting an assignee clarifies who needs to take action on the merge request at any given time."
 end
 
+if gitlab.mr_author != "automation-user"
+ 
+  jira.check(
+    key: ["[a-zA-Z]+"],
+    url: "https://avisi.atlassian.net/browse/browse",
+    search_title: true,
+    search_commits: true,
+    fail_on_warning: true,
+    report_missing: true,
+    skippable: false
+  )
+end
+
 markdown("**If needed, you can retry the [`danger-review` job](#{ENV['CI_JOB_URL']}) that generated this comment.**")
