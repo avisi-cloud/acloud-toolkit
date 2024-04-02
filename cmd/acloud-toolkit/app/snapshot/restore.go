@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+
 	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/ame/snapshots"
 )
 
@@ -47,7 +48,7 @@ By default, this command restores the PVC to the default storage class installed
 acloud-toolkit snapshot restore my-snapshot --restore-pvc-name my-pvc --restore-storage-class ebs-restore
 		`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctxWithTimeout, cancel := context.WithTimeout(cmd.Context(), time.Duration(runOptions.timeout)*time.Minute)
+			ctxWithTimeout, cancel := context.WithTimeout(cmd.Context(), runOptions.timeout)
 			defer cancel()
 			return snapshots.RestoreSnapshot(ctxWithTimeout, args[0], runOptions.sourceNamespace, runOptions.targetName, runOptions.targetNamespace, runOptions.restoreStorageClass)
 		},

@@ -6,6 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+
 	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/ame/snapshots"
 )
 
@@ -48,7 +49,7 @@ acloud-toolkit snapshot create my-snapshot --pvc=my-pvc
 acloud-toolkit snapshot create my-snapshot --pvc=my-pvc --namespace=my-namespace
 		`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			ctxWithTimeout, cancel := context.WithTimeout(cmd.Context(), time.Duration(runOptions.timeout)*time.Minute)
+			ctxWithTimeout, cancel := context.WithTimeout(cmd.Context(), runOptions.timeout)
 			defer cancel()
 			return snapshots.SnapshotCreate(ctxWithTimeout, args[0], runOptions.persistentVolumeClaimNamespace, runOptions.persistentVolumeClaimName, runOptions.snapshotCreateStorageClass)
 		},
