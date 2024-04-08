@@ -21,5 +21,6 @@ func NewSnapshotCmd() *cobra.Command {
 	cmds.AddCommand(NewRestoreCmd(nil))
 	cmds.AddCommand(NewSnapshotCreateCmd(nil))
 	cmds.AddCommand(NewImportCmd(nil))
+	cmds.AddCommand(NewPruneCmd(nil))
 	return cmds
 }
