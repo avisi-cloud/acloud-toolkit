@@ -9,7 +9,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	v1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
-	policyv1 "k8s.io/api/policy/v1beta1"
 	kubeerrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -187,36 +186,6 @@ func (a *KubeApply) ApplyIngress(ctx context.Context, ingress *networkingv1.Ingr
 
 	// Patch the installed ingress with out new values
 	_, err = a.client.NetworkingV1().Ingresses(a.namespace).Update(ctx, existingIngress, metav1.UpdateOptions{})
-	return err
-}
-
-// ApplyPodSecurityPolicy installs or updates a pod security policy
-func (a *KubeApply) ApplyPodSecurityPolicy(ctx context.Context, psp *policyv1.PodSecurityPolicy) error {
-	const errorMsg = "failed to install pod security policy"
-
-	existingPSP, err := a.client.PolicyV1beta1().PodSecurityPolicies().Get(ctx, psp.GetName(), metav1.GetOptions{})
-	if err != nil {
-		if kubeerrors.IsNotFound(err) {
-			_, err := a.client.PolicyV1beta1().PodSecurityPolicies().Create(ctx, psp, metav1.CreateOptions{})
-			if err != nil && !kubeerrors.IsAlreadyExists(err) {
-				return errors.Wrapf(err, errorMsg)
-			}
-			return nil
-		}
-		return errors.Wrapf(err, errorMsg)
-	}
-
-	if existingPSP == nil {
-		return fmt.Errorf(errorMsg)
-	}
-
-	// Update the attributes
-	existingPSP.Spec = psp.Spec
-	existingPSP.Labels = psp.Labels
-	existingPSP.Annotations = psp.Annotations
-
-	// Patch the installed PSP with out new values
-	_, err = a.client.PolicyV1beta1().PodSecurityPolicies().Update(ctx, psp, metav1.UpdateOptions{})
 	return err
 }
 
