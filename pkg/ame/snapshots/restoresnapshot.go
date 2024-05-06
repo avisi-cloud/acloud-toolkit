@@ -114,7 +114,7 @@ func RestoreSnapshot(ctx context.Context, snapshotName string, sourceNamespace s
 				Name:     snapshotName,
 			},
 			AccessModes: []apiv1.PersistentVolumeAccessMode{apiv1.ReadWriteOnce},
-			Resources: apiv1.ResourceRequirements{
+			Resources: apiv1.VolumeResourceRequirements{
 				Requests: apiv1.ResourceList{
 					"storage": storageSize,
 				},
@@ -193,7 +193,7 @@ func RestoreSnapshot(ctx context.Context, snapshotName string, sourceNamespace s
 		Spec: apiv1.PersistentVolumeClaimSpec{
 			StorageClassName: helpers.String(restoreStorageClass),
 			AccessModes:      []apiv1.PersistentVolumeAccessMode{apiv1.ReadWriteOnce},
-			Resources: apiv1.ResourceRequirements{
+			Resources: apiv1.VolumeResourceRequirements{
 				Requests: apiv1.ResourceList{
 					"storage": storageSize,
 				},
