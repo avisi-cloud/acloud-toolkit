@@ -20,6 +20,9 @@ type BatchMigrateOptions struct {
 	MigrationMode          MigrationMode
 	MigrationFlags         string
 	NodeSelector           []string
+
+	RSyncImage  string
+	RCloneImage string
 }
 
 func BatchMigrateVolumes(ctx context.Context, opts BatchMigrateOptions) error {

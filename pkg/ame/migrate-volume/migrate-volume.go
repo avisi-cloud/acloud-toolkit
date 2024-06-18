@@ -122,7 +122,7 @@ func StartMigrateVolumeJob(ctx context.Context, opts MigrationOptions) error {
 		if opts.RCloneImage != "" {
 			image = opts.RCloneImage
 		}
-		args = fmt.Sprintf("rclone copy /mnt/old/ /mnt/new --multi-thread-streams=8 --metadata --progress %s", opts.MigrationFlags)
+		args = fmt.Sprintf("rclone copy /mnt/old/ /mnt/new --progress %s", opts.MigrationFlags)
 	default:
 		return fmt.Errorf("unknown mode %q", opts.MigrationMode)
 	}

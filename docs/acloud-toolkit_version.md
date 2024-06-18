@@ -1,5 +1,5 @@
 ---
-date: 2024-06-18T12:19:26+02:00
+date: 2024-06-18T12:42:26+02:00
 title: "acloud-toolkit version"
 displayName: "version"
 slug: acloud-toolkit_version

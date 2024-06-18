@@ -1,0 +1,5 @@
+# Migrate all rbd volumes to rbd-new using rclone:
+acloud-toolkit storage batch-migrate -s rbd -t rbd-new -m rclone
+
+# Add additional flags to rclone:
+acloud-toolkit storage batch-migrate -s rbd -t rbd-new -m rclone -f '--multi-thread-streams=8 --metadata'
