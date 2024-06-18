@@ -1,5 +1,5 @@
 ---
-date: 2024-05-06T11:06:16+02:00
+date: 2024-06-18T12:19:26+02:00
 title: "acloud-toolkit"
 displayName: "acloud-toolkit"
 slug: acloud-toolkit

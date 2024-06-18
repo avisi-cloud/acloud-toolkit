@@ -3,6 +3,7 @@ package migrate_volume
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/helpers"
@@ -21,15 +22,67 @@ const (
 	USE_EQUAL_SIZE = 0
 )
 
-func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName string, namespace string, newSize int64) error {
-	k8sClient := k8s.GetClientOrDie()
+// MigrationMode is the type of tool used for migration of the filesystem
+type MigrationOptions struct {
+	// StorageClassName is the name of the new storageclass
+	StorageClassName string
+	// PVCName is the name of the persistent volume claim
+	PVCName string
+	// TargetNamespace is the namespace where the volume migrate job will be executed
+	TargetNamespace string
+	// NewSize is the size of the new PVC. Value is in MB. Default 0 means use same size as current PVC
+	NewSize int64
+
+	// MigrationMode is the type of tool used for migration of the filesystem
+	MigrationMode MigrationMode
+
+	// RCloneImage is the image used for the rclone migration tool
+	RCloneImage string
+	// RyncImage is the image used for the rsync migration tool
+	RyncImage string
+
+	// comma separated list of node labels used for nodeSelector
+	NodeSelector []string
+
+	// Additional flags to pass to the migration tool
+	MigrationFlags string
+}
+
+// StartMigrateVolumeJob starts a job that migrates the filesystem on a persistent volume to another storage class
+// This will create a new PVC using the target storage class, and copy all file contents over to the new volume.
+// The existing persistent volume will remain available in the cluster.
+// The function will return an error if the migration fails.
+func StartMigrateVolumeJob(ctx context.Context, opts MigrationOptions) error {
+
+	metav1.FormatLabelSelector(nil)
+	kubeconfig, err := k8s.GetClientConfig()
+	if err != nil {
+		return err
+	}
+	config, err := kubeconfig.ClientConfig()
+	if err != nil {
+		return err
+	}
+	k8sClient, err := k8s.GetClientWithConfig(config)
+	if err != nil {
+		return err
+	}
+	namespace := opts.TargetNamespace
+	if namespace == "" {
+		contextNamespace, _, err := kubeconfig.Namespace()
+		if err != nil {
+			return err
+		}
+		namespace = contextNamespace
+	}
 
 	migrateVolumeJob := k8sClient.BatchV1().Jobs(namespace)
 
+	pvcName := opts.PVCName
 	jobName := "migrate-volume-" + pvcName
-	tmpPVCName := "tmp-" + pvcName
+	tmpPVCName := "tmp-" + opts.PVCName
 
-	if err := k8s.ValidateStorageClassExists(ctx, k8sClient, storageClassName); err != nil {
+	if err := k8s.ValidateStorageClassExists(ctx, k8sClient, opts.StorageClassName); err != nil {
 		return err
 	}
 
@@ -39,11 +92,11 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 	}
 
 	storageSize := *pvc.Spec.Resources.Requests.Storage()
-	if newSize > USE_EQUAL_SIZE {
-		storageSize = resource.MustParse(fmt.Sprintf("%dM", newSize))
+	if opts.NewSize > USE_EQUAL_SIZE {
+		storageSize = resource.MustParse(fmt.Sprintf("%dM", opts.NewSize))
 	}
 
-	err = k8s.CreatePersistentVolumeClaim(ctx, k8sClient, tmpPVCName, namespace, storageClassName, storageSize)
+	err = k8s.CreatePersistentVolumeClaim(ctx, k8sClient, tmpPVCName, namespace, opts.StorageClassName, storageSize)
 	if err != nil {
 		if !kubeerrors.IsAlreadyExists(err) {
 			return err
@@ -55,6 +108,34 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 
 	ttlSecondsAfterFinished := int32(1000)
 
+	image := ""
+	args := ""
+	switch opts.MigrationMode {
+	case MigrationModeRsync:
+		image = DefaultRSyncContainerImage
+		if opts.RyncImage != "" {
+			image = opts.RyncImage
+		}
+		args = fmt.Sprintf("rsync -a --stats --progress %s /mnt/old/ /mnt/new", opts.MigrationFlags)
+	case MigrationModeRclone:
+		image = DefaultRCloneContainerImage
+		if opts.RCloneImage != "" {
+			image = opts.RCloneImage
+		}
+		args = fmt.Sprintf("rclone copy /mnt/old/ /mnt/new --multi-thread-streams=8 --metadata --progress %s", opts.MigrationFlags)
+	default:
+		return fmt.Errorf("unknown mode %q", opts.MigrationMode)
+	}
+
+	labelSelector, err := metav1.ParseToLabelSelector(strings.Join(opts.NodeSelector, ","))
+	if err != nil {
+		return fmt.Errorf("failed to parse nodeSelector: %w", err)
+	}
+	nodeSelector, err := metav1.LabelSelectorAsMap(labelSelector)
+	if err != nil {
+		return fmt.Errorf("failed to convert nodeSelector to map: %w", err)
+	}
+
 	jobSpec := &batchv1.Job{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      jobName,
@@ -63,18 +144,18 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 		Spec: batchv1.JobSpec{
 			TTLSecondsAfterFinished: &ttlSecondsAfterFinished,
 			Template: v1.PodTemplateSpec{
-
 				Spec: v1.PodSpec{
+					NodeSelector: nodeSelector,
 					SecurityContext: &v1.PodSecurityContext{
 						RunAsNonRoot: helpers.False(),
 					},
 					Containers: []v1.Container{
 						{
 							Name:            "volume-migrator",
-							Image:           "registry.avisi.cloud/library/rsync:v1",
+							Image:           image,
 							ImagePullPolicy: v1.PullAlways,
 							Command:         []string{"/bin/sh"},
-							Args:            []string{"-c", "rsync -a --stats --progress /mnt/old/ /mnt/new"},
+							Args:            []string{"-c", args},
 							VolumeMounts: []v1.VolumeMount{
 								k8s.NewVolumeMount("old", "/mnt/old/", true),
 								k8s.NewVolumeMount("new", "/mnt/new/", false),
@@ -159,7 +240,7 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 	}
 
 	err = helpers.RetryWithCancel(ctx, 3, 2*time.Second, func() error {
-		return k8s.CreatePersistentVolumeClaim(ctx, k8sClient, pvcName, namespace, storageClassName, storageSize)
+		return k8s.CreatePersistentVolumeClaim(ctx, k8sClient, pvcName, namespace, opts.StorageClassName, storageSize)
 	})
 	if err != nil {
 		return err
@@ -180,8 +261,8 @@ func MigrateVolumeJob(ctx context.Context, storageClassName string, pvcName stri
 			return fmt.Errorf("new persistent volume claim %q is not bound to the new persistentvolume! %q", finalPVC.Name, tmpPVC.Spec.VolumeName)
 		}
 
-		if *finalPVC.Spec.StorageClassName != storageClassName {
-			return fmt.Errorf("new persistent volume claim %q has the storageclass %q and not the given storageclass %q", pvcName, *finalPVC.Spec.StorageClassName, storageClassName)
+		if *finalPVC.Spec.StorageClassName != opts.StorageClassName {
+			return fmt.Errorf("new persistent volume claim %q has the storageclass %q and not the given storageclass %q", pvcName, *finalPVC.Spec.StorageClassName, opts.StorageClassName)
 		}
 		fmt.Printf("Data in %q succesfully migrated to %q bound to PVC %q with storageclass %q\n", pvc.Spec.VolumeName, finalPVC.Spec.VolumeName, finalPVC.Name, *finalPVC.Spec.StorageClassName)
 		return nil

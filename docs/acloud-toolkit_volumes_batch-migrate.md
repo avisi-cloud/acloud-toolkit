@@ -1,5 +1,5 @@
 ---
-date: 2024-05-06T11:06:16+02:00
+date: 2024-06-18T12:19:26+02:00
 title: "acloud-toolkit volumes batch-migrate"
 displayName: "volumes batch-migrate"
 slug: acloud-toolkit_volumes_batch-migrate
@@ -20,7 +20,7 @@ Batch migrate all volumes within a namespace to another storage class
 
 ### Synopsis
 
-Batch migrate all volumes from a source storage class within a namespace to another storage class. For each PVC that has the source storage class within the namespace, this will create a new PVC using the target storage class, and copy all file contents over to the new volume. The existing persistent volume will remain available in the cluster.
+Batch migrate all volumes from a source storage class within a namespace to another storage class. For each PVC that has the source storage class within the namespace, this will create a new PVC using the target storage class, and copy all file contents over to the new volume. The existing persistent volume(s) will remain available within the cluster.
 
 ```
 acloud-toolkit volumes batch-migrate [flags]
@@ -31,6 +31,9 @@ acloud-toolkit volumes batch-migrate [flags]
 ```
       --dry-run                       Perform a dry run of the batch migrate
   -h, --help                          help for batch-migrate
+  -f, --migration-flags string        Additional flags to pass to the migration tool
+  -m, --migration-mode string         Migration mode to use. Options: rsync, rclone (default "rsync")
+      --node-selector strings         comma separated list of node labels used for nodeSelector of the migration job
   -s, --source-storage-class string   name of the source storageclass
   -n, --target-namespace string       Namespace where the migrate job will be executed (default "default")
   -t, --target-storage-class string   name of the target storageclass
