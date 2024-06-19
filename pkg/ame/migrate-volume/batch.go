@@ -11,16 +11,50 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func BatchMigrateVolumes(ctx context.Context, sourceStorageClass, targetStorageClass, namespace string, dryRun bool) error {
-	k8sClient := k8s.GetClientOrDie()
+type BatchMigrateOptions struct {
+	SourceStorageClassName string
+	TargetStorageClassName string
+	TargetNamespace        string
+	Timeout                int32
+	DryRun                 bool
+	MigrationMode          MigrationMode
+	MigrationFlags         string
+	NodeSelector           []string
+
+	RSyncImage  string
+	RCloneImage string
+}
+
+func BatchMigrateVolumes(ctx context.Context, opts BatchMigrateOptions) error {
+	kubeconfig, err := k8s.GetClientConfig()
+	if err != nil {
+		return err
+	}
+	config, err := kubeconfig.ClientConfig()
+	if err != nil {
+		return err
+	}
+	k8sClient, err := k8s.GetClientWithConfig(config)
+	if err != nil {
+		return err
+	}
+	namespace := opts.TargetNamespace
+	if namespace == "" {
+		contextNamespace, _, err := kubeconfig.Namespace()
+		if err != nil {
+			return err
+		}
+		namespace = contextNamespace
+	}
+
 	pvcs, err := k8sClient.CoreV1().PersistentVolumeClaims(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return fmt.Errorf("failed to get persistent volumes in namespace %q: %s", namespace, err)
 	}
-	if err := k8s.ValidateStorageClassExists(ctx, k8sClient, sourceStorageClass); err != nil {
+	if err := k8s.ValidateStorageClassExists(ctx, k8sClient, opts.SourceStorageClassName); err != nil {
 		return err
 	}
-	if err := k8s.ValidateStorageClassExists(ctx, k8sClient, targetStorageClass); err != nil {
+	if err := k8s.ValidateStorageClassExists(ctx, k8sClient, opts.TargetStorageClassName); err != nil {
 		return err
 	}
 
@@ -29,9 +63,8 @@ func BatchMigrateVolumes(ctx context.Context, sourceStorageClass, targetStorageC
 		if pvc.Status.Phase != v1.ClaimBound {
 			continue
 		}
-		if *pvc.Spec.StorageClassName == sourceStorageClass {
+		if *pvc.Spec.StorageClassName == opts.SourceStorageClassName {
 			// check if the volume is attached
-
 			// if no volumeName, this PVC has no bound PV and should not have to be migrated
 			if pvc.Spec.VolumeName == "" {
 				continue
@@ -46,7 +79,6 @@ func BatchMigrateVolumes(ctx context.Context, sourceStorageClass, targetStorageC
 						return fmt.Errorf("error while checking for volume attachments: %s", err)
 					}
 					if attachment.Status.Attached {
-
 						isAttached = true
 						fmt.Printf("volume %s is still attached. Skipping ...\n", pvc.GetName())
 					}
@@ -59,15 +91,25 @@ func BatchMigrateVolumes(ctx context.Context, sourceStorageClass, targetStorageC
 		}
 	}
 
-	if dryRun {
+	if opts.DryRun {
 		fmt.Printf("volumes to migrate: %q (dry-run)\n", pvcsToMigrate)
 		return nil
 	}
+
 	fmt.Printf("volumes to migrate: %q\n", pvcsToMigrate)
 	for _, pvcName := range pvcsToMigrate {
 		fmt.Printf("-----\n")
 		fmt.Printf("starting volume migration job for PVC \"%s/%s\" ...\n", namespace, pvcName)
-		err = MigrateVolumeJob(ctx, targetStorageClass, pvcName, namespace, USE_EQUAL_SIZE)
+		err = StartMigrateVolumeJob(ctx, MigrationOptions{
+			StorageClassName: opts.TargetStorageClassName,
+			PVCName:          pvcName,
+			TargetNamespace:  namespace,
+			NewSize:          USE_EQUAL_SIZE,
+			MigrationMode:    opts.MigrationMode,
+			MigrationFlags:   opts.MigrationFlags,
+			NodeSelector:     opts.NodeSelector,
+		})
+
 		if err != nil {
 			return fmt.Errorf("failed to migrate volume job: %s", err)
 		}
