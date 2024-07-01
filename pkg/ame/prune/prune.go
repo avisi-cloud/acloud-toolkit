@@ -12,7 +12,13 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 )
 
-func PruneVolumes(ctx context.Context, dryRun bool) error {
+type PruneOpts struct {
+	DryRun        bool
+	AllNamespaces bool
+	PvcNamespace  string
+}
+
+func PruneVolumes(ctx context.Context, opts PruneOpts) error {
 	kubeconfig, err := k8s.GetClientConfig()
 	if err != nil {
 		return err
@@ -24,6 +30,14 @@ func PruneVolumes(ctx context.Context, dryRun bool) error {
 	k8sClient, err := k8s.GetClientWithConfig(config)
 	if err != nil {
 		return err
+	}
+	namespace := opts.PvcNamespace
+	if namespace == "" {
+		contextNamespace, _, err := kubeconfig.Namespace()
+		if err != nil {
+			return err
+		}
+		namespace = contextNamespace
 	}
 
 	pvs, err := k8sClient.CoreV1().PersistentVolumes().List(ctx, metav1.ListOptions{})
@@ -48,6 +62,12 @@ func PruneVolumes(ctx context.Context, dryRun bool) error {
 			continue
 		}
 
+		if !opts.AllNamespaces {
+			if pv.Spec.ClaimRef != nil && pv.Spec.ClaimRef.Namespace != namespace { // filter by PVC namespace
+				continue
+			}
+		}
+
 		if !containsVolumeIdMultipleTimes(pv.Spec.CSI.VolumeHandle, pvs.Items) {
 			pvsToPrune = append(pvsToPrune, pv)
 		} else if pv.Spec.ClaimRef != nil {
@@ -58,7 +78,7 @@ func PruneVolumes(ctx context.Context, dryRun bool) error {
 
 	}
 
-	if dryRun {
+	if opts.DryRun {
 		totalSize := int64(0)
 		for _, pv := range pvsToPrune {
 			storageCapacity := pv.Spec.Capacity.Storage()
