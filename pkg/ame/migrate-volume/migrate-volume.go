@@ -79,7 +79,7 @@ func StartMigrateVolumeJob(ctx context.Context, opts MigrationOptions) error {
 	migrateVolumeJob := k8sClient.BatchV1().Jobs(namespace)
 
 	pvcName := opts.PVCName
-	jobName := "migrate-volume-" + pvcName
+	jobName := helpers.FormatKubernetesName(fmt.Sprintf("migrate-volume-%s", pvcName), helpers.MaxKubernetesLabelValueLength, 5)
 	tmpPVCName := "tmp-" + opts.PVCName
 
 	if err := k8s.ValidateStorageClassExists(ctx, k8sClient, opts.StorageClassName); err != nil {

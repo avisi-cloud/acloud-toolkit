@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"strings"
 
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/helpers"
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/k8s"
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
 	kubeerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/helpers"
+	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/k8s"
 )
 
 const (
@@ -52,7 +53,7 @@ func SyncVolumeJob(ctx context.Context, opts SyncVolumeJobOptions) error {
 	}
 
 	syncVolumeJob := k8sClient.BatchV1().Jobs(opts.Namespace)
-	jobName := "sync-" + opts.SourcePVCName + "-to-" + opts.TargetPVCName
+	jobName := helpers.FormatKubernetesName(fmt.Sprintf("sync-"+opts.SourcePVCName+"-to-"+opts.TargetPVCName), helpers.MaxKubernetesLabelValueLength, 5)
 
 	sourcePVC, err := k8s.GetPersistentVolumeClaimAndCheckForVolumes(ctx, k8sClient, opts.SourcePVCName, opts.Namespace)
 	if err != nil {
