@@ -1,3 +1,5 @@
+version: 2
+
 gitlab_urls:
   api: https://gitlab.avisi.cloud/api/v4/
   download: https://gitlab.avisi.cloud
@@ -61,7 +63,7 @@ brews:
 
     # Folder inside the repository to put the formula.
     # Default is the root folder.
-    folder: Formula
+    directory: Formula
 
     # Caveats for the user of your binary.
     # Default is empty.
@@ -138,7 +140,7 @@ brews:
 blobs:
   - provider: s3
     bucket: avisi-cloud-brew-tap-public
-    folder: "releases/{{ .ProjectName }}/{{.Version}}"
+    directory: "releases/{{ .ProjectName }}/{{.Version}}"
     region: eu-west-1
 
 dockers:
