@@ -3,45 +3,34 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 	"path"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/spf13/cobra/doc"
+
 	"gitlab.avisi.cloud/ame/acloud-toolkit/cmd/acloud-toolkit/app"
 )
 
-const fmTemplate = `---
-date: %s
+const mdxTemplate = `---
 title: "%s"
-displayName: "%s"
-slug: %s
-url: %s
 description: ""
-lead: ""
-draft: false
-images: []
-menu:
-  references:
-    parent: "%s-ref"
-weight: %d
-toc: true
 ---
 `
+
+const (
+	docsPath = "./docs"
+)
 
 func main() {
 	cmd := app.NewACloudToolKitCmd(nil, nil, nil)
 
-	weight := 760
 	filePrepender := func(filename string) string {
-		now := time.Now().Format(time.RFC3339)
 		name := filepath.Base(filename)
 		base := strings.TrimSuffix(name, path.Ext(name))
-		displayName := strings.TrimPrefix(base, cmd.Name()+"_")
-		url := "/references/" + cmd.Name() + "/" + strings.ToLower(base) + "/"
-		weight--
-		return fmt.Sprintf(fmTemplate, now, strings.Replace(base, "_", " ", -1), strings.Replace(displayName, "_", " ", -1), base, url, cmd.Name(), weight)
+		finalName := strings.TrimPrefix(base, cmd.Name()+"_")
+		return fmt.Sprintf(mdxTemplate, strings.Replace(finalName, "_", " ", -1))
 	}
 	linkHandler := func(name string) string {
 		base := strings.TrimSuffix(name, path.Ext(name))
@@ -49,8 +38,89 @@ func main() {
 	}
 
 	cmd.DisableAutoGenTag = true
-	err := doc.GenMarkdownTreeCustom(cmd, "./docs", filePrepender, linkHandler)
+	err := doc.GenMarkdownTreeCustom(cmd, docsPath, filePrepender, linkHandler)
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	// Rename .md files to .mdx
+	err = filepath.Walk(docsPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && strings.HasSuffix(info.Name(), ".md") {
+			newPath := strings.TrimSuffix(path, ".md") + ".mdx"
+			err := os.Rename(path, newPath)
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Add `bash` after the first triple backtick in each code block in .mdx files
+	err = filepath.Walk(docsPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && strings.HasSuffix(info.Name(), ".mdx") {
+			content, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			updatedContent := addBashToCodeBlocks(string(content))
+			updatedContent = removeFirstMarkdownLine(updatedContent)
+			err = os.WriteFile(path, []byte(updatedContent), info.Mode())
+			if err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+// addBashToCodeBlocks adds `bash` after the first triple backtick in each code block
+func addBashToCodeBlocks(content string) string {
+	var result strings.Builder
+	inCodeBlock := false
+	lines := strings.Split(content, "\n")
+
+	for _, line := range lines {
+		if strings.HasPrefix(line, "```") {
+			if inCodeBlock {
+				inCodeBlock = false
+			} else {
+				inCodeBlock = true
+				if line == "```" {
+					line = "```bash"
+				}
+			}
+		}
+		result.WriteString(line + "\n")
+	}
+
+	return result.String()
+}
+
+// removeFirstMarkdownLine removes the first line starting with `##`
+func removeFirstMarkdownLine(content string) string {
+	var result strings.Builder
+	lines := strings.Split(content, "\n")
+	skip := true
+
+	for _, line := range lines {
+		if skip && strings.HasPrefix(line, "##") {
+			skip = false
+			continue
+		}
+		result.WriteString(line + "\n")
+	}
+
+	return result.String()
 }
