@@ -1,5 +1,2 @@
-# Migrate all rbd volumes to rbd-new using rclone:
-acloud-toolkit storage batch-migrate -s rbd -t rbd-new -m rclone
-
-# Add additional flags to rclone:
-acloud-toolkit storage batch-migrate -s rbd -t rbd-new -m rclone -f '--multi-thread-streams=8 --metadata'
+# Migrate volumes from one storage class to another, in this example migrate pvc `app-data` to `gp2`
+acloud-toolkit volumes migrate -s gp2 --pvc app-data -n default

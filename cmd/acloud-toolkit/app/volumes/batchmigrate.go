@@ -2,6 +2,7 @@ package volumes
 
 import (
 	"context"
+	_ "embed"
 	"time"
 
 	migrate_volume "gitlab.avisi.cloud/ame/acloud-toolkit/pkg/ame/migrate-volume"
@@ -43,6 +44,9 @@ func AddBatchMigrateVolumeOptions(flagSet *flag.FlagSet, opts *batchMigrateVolum
 	flagSet.StringVar(&opts.rcloneImage, "rclone-image", migrate_volume.DefaultRCloneContainerImage, "Image used for the rclone migration tool")
 }
 
+//go:embed examples/batch-migrate.txt
+var batchmigrateExamples string
+
 // NewMigrateVolumeCmd returns the Cobra Bootstrap sub command
 func NewBatchMigrateVolumeCmd(runOptions *batchMigrateVolumeOptions) *cobra.Command {
 	if runOptions == nil {
@@ -61,6 +65,7 @@ Match migrate supports both rclone and rsync migration modes. The default mode i
 
 It is recommended to utilize the migration-flag option to pass additional flags to the migration tool, such as --checksum or others and optmize the migration job for your specific use case.
 		`,
+		Example: batchmigrateExamples,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx := cmd.Context()
 			var cancel context.CancelFunc
