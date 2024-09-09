@@ -34,17 +34,19 @@ func main() {
 	}
 	linkHandler := func(name string) string {
 		base := strings.TrimSuffix(name, path.Ext(name))
-		return "/references/" + cmd.Name() + "/" + strings.ToLower(base) + "/"
+		return "/docs/cli/" + cmd.Name() + "/commands/" + strings.ToLower(base) + "/"
 	}
 
+	if err := os.MkdirAll(docsPath, 0755); err != nil {
+		log.Fatal(err)
+	}
 	cmd.DisableAutoGenTag = true
-	err := doc.GenMarkdownTreeCustom(cmd, docsPath, filePrepender, linkHandler)
-	if err != nil {
+	if err := doc.GenMarkdownTreeCustom(cmd, docsPath, filePrepender, linkHandler); err != nil {
 		log.Fatal(err)
 	}
 
 	// Rename .md files to .mdx
-	err = filepath.Walk(docsPath, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(docsPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
