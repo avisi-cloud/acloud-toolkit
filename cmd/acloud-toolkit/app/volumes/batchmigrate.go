@@ -59,7 +59,7 @@ func NewBatchMigrateVolumeCmd(runOptions *batchMigrateVolumeOptions) *cobra.Comm
 		Long: `Batch migrate all volumes from a source storage class within a namespace to another storage class.
 For each PVC that has the source storage class within the namespace, this will create a new PVC using the target storage class, and copy all file contents over to the new volume. The existing persistent volume(s) will remain available within the cluster.
 
-Match migrate supports both rclone and rsync migration modes. The default mode is rsync.
+Batch migrate supports both rclone and rsync migration modes. The default mode is rsync.
 - When using rsync, by default it uses the --archive flag. It will preserve all file permissions, timestamps, and ownerships.
 - When using rclone a copy command is used. Use --metadata flag to preserve metadata.
 

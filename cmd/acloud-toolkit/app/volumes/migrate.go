@@ -59,7 +59,7 @@ func NewMigrateVolumeCmd(runOptions *migrateVolumeOptions) *cobra.Command {
 		Long: `Migrate the filesystem on a persistent volume to another storage class.
 This will create a new PVC using the target storage class, and copy all file contents over to the new volume. The existing persistent volume will remain available in the cluster.
 
-Match migrate supports both rclone and rsync migration modes. The default mode is rsync.
+Migrate supports both rclone and rsync migration modes. The default mode is rsync.
 - When using rsync, by default it uses the --archive flag. It will preserve all file permissions, timestamps, and ownerships.
 - When using rclone a copy command is used. Use --metadata flag to preserve metadata.
 
