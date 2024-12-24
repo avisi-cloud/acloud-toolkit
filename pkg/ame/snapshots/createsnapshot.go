@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/helpers"
@@ -63,6 +64,9 @@ func SnapshotCreate(ctx context.Context, snapshotName string, targetNamespace st
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      snapshotName,
 			Namespace: targetNamespace,
+			Labels: map[string]string{
+				"app.kubernetes.io/created-by": "acloud-toolkit",
+			},
 		},
 		Spec: volumesnapshotv1.VolumeSnapshotSpec{
 			Source: volumesnapshotv1.VolumeSnapshotSource{
@@ -110,4 +114,83 @@ func SnapshotCreate(ctx context.Context, snapshotName string, targetNamespace st
 	fmt.Printf("Snapshot %q completed...\n", snapshotName)
 
 	return nil
+}
+
+func SnapshotCreateAllInNamespace(ctx context.Context, targetNamespace, snapshotClassName, prefix string, concurrentLimit int) error {
+	kubeconfig, err := k8s.GetClientConfig()
+	if err != nil {
+		return err
+	}
+	config, err := kubeconfig.ClientConfig()
+	if err != nil {
+		return err
+	}
+	k8sclient, err := k8s.GetClientWithConfig(config)
+	if err != nil {
+		return err
+	}
+	if targetNamespace == "" {
+		contextNamespace, _, err := kubeconfig.Namespace()
+		if err != nil {
+			return err
+		}
+		targetNamespace = contextNamespace
+	}
+
+	// wait until PVC has a persistent volume
+	pvcs, err := k8sclient.CoreV1().PersistentVolumeClaims(targetNamespace).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return err
+	}
+
+	var wg sync.WaitGroup
+	errCh := make(chan error, len(pvcs.Items))
+	createdSnapshots := make([]string, 0, len(pvcs.Items))
+
+	// Create a worker pool with a limit on the number of concurrent snapshot creation operations
+	workerPool := make(chan struct{}, concurrentLimit)
+
+	suffix, _ := helpers.GenerateRandomString(5)
+
+	for _, pvc := range pvcs.Items {
+		wg.Add(1)
+		workerPool <- struct{}{} // Reserve a spot in the worker pool
+
+		go func(pvcName string) {
+			defer wg.Done()
+			defer func() { <-workerPool }() // Release the spot in the worker pool
+
+			var snapshotName string
+			if prefix != "" {
+				snapshotName = helpers.FormatKubernetesNameCustomSuffix(fmt.Sprintf("%s-%s", prefix, pvcName), helpers.MaxKubernetesNameLength, suffix)
+			} else {
+				snapshotName = helpers.FormatKubernetesNameCustomSuffix(pvcName, helpers.MaxKubernetesNameLength, suffix)
+			}
+
+			err := SnapshotCreate(ctx, snapshotName, targetNamespace, pvcName, snapshotClassName)
+			if err != nil {
+				errCh <- err
+			} else {
+				createdSnapshots = append(createdSnapshots, snapshotName)
+			}
+		}(pvc.Name)
+	}
+
+	wg.Wait()
+	close(errCh)
+
+	var finalErr error
+	for err := range errCh {
+		if err != nil {
+			finalErr = err
+			fmt.Printf("Error creating snapshot: %v\n", err)
+		}
+	}
+
+	fmt.Println("\nCreated snapshots:")
+	for _, snapshot := range createdSnapshots {
+		fmt.Println(snapshot)
+	}
+
+	return finalErr
 }
