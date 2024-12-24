@@ -33,7 +33,7 @@ brews:
     repository:
       owner: ame
       name: homebrew-ame
-      token: "{{ .Env.HOMEBREW_TAP_GITLAB_TOKEN }}"
+      token: "{{ .Env.GITLAB_TOKEN }}"
 
     # Template for the url which is determined by the given Token (github or gitlab)
     # Default for github is "https://github.com/<repo_owner>/<repo_name>/releases/download/{{ .Tag }}/{{ .ArtifactName }}"
