@@ -27,7 +27,7 @@ func FormatKubernetesName(name string, maxLength, suffixLength int) string {
 	}
 
 	// Generate a random suffix using the full alphabet and numbers
-	suffix, _ := generateRandomSuffix(suffixLength)
+	suffix, _ := GenerateRandomString(suffixLength)
 
 	// Calculate the maximum length for the original name
 	maxNameLength := maxLength - suffixLength - len(Separator)
@@ -44,8 +44,29 @@ func FormatKubernetesName(name string, maxLength, suffixLength int) string {
 	return name + Separator + suffix
 }
 
-// Generate a random suffix using the full alphabet and numbers
-func generateRandomSuffix(length int) (string, error) {
+// FormatKubernetesNameCustomSuffix formats a name to be compliant with Kubernetes naming rules.
+func FormatKubernetesNameCustomSuffix(name string, maxLength int, suffix string) string {
+	if maxLength == 0 || maxLength > MaxKubernetesNameLength {
+		maxLength = MaxKubernetesNameLength
+	}
+
+	// Calculate the maximum length for the original name
+	maxNameLength := maxLength - len(suffix) - len(Separator)
+
+	// Truncate the original name if necessary
+	if len(name) > maxNameLength {
+		name = name[:maxNameLength]
+	}
+
+	// Remove any trailing hyphens from the truncated name
+	name = strings.TrimRight(name, Separator)
+
+	// Combine the name, separator, and suffix
+	return name + Separator + suffix
+}
+
+// GenerateRandomString generates a random suffix using the full alphabet and numbers
+func GenerateRandomString(length int) (string, error) {
 	suffix := make([]byte, length)
 	for i := range suffix {
 		n, err := rand.Int(rand.Reader, big.NewInt(int64(len(charset))))
