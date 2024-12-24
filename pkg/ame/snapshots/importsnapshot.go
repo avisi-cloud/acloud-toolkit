@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	volumesnapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v6/apis/volumesnapshot/v1"
+	volumesnapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v8/apis/volumesnapshot/v1"
 	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/helpers"
 	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/k8s"
 	v1 "k8s.io/api/core/v1"
