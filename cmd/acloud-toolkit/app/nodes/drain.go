@@ -40,7 +40,7 @@ func NewDrainCmd(runOptions *maintenanceDrainOptions) *cobra.Command {
 		runOptions = newmaintenanceDrainOptions()
 	}
 
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "drain <node>",
 		Args:    cobra.MinimumNArgs(0),
 		Short:   `drain a kubernetes node with additional options not supported by kubectl`,

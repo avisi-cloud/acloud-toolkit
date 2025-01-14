@@ -36,7 +36,7 @@ func NewListCmd(runOptions *listOptions) *cobra.Command {
 		runOptions = newListOptions()
 	}
 
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "list",
 		Short:   "List all persistent volumes in a Kubernetes cluster",
 		Long:    `This command lists all CSI persistent volumes within the cluster. This command allows you to list and filter persistent volumes based on various criteria, making it easier to inspect and manage your storage resources.`,
@@ -44,7 +44,6 @@ func NewListCmd(runOptions *listOptions) *cobra.Command {
 		Example: listExamples,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			volumes, err := volumes.ListVolumes(cmd.Context(), runOptions.unattachedOnly, runOptions.storageClassName)
-
 			if err != nil {
 				return err
 			}

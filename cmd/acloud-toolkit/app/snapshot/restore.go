@@ -36,7 +36,7 @@ func NewRestoreCmd(runOptions *restoreOptions) *cobra.Command {
 		runOptions = newRestoreOptions()
 	}
 
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "restore <snapshot>",
 		Args:  cobra.ExactArgs(1),
 		Short: "Restore a Kubernetes PVC from a CSI snapshot.",

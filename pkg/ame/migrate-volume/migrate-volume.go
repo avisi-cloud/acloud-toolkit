@@ -53,7 +53,6 @@ type MigrationOptions struct {
 // The existing persistent volume will remain available in the cluster.
 // The function will return an error if the migration fails.
 func StartMigrateVolumeJob(ctx context.Context, opts MigrationOptions) error {
-
 	metav1.FormatLabelSelector(nil)
 	kubeconfig, err := k8s.GetClientConfig()
 	if err != nil {

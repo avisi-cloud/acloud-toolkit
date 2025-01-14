@@ -104,7 +104,7 @@ func TestWithDefault(t *testing.T) {
 			case err := <-returnCh:
 				log.Println("returnCh: " + err.Error())
 				break Loop
-				//default:
+				// default:
 				//	log.Println("default:")
 			}
 		}
