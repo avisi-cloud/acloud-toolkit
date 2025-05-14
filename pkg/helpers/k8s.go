@@ -10,7 +10,8 @@ const (
 	MaxKubernetesNameLength       = 253
 	MaxKubernetesLabelValueLength = 63
 	DefaultSuffixLength           = 5
-	Separator                     = "-"
+	DefaultSeparator              = "-"
+	Separators                    = "-_."
 	charset                       = "abcdefghijklmnopqrstuvwxyz0123456789"
 )
 
@@ -30,7 +31,7 @@ func FormatKubernetesName(name string, maxLength, suffixLength int) string {
 	suffix, _ := GenerateRandomString(suffixLength)
 
 	// Calculate the maximum length for the original name
-	maxNameLength := maxLength - suffixLength - len(Separator)
+	maxNameLength := maxLength - suffixLength - len(DefaultSeparator)
 
 	// Truncate the original name if necessary
 	if len(name) > maxNameLength {
@@ -38,10 +39,10 @@ func FormatKubernetesName(name string, maxLength, suffixLength int) string {
 	}
 
 	// Remove any trailing hyphens from the truncated name
-	name = strings.TrimRight(name, Separator)
+	name = strings.TrimRight(name, Separators)
 
 	// Combine the name, separator, and suffix
-	return name + Separator + suffix
+	return name + DefaultSeparator + suffix
 }
 
 // FormatKubernetesNameCustomSuffix formats a name to be compliant with Kubernetes naming rules.
@@ -51,7 +52,7 @@ func FormatKubernetesNameCustomSuffix(name string, maxLength int, suffix string)
 	}
 
 	// Calculate the maximum length for the original name
-	maxNameLength := maxLength - len(suffix) - len(Separator)
+	maxNameLength := maxLength - len(suffix) - len(DefaultSeparator)
 
 	// Truncate the original name if necessary
 	if len(name) > maxNameLength {
@@ -59,10 +60,25 @@ func FormatKubernetesNameCustomSuffix(name string, maxLength int, suffix string)
 	}
 
 	// Remove any trailing hyphens from the truncated name
-	name = strings.TrimRight(name, Separator)
+	name = strings.TrimRight(name, Separators)
 
 	// Combine the name, separator, and suffix
-	return name + Separator + suffix
+	return name + DefaultSeparator + suffix
+}
+
+// TruncateAndCleanName formats a name to not exceed the provided maxLength
+// and trims any trailing separator characters (-, _, .).
+func TruncateAndCleanName(name string, maxLength int) string {
+	// Truncate the original name if necessary
+	if len(name) > maxLength {
+		name = name[:maxLength]
+	}
+
+	// Remove any trailing hyphens from the truncated name
+	name = strings.TrimRight(name, Separators)
+
+	// Combine the name, separator, and suffix
+	return name
 }
 
 // GenerateRandomString generates a random suffix using the full alphabet and numbers

@@ -118,3 +118,5 @@ completions
 
 # exclude generated documentation
 docs
+
+.DS_Store
