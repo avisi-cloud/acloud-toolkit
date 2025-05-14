@@ -95,15 +95,20 @@ func RestoreSnapshot(ctx context.Context, snapshotName string, sourceNamespace s
 	if snapshot.Spec.Source.PersistentVolumeClaimName != nil {
 		sourcePVC = *snapshot.Spec.Source.PersistentVolumeClaimName
 	}
+
+	formattedTargetName := helpers.TruncateAndCleanName(targetName, helpers.MaxKubernetesLabelValueLength)
+	formattedSnapshotName := helpers.TruncateAndCleanName(snapshotName, helpers.MaxKubernetesLabelValueLength)
+	formattedSourcePVCName := helpers.TruncateAndCleanName(sourcePVC, helpers.MaxKubernetesLabelValueLength)
+
 	_, err = k8sclient.CoreV1().PersistentVolumeClaims(sourceNamespace).Create(ctx, &apiv1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      restorePVCName,
 			Namespace: sourceNamespace,
 			Labels: map[string]string{
 				"acloud-toolkit.k8s.avisi.cloud/snapshot-reference": string(snapshot.GetUID()),
-				"acloud-toolkit.k8s.avisi.cloud/target-pvc":         targetName,
-				"acloud-toolkit.k8s.avisi.cloud/source-snapshot":    snapshotName,
-				"acloud-toolkit.k8s.avisi.cloud/source-pvc":         sourcePVC,
+				"acloud-toolkit.k8s.avisi.cloud/target-pvc":         formattedTargetName,
+				"acloud-toolkit.k8s.avisi.cloud/source-snapshot":    formattedSnapshotName,
+				"acloud-toolkit.k8s.avisi.cloud/source-pvc":         formattedSourcePVCName,
 			},
 		},
 		Spec: apiv1.PersistentVolumeClaimSpec{
@@ -185,9 +190,9 @@ func RestoreSnapshot(ctx context.Context, snapshotName string, sourceNamespace s
 			Labels: map[string]string{
 				"acloud-toolkit.k8s.avisi.cloud/restored":           "true",
 				"acloud-toolkit.k8s.avisi.cloud/snapshot-reference": string(snapshot.GetUID()),
-				"acloud-toolkit.k8s.avisi.cloud/target-pvc":         fmt.Sprintf("%s", targetName),
-				"acloud-toolkit.k8s.avisi.cloud/source-snapshot":    fmt.Sprintf("%s", snapshotName),
-				"acloud-toolkit.k8s.avisi.cloud/source-pvc":         fmt.Sprintf("%s", sourcePVC),
+				"acloud-toolkit.k8s.avisi.cloud/target-pvc":         formattedTargetName,
+				"acloud-toolkit.k8s.avisi.cloud/source-snapshot":    formattedSnapshotName,
+				"acloud-toolkit.k8s.avisi.cloud/source-pvc":         formattedSourcePVCName,
 			},
 		},
 		Spec: apiv1.PersistentVolumeClaimSpec{
