@@ -1,76 +1,108 @@
-# CSI snapshot utils
+# 🚀 acloud-toolkit
 
-CLI tooling for working with CSI snapshots.
+[![Build Status](https://github.com/avisi-cloud/acloud-toolkit/actions/workflows/build.yml/badge.svg)](https://github.com/avisi-cloud/acloud-toolkit/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/avisi-cloud/acloud-toolkit)](https://goreportcard.com/report/github.com/avisi-cloud/acloud-toolkit)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-This is based on the [manual documentation](https://insight.avisi.nl/confluence/display/AME/how-to+restore+a+snapshot+to+a+new+namespace) for restoring CSI snapshots.
+A powerful CLI toolkit for Kubernetes storage operations, specializing in CSI snapshot management, volume migration, and storage automation.
 
-## Installation
+## ✨ Features
 
+- **Snapshot Management**: Create, restore, import, and list CSI snapshots
+- **Volume Migration**: Migrate volumes between storage classes
+- **Volume Sync**: Synchronize data between persistent volumes
+- **Volume Resize**: Easily resize persistent volumes
+- **Storage Cleanup**: Prune orphaned volumes and snapshots
+
+## 🚀 Quick Start
+
+### Installation
+
+#### From Homebrew (macOS/Linux) (Recommended)
 ```bash
-{
-    make build;
-    cp bin/acloud-toolkit /usr/local/bin/acloud-toolkit;
-    acloud-toolkit -h;
-}
+brew install avisi-cloud/tools/acloud-toolkit
 ```
 
-## Usage
-
+#### From Release
 ```bash
-$ ./bin/acloud-toolkit restore -h
-restore a snapshot
-
-Usage:
-  acloud-toolkit restore [flags]
-
-Flags:
-  -h, --help                           help for restore
-      --restore-storage-class string    (default "ebs-restore")
-      --snapshot-name string           name of the snapshot
-      --source-namespace string         (default "default")
-      --target-name string             
-      --target-namespace string         (default "default")
+# Download the latest release
+curl -LO "https://github.com/avisi-cloud/acloud-toolkit/releases/latest/download/acloud-toolkit-linux-amd64"
+chmod +x acloud-toolkit-linux-amd64
+sudo mv acloud-toolkit-linux-amd64 /usr/local/bin/acloud-toolkit
 ```
 
-### Restore example
-
+#### From Source
 ```bash
-$ ./bin/acloud-toolkit restore --snapshot-name=test-snapshotgroup-1614584579 --target-name=test3 --target-namespace=default
-using snapshot test-snapshotgroup-1614584579 for restoring
-created PVC test3-721bd6a7-6f75-471f-ad24-a99e063a6cf0...
-PVC has volume pvc-dc23367b-f5b2-4fb7-9ddc-da0d864a7147...
-deleted the PVC test3-721bd6a7-6f75-471f-ad24-a99e063a6cf0...
-removed the PV pvc-dc23367b-f5b2-4fb7-9ddc-da0d864a7147 claim ref to test3-721bd6a7-6f75-471f-ad24-a99e063a6cf0...
-created a new PVC test3 in namespace default...
+git clone https://github.com/avisi-cloud/acloud-toolkit.git
+cd acloud-toolkit
+make build
+sudo cp bin/acloud-toolkit /usr/local/bin/acloud-toolkit
 ```
 
-### Create snapshot
-
+### Verify Installation
 ```bash
-./bin/acloud-toolkit create-snapshot --pvc jira-jira-0 --snapshot-name jira-$(date "+%F-%H%M%S") -n jira
+acloud-toolkit version
 ```
 
-### Examples
+## 📖 Usage Examples
 
+### Snapshot Operations
+
+#### Create a snapshot
+```bash
+# Create snapshot from a PVC
+acloud-toolkit snapshot create my-snapshot --pvc my-pvc
+
+# Create snapshots for all PVCs in the namespace "my-namespace" with a prefix "backup":
+acloud-toolkit snapshot create --all --namespace my-namespace --prefix backup
 ```
-./bin/acloud-toolkit restore --snapshot-name=jira-2021-04-14-110521 --target-name=jira-jira-0 --target-namespace=jira-acc --source-namespace=jira
-./bin/acloud-toolkit restore --snapshot-name=jira-db-2021-04-14-110635 --target-name=data-jira-database-postgresql-0 --target-namespace=jira-acc --source-namespace=jira
+
+#### Restore from snapshot
+```bash
+# Restore to new PVC
+acloud-toolkit snapshot restore my-snapshot \
+  --restore-pvc-name my-pvc \
+  --restore-storage-class ebs-restore
 ```
 
-
+#### Import external snapshots
+```bash
+# Import AWS EBS snapshot
+acloud-toolkit snapshot import \
+  snap-1234567890abcdef0 \
+  --name my-imported-snapshot
 ```
-kubectl get pv --no-headers | grep Released|awk '{print $1}'|xargs kubectl  patch pv -p '{"spec":{"persistentVolumeReclaimPolicy":"Delete"}}'
+
+### Storage Management
+
+#### Prune orphaned resources
+```bash
+acloud-toolkit volumes prune                    # Preview what will be deleted
+acloud-toolkit volumes prune --dry-run=false    # Execute cleanup
 ```
 
-kubectl get pv --no-headers | grep Available|awk '{print $1}'|xargs kubectl  patch pv -p '{"spec":{"persistentVolumeReclaimPolicy":"Delete"}}'
+## 🤝 Contributing
 
-### Documentation
+### Development Setup
+```bash
+git clone https://github.com/avisi-cloud/acloud-toolkit.git
+cd acloud-toolkit
+make test
+make build
+```
 
-- [documentation](docs/acloud-toolkit.md)
+### Running Tests
+```bash
+make test          # Unit tests
+make lint          # Code linting
+make race          # Race condition detection
+```
 
-Documentation is auto generated through running:
+### Generate Documentation
 ```bash
 go run tools/docs.go
 ```
 
-Please check out `docs/`.
+## 📄 License
+
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
