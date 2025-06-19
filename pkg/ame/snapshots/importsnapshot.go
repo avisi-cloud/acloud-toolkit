@@ -7,8 +7,8 @@ import (
 
 	"github.com/google/uuid"
 	volumesnapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v8/apis/volumesnapshot/v1"
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/helpers"
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/k8s"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/helpers"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"

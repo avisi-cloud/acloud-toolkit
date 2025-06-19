@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/helpers"
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/k8s"
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/kubestorageclasses"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/helpers"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/kubestorageclasses"
 
 	"k8s.io/client-go/dynamic"
 

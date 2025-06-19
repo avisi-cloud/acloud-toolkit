@@ -6,11 +6,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"gitlab.avisi.cloud/ame/acloud-toolkit/cmd/acloud-toolkit/app/docs"
-	"gitlab.avisi.cloud/ame/acloud-toolkit/cmd/acloud-toolkit/app/nodes"
-	"gitlab.avisi.cloud/ame/acloud-toolkit/cmd/acloud-toolkit/app/snapshot"
-	"gitlab.avisi.cloud/ame/acloud-toolkit/cmd/acloud-toolkit/app/version"
-	"gitlab.avisi.cloud/ame/acloud-toolkit/cmd/acloud-toolkit/app/volumes"
+	"github.com/avisi-cloud/acloud-toolkit/cmd/acloud-toolkit/app/docs"
+	"github.com/avisi-cloud/acloud-toolkit/cmd/acloud-toolkit/app/nodes"
+	"github.com/avisi-cloud/acloud-toolkit/cmd/acloud-toolkit/app/snapshot"
+	"github.com/avisi-cloud/acloud-toolkit/cmd/acloud-toolkit/app/version"
+	"github.com/avisi-cloud/acloud-toolkit/cmd/acloud-toolkit/app/volumes"
 )
 
 // Execute runs the acloud-toolkit application

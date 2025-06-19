@@ -11,8 +11,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/helpers"
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/k8s"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/helpers"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
 )
 
 const (

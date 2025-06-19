@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
-	migrate_volume "gitlab.avisi.cloud/ame/acloud-toolkit/pkg/ame/migrate-volume"
+	migrate_volume "github.com/avisi-cloud/acloud-toolkit/pkg/ame/migrate-volume"
 )
 
 type migrateVolumeOptions struct {

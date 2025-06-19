@@ -3,7 +3,7 @@ package version
 import (
 	"github.com/spf13/cobra"
 
-	versionpkg "gitlab.avisi.cloud/ame/acloud-toolkit/pkg/version"
+	versionpkg "github.com/avisi-cloud/acloud-toolkit/pkg/version"
 )
 
 var (

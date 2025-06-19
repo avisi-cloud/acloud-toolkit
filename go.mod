@@ -1,4 +1,4 @@
-module gitlab.avisi.cloud/ame/acloud-toolkit
+module github.com/avisi-cloud/acloud-toolkit
 
 go 1.23.0
 

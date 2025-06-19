@@ -3,7 +3,7 @@ package volumes
 import (
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/ame/resize"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/ame/resize"
 )
 
 type volumeResizeOptions struct {

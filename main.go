@@ -4,8 +4,8 @@ import (
 	"math/rand"
 	"time"
 
-	"gitlab.avisi.cloud/ame/acloud-toolkit/cmd/acloud-toolkit/app"
-	versionpkg "gitlab.avisi.cloud/ame/acloud-toolkit/pkg/version"
+	"github.com/avisi-cloud/acloud-toolkit/cmd/acloud-toolkit/app"
+	versionpkg "github.com/avisi-cloud/acloud-toolkit/pkg/version"
 )
 
 // these must be set by the compiler using LDFLAGS

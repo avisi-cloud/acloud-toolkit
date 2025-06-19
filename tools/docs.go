@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra/doc"
 
-	"gitlab.avisi.cloud/ame/acloud-toolkit/cmd/acloud-toolkit/app"
+	"github.com/avisi-cloud/acloud-toolkit/cmd/acloud-toolkit/app"
 )
 
 const mdxTemplate = `---

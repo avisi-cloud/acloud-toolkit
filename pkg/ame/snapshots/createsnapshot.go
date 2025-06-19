@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/helpers"
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/k8s"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/helpers"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
 
 	"k8s.io/client-go/dynamic"
 

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/helpers"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/helpers"
 	v1 "k8s.io/api/core/v1"
 	kubeerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"

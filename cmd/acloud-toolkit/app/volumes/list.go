@@ -6,9 +6,9 @@ import (
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/ame/volumes"
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/table"
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/timeformat"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/ame/volumes"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/table"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/timeformat"
 )
 
 type listOptions struct {

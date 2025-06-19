@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/k8s"
-	"gitlab.avisi.cloud/ame/acloud-toolkit/pkg/table"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/table"
 
 	"k8s.io/client-go/dynamic"
 
