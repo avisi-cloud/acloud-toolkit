@@ -1,4 +1,4 @@
-package migrate_volume
+package migratevolume
 
 import (
 	"context"

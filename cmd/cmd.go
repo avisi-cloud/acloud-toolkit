@@ -1,4 +1,4 @@
-package app
+package cmd
 
 import (
 	"io"
@@ -6,11 +6,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/avisi-cloud/acloud-toolkit/cmd/acloud-toolkit/app/docs"
-	"github.com/avisi-cloud/acloud-toolkit/cmd/acloud-toolkit/app/nodes"
-	"github.com/avisi-cloud/acloud-toolkit/cmd/acloud-toolkit/app/snapshot"
-	"github.com/avisi-cloud/acloud-toolkit/cmd/acloud-toolkit/app/version"
-	"github.com/avisi-cloud/acloud-toolkit/cmd/acloud-toolkit/app/volumes"
+	"github.com/avisi-cloud/acloud-toolkit/cmd/docs"
+	"github.com/avisi-cloud/acloud-toolkit/cmd/nodes"
+	"github.com/avisi-cloud/acloud-toolkit/cmd/snapshot"
+	"github.com/avisi-cloud/acloud-toolkit/cmd/version"
+	"github.com/avisi-cloud/acloud-toolkit/cmd/volumes"
 )
 
 // Execute runs the acloud-toolkit application

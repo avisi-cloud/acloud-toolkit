@@ -1,10 +1,7 @@
 package main
 
 import (
-	"math/rand"
-	"time"
-
-	"github.com/avisi-cloud/acloud-toolkit/cmd/acloud-toolkit/app"
+	"github.com/avisi-cloud/acloud-toolkit/cmd"
 	versionpkg "github.com/avisi-cloud/acloud-toolkit/pkg/version"
 )
 
@@ -18,9 +15,7 @@ var (
 )
 
 func main() {
-	// make sure we have seed the rand package
-	rand.Seed(time.Now().UnixNano())
-	app.Execute()
+	cmd.Execute()
 }
 
 func init() {

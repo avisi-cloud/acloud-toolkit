@@ -10,7 +10,7 @@ import (
 
 	"github.com/spf13/cobra/doc"
 
-	"github.com/avisi-cloud/acloud-toolkit/cmd/acloud-toolkit/app"
+	"github.com/avisi-cloud/acloud-toolkit/cmd"
 )
 
 const mdxTemplate = `---
@@ -24,7 +24,7 @@ const (
 )
 
 func main() {
-	cmd := app.NewACloudToolKitCmd(nil, nil, nil)
+	cmd := cmd.NewACloudToolKitCmd(nil, nil, nil)
 
 	filePrepender := func(filename string) string {
 		name := filepath.Base(filename)

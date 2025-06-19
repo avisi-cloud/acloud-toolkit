@@ -5,10 +5,10 @@ import (
 	_ "embed"
 	"time"
 
-	migrate_volume "github.com/avisi-cloud/acloud-toolkit/pkg/ame/migrate-volume"
-
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+
+	"github.com/avisi-cloud/acloud-toolkit/pkg/ame/migratevolume"
 )
 
 type batchMigrateVolumeOptions struct {
@@ -40,8 +40,8 @@ func AddBatchMigrateVolumeOptions(flagSet *flag.FlagSet, opts *batchMigrateVolum
 	flagSet.StringVarP(&opts.migrationFlags, "migration-flags", "f", "", "Additional flags to pass to the migration tool")
 
 	// images
-	flagSet.StringVar(&opts.rsyncImage, "rsync-image", migrate_volume.DefaultRSyncContainerImage, "Image used for the rsync migration tool")
-	flagSet.StringVar(&opts.rcloneImage, "rclone-image", migrate_volume.DefaultRCloneContainerImage, "Image used for the rclone migration tool")
+	flagSet.StringVar(&opts.rsyncImage, "rsync-image", migratevolume.DefaultRSyncContainerImage, "Image used for the rsync migration tool")
+	flagSet.StringVar(&opts.rcloneImage, "rclone-image", migratevolume.DefaultRCloneContainerImage, "Image used for the rclone migration tool")
 }
 
 //go:embed examples/batch-migrate.txt
@@ -73,13 +73,13 @@ It is recommended to utilize the migration-flag option to pass additional flags 
 				ctx, cancel = context.WithTimeout(ctx, time.Duration(runOptions.timeout)*time.Minute)
 			}
 			defer cancel()
-			return migrate_volume.BatchMigrateVolumes(ctx, migrate_volume.BatchMigrateOptions{
+			return migratevolume.BatchMigrateVolumes(ctx, migratevolume.BatchMigrateOptions{
 				SourceStorageClassName: runOptions.sourceStorageClassName,
 				TargetStorageClassName: runOptions.targetStorageClassName,
 				TargetNamespace:        runOptions.targetNamespace,
 				Timeout:                runOptions.timeout,
 				DryRun:                 runOptions.dryRun,
-				MigrationMode:          migrate_volume.MigrationMode(runOptions.migrationMode),
+				MigrationMode:          migratevolume.MigrationMode(runOptions.migrationMode),
 				MigrationFlags:         runOptions.migrationFlags,
 				NodeSelector:           runOptions.nodeSelector,
 

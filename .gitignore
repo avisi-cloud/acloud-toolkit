@@ -117,6 +117,6 @@ vendor
 completions
 
 # exclude generated documentation
-docs
+./docs
 
 .DS_Store
