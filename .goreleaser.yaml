@@ -1,0 +1,136 @@
+# yaml-language-server: $schema=https://goreleaser.com/static/schema.json
+
+version: 2
+
+builds:
+  - id: "acloud-toolkit"
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+
+before:
+  hooks:
+    - go mod tidy
+    - ./scripts/shell-completions.sh
+
+archives:
+  - files:
+      - completions/*
+
+homebrew_casks:
+  - repository:
+      owner: avisi-cloud
+      name: homebrew-tools
+      token: "{{ .Env.HOMEBREW_TOOLS_GITHUB_TOKEN }}"
+    homepage: "https://docs.avisi.cloud/docs/cli/acloud-toolkit/overview"
+    conflicts:
+      - formula: "acloud-toolkit"
+    completions:
+      bash: completions/acloud-toolkit.bash
+      zsh: completions/acloud-toolkit.zsh
+      fish: completions/acloud-toolkit.fish
+
+release:
+  footer: |
+    **Full Changelog**: https://github.com/avisi-cloud/acloud-toolkit/compare/{{ .PreviousTag }}...{{ .Tag }}
+
+changelog:
+  use: github
+  sort: asc
+  groups:
+    - title: "Breaking changes"
+      regexp: '^.*?\w+(\(.+\))?!:\s?.+$'
+      order: 0
+    - title: "Features"
+      regexp: '^.*?feat(\(.+\))??!?:.+$'
+      order: 1
+    - title: "Bug fixes"
+      regexp: '^.*?fix(\(.+\))??!?:.+$'
+      order: 2
+    - title: "Documentation"
+      regexp: '^.*?docs(\(.+\))??!?:.+$'
+      order: 3
+    - title: "Others"
+      order: 999
+  filters:
+    # Commit messages matching the regexp listed here will be removed from the changelog
+    exclude:
+      - '^Merge branch'
+      - '^.*?(test|style)(\(.+\))??!?:.+$'
+      - 'initial commit'
+
+announce:
+  slack:
+    # Whether its enabled or not. Defaults to false.
+    enabled: true
+
+    # Message template to use while publishing.
+    message_template: '{{.ProjectName}} v{{.Version}} has been released'
+
+    # The name of the channel that the user selected as a destination for webhook messages.
+    channel: '#ame-releases'
+    # channel: '#ame-releases'
+
+    # Set your Webhook's user name.
+    username: ''
+
+    # Emoji to use as the icon for this message. Overrides icon_url.
+    icon_emoji: '🎉'
+
+    # URL to an image to use as the icon for this message.
+    icon_url: ''
+
+    # Blocks for advanced formatting, see: https://api.slack.com/messaging/webhooks#advanced_message_formatting
+    # and https://api.slack.com/messaging/composing/layouts#adding-blocks.
+    #
+    # Templating is possible inside this structure.
+    #
+    # Attention: goreleaser doesn't check the full structure of the Slack API: please make sure that
+    # your configuration for advanced message formatting abides by this API.
+    blocks: [
+      {
+        "type": "section",
+        "fields": [
+          {
+            "type": "mrkdwn",
+            "text": "A new release has been made"
+          }
+        ]
+      },
+      {
+        "type": "section",
+        "fields": [
+          {
+            "type": "mrkdwn",
+            "text": "*Project:*\n<{{.GitURL}}|{{.ProjectName}}>"
+          },
+          {
+            "type": "mrkdwn",
+            "text": "*Release:*\n<{{.ReleaseURL}}|v{{.Version}}>"
+          }
+        ]
+      },
+      # couldn't make the releasnotes section work -> ERROR: invalid character '\n' in string literal
+      # {
+      #   "type": "section",
+      #   "fields": [
+      #     {
+      #       "type": "mrkdwn",
+      #       "text": "*Releasenotes:*\n{{.ReleaseNotes}}"
+      #     }
+      #   ]
+      # }
+    ]
+
+    # Attachments, see: https://api.slack.com/reference/messaging/attachments
+    #
+    # Templating is possible inside this structure.
+    #
+    # Attention: goreleaser doesn't check the full structure of the Slack API: please make sure that
+    # your configuration for advanced message formatting abides by this API.
+    attachments: []

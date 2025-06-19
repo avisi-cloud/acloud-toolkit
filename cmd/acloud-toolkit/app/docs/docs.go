@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	browserURL = "https://docs.avisi.cloud/references/acloud-toolkit"
+	browserURL = "https://docs.avisi.cloud/docs/cli/acloud-toolkit/overview"
 )
 
 // NewOpenDocs returns the Cobra version sub command
