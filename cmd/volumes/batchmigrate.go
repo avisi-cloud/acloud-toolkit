@@ -25,7 +25,7 @@ type batchMigrateVolumeOptions struct {
 	rcloneImage string
 }
 
-func NewBatchMigrateVolumeOptions() *batchMigrateVolumeOptions {
+func newBatchMigrateVolumeOptions() *batchMigrateVolumeOptions {
 	return &batchMigrateVolumeOptions{}
 }
 
@@ -47,10 +47,10 @@ func AddBatchMigrateVolumeOptions(flagSet *flag.FlagSet, opts *batchMigrateVolum
 //go:embed examples/batch-migrate.txt
 var batchmigrateExamples string
 
-// NewMigrateVolumeCmd returns the Cobra Bootstrap sub command
+// NewBatchMigrateVolumeCmd returns the Cobra Bootstrap sub command
 func NewBatchMigrateVolumeCmd(runOptions *batchMigrateVolumeOptions) *cobra.Command {
 	if runOptions == nil {
-		runOptions = NewBatchMigrateVolumeOptions()
+		runOptions = newBatchMigrateVolumeOptions()
 	}
 
 	cmd := &cobra.Command{

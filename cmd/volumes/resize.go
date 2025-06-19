@@ -12,19 +12,19 @@ type volumeResizeOptions struct {
 	newSize   string
 }
 
-func newvolumeResizeOptions() *volumeResizeOptions {
+func newVolumeResizeOptions() *volumeResizeOptions {
 	return &volumeResizeOptions{}
 }
 
-func AddvolumeResizeFlags(flagSet *flag.FlagSet, opts *volumeResizeOptions) {
+func AddVolumeResizeFlags(flagSet *flag.FlagSet, opts *volumeResizeOptions) {
 	flagSet.StringVar(&opts.newSize, "size", "", "New size. Example: 10G")
 	flagSet.StringVarP(&opts.namespace, "namespace", "n", "", "If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context")
 }
 
-// NewvolumeResizeCmd returns the Cobra Bootstrap sub command
-func NewvolumeResizeCmd(runOptions *volumeResizeOptions) *cobra.Command {
+// NewVolumeResizeCmd returns the Cobra Bootstrap sub command
+func NewVolumeResizeCmd(runOptions *volumeResizeOptions) *cobra.Command {
 	if runOptions == nil {
-		runOptions = newvolumeResizeOptions()
+		runOptions = newVolumeResizeOptions()
 	}
 
 	cmd := &cobra.Command{
@@ -49,7 +49,7 @@ acloud-toolkit storage resize data --namespace prod --size 50G
 		},
 	}
 
-	AddvolumeResizeFlags(cmd.Flags(), runOptions)
+	AddVolumeResizeFlags(cmd.Flags(), runOptions)
 
 	return cmd
 }

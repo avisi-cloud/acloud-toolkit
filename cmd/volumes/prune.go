@@ -13,20 +13,20 @@ type volumePruneOptions struct {
 	pvcNamespace  string
 }
 
-func newvolumePruneOptions() *volumePruneOptions {
+func newVolumePruneOptions() *volumePruneOptions {
 	return &volumePruneOptions{}
 }
 
-func AddvolumePruneFlags(flagSet *flag.FlagSet, opts *volumePruneOptions) {
+func AddVolumePruneFlags(flagSet *flag.FlagSet, opts *volumePruneOptions) {
 	flagSet.BoolVar(&opts.dryRun, "dry-run", true, "Perform a dry run of volume prune")
 	flagSet.BoolVarP(&opts.allNamespaces, "all", "A", false, "Prune volumes from all namespaces")
 	flagSet.StringVarP(&opts.pvcNamespace, "namespace", "n", "", "Namespace to prune volumes from. Volume namespaces are cluster scoped, so the namespace is only used to filter the PVCs")
 }
 
-// NewvolumePruneCmd returns the Cobra Bootstrap sub command
-func NewvolumePruneCmd(runOptions *volumePruneOptions) *cobra.Command {
+// NewVolumePruneCmd returns the Cobra Bootstrap sub command
+func NewVolumePruneCmd(runOptions *volumePruneOptions) *cobra.Command {
 	if runOptions == nil {
-		runOptions = newvolumePruneOptions()
+		runOptions = newVolumePruneOptions()
 	}
 
 	cmd := &cobra.Command{
@@ -56,7 +56,7 @@ acloud-toolkit storage prune -n my-namespace --dry-run=false
 		},
 	}
 
-	AddvolumePruneFlags(cmd.Flags(), runOptions)
+	AddVolumePruneFlags(cmd.Flags(), runOptions)
 
 	return cmd
 }

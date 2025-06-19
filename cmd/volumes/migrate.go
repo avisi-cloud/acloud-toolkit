@@ -25,7 +25,7 @@ type migrateVolumeOptions struct {
 	rcloneImage string
 }
 
-func NewMigrateVolumeOptions() *migrateVolumeOptions {
+func newMigrateVolumeOptions() *migrateVolumeOptions {
 	return &migrateVolumeOptions{}
 }
 
@@ -50,7 +50,7 @@ var migrateExamples string
 // NewMigrateVolumeCmd returns the Cobra Bootstrap sub command
 func NewMigrateVolumeCmd(runOptions *migrateVolumeOptions) *cobra.Command {
 	if runOptions == nil {
-		runOptions = NewMigrateVolumeOptions()
+		runOptions = newMigrateVolumeOptions()
 	}
 
 	cmd := &cobra.Command{

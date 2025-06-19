@@ -19,7 +19,7 @@ type maintenanceDrainOptions struct {
 	timeout               time.Duration
 }
 
-func newmaintenanceDrainOptions() *maintenanceDrainOptions {
+func newMaintenanceDrainOptions() *maintenanceDrainOptions {
 	return &maintenanceDrainOptions{}
 }
 
@@ -38,7 +38,7 @@ var drainExamples string
 // NewDrainCmd returns the Cobra Bootstrap sub command
 func NewDrainCmd(runOptions *maintenanceDrainOptions) *cobra.Command {
 	if runOptions == nil {
-		runOptions = newmaintenanceDrainOptions()
+		runOptions = newMaintenanceDrainOptions()
 	}
 
 	cmd := &cobra.Command{

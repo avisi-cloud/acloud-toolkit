@@ -16,7 +16,7 @@ type syncVolumeOptions struct {
 	timeout int32
 }
 
-func NewSyncVolumeOptions() *syncVolumeOptions {
+func newSyncVolumeOptions() *syncVolumeOptions {
 	return &syncVolumeOptions{}
 }
 
@@ -38,7 +38,7 @@ var syncExamples string
 // NewSyncVolumeCmd returns the Cobra Bootstrap sub command
 func NewSyncVolumeCmd(runOptions *syncVolumeOptions) *cobra.Command {
 	if runOptions == nil {
-		runOptions = NewSyncVolumeOptions()
+		runOptions = newSyncVolumeOptions()
 	}
 
 	cmd := &cobra.Command{
