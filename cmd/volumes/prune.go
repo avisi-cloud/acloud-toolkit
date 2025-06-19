@@ -45,7 +45,7 @@ acloud-toolkit storage prune -n my-namespace --dry-run=false
 `,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if err := prune.PruneVolumes(cmd.Context(), prune.PruneOpts{
+			if err := prune.Volumes(cmd.Context(), prune.Opts{
 				DryRun:        runOptions.dryRun,
 				AllNamespaces: runOptions.allNamespaces,
 				PvcNamespace:  runOptions.pvcNamespace,

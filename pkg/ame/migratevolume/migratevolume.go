@@ -19,10 +19,10 @@ import (
 )
 
 const (
-	USE_EQUAL_SIZE = 0
+	UseEqualSize = 0
 )
 
-// MigrationMode is the type of tool used for migration of the filesystem
+// MigrationOptions is the type of tool used for migration of the filesystem
 type MigrationOptions struct {
 	// StorageClassName is the name of the new storageclass
 	StorageClassName string
@@ -92,7 +92,7 @@ func StartMigrateVolumeJob(ctx context.Context, opts MigrationOptions) error {
 	}
 
 	storageSize := *pvc.Spec.Resources.Requests.Storage()
-	if opts.NewSize > USE_EQUAL_SIZE {
+	if opts.NewSize > UseEqualSize {
 		storageSize = resource.MustParse(fmt.Sprintf("%dM", opts.NewSize))
 	}
 

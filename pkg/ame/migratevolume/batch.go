@@ -104,7 +104,7 @@ func BatchMigrateVolumes(ctx context.Context, opts BatchMigrateOptions) error {
 			StorageClassName: opts.TargetStorageClassName,
 			PVCName:          pvcName,
 			TargetNamespace:  namespace,
-			NewSize:          USE_EQUAL_SIZE,
+			NewSize:          UseEqualSize,
 			MigrationMode:    opts.MigrationMode,
 			MigrationFlags:   opts.MigrationFlags,
 			NodeSelector:     opts.NodeSelector,

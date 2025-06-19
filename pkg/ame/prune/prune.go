@@ -12,13 +12,13 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth/oidc"
 )
 
-type PruneOpts struct {
+type Opts struct {
 	DryRun        bool
 	AllNamespaces bool
 	PvcNamespace  string
 }
 
-func PruneVolumes(ctx context.Context, opts PruneOpts) error {
+func Volumes(ctx context.Context, opts Opts) error {
 	kubeconfig, err := k8s.GetClientConfig()
 	if err != nil {
 		return err
