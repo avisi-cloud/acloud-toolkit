@@ -53,7 +53,7 @@ func NewBatchMigrateVolumeCmd(runOptions *batchMigrateVolumeOptions) *cobra.Comm
 		runOptions = NewBatchMigrateVolumeOptions()
 	}
 
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "batch-migrate",
 		Short: "Batch migrate all volumes within a namespace to another storage class",
 		Long: `Batch migrate all volumes from a source storage class within a namespace to another storage class.

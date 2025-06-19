@@ -41,7 +41,7 @@ func NewSyncVolumeCmd(runOptions *syncVolumeOptions) *cobra.Command {
 		runOptions = NewSyncVolumeOptions()
 	}
 
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:     "sync",
 		Short:   "Sync a volume to another existing volume, or create a new volume",
 		Long:    `Sync a volume to another existing volume, or create a new volume. This will create a new PVC using the target storage class or use an existing one, and copy all file contents over to the new volume using rsync. The existing persistent volume and persistent volume claim will remain available in the cluster.`,

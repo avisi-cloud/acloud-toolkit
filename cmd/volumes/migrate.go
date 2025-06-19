@@ -53,7 +53,7 @@ func NewMigrateVolumeCmd(runOptions *migrateVolumeOptions) *cobra.Command {
 		runOptions = NewMigrateVolumeOptions()
 	}
 
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "migrate",
 		Short: "Migrate the filesystem on a persistent volume to another storage class",
 		Long: `Migrate the filesystem on a persistent volume to another storage class.

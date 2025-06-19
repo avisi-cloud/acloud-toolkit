@@ -29,7 +29,7 @@ func NewvolumePruneCmd(runOptions *volumePruneOptions) *cobra.Command {
 		runOptions = newvolumePruneOptions()
 	}
 
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "prune <persistent-volume-claim>",
 		Short: "Prune removes any unused and released persistent volumes",
 		Long:  `The 'prune' command removes any released persistent volumes. By default it will run in dry-run mode, which will only show the volumes that would be pruned. Use the --dry-run=false flag to actually prune the volumes.`,

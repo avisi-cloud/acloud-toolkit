@@ -95,7 +95,6 @@ func SyncVolumeJob(ctx context.Context, opts SyncVolumeJobOptions) error {
 		Spec: batchv1.JobSpec{
 			TTLSecondsAfterFinished: &opts.TtlSecondsAfterFinished,
 			Template: v1.PodTemplateSpec{
-
 				Spec: v1.PodSpec{
 					SecurityContext: &v1.PodSecurityContext{
 						RunAsNonRoot: helpers.False(),

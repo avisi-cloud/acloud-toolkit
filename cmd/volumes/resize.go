@@ -27,7 +27,7 @@ func NewvolumeResizeCmd(runOptions *volumeResizeOptions) *cobra.Command {
 		runOptions = newvolumeResizeOptions()
 	}
 
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "resize <persistent-volume-claim>",
 		Short: "Resize adjusts the volume size of a persistent volume claim",
 		Long:  `The 'resize' command adjusts the size of a persistent volume claim (PVC). The command takes a PVC name as input along with an optional namespace parameter and a new size in gigabytes.`,

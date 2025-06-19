@@ -14,7 +14,7 @@ var (
 
 // NewVersionCmd returns the Cobra version sub command
 func NewVersionCmd() *cobra.Command {
-	var versionCmd = &cobra.Command{
+	versionCmd := &cobra.Command{
 		Use:   "version",
 		Short: "Print version information",
 		Long:  `version information`,

@@ -29,7 +29,7 @@ func NewListCmd(runOptions *listOptions) *cobra.Command {
 		runOptions = newListOptions()
 	}
 
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "List all available CSI snapshots within the current namespace",
 		Long: `This command lists all available CSI snapshots within the current namespace. CSI snapshots are used to capture a point-in-time copy of a Kubernetes PVC, allowing you to preserve the data stored in the PVC for backup, disaster recovery, or other purposes.

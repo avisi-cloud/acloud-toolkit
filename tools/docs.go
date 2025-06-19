@@ -37,7 +37,7 @@ func main() {
 		return "/docs/cli/" + cmd.Name() + "/commands/" + strings.ToLower(base) + "/"
 	}
 
-	if err := os.MkdirAll(docsPath, 0755); err != nil {
+	if err := os.MkdirAll(docsPath, 0o755); err != nil {
 		log.Fatal(err)
 	}
 	cmd.DisableAutoGenTag = true
