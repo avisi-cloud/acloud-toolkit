@@ -109,7 +109,6 @@ func BatchMigrateVolumes(ctx context.Context, opts BatchMigrateOptions) error {
 			MigrationFlags:   opts.MigrationFlags,
 			NodeSelector:     opts.NodeSelector,
 		})
-
 		if err != nil {
 			return fmt.Errorf("failed to migrate volume job: %s", err)
 		}

@@ -41,7 +41,7 @@ func NewSnapshotCreateCmd(runOptions *snapshotCreateOptions) *cobra.Command {
 		runOptions = newSnapshotCreateOptions()
 	}
 
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use: "create <snapshot>",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if !runOptions.allInNamespace && len(args) != 1 {

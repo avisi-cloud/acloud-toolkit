@@ -49,7 +49,7 @@ func NewProjectedVolumeFromSecrets(name string, secretNames ...string) v1.Volume
 		})
 	}
 
-	var defaultMode int32 = 0600
+	var defaultMode int32 = 0o600
 	return v1.Volume{
 		Name: name,
 		VolumeSource: v1.VolumeSource{
@@ -144,6 +144,7 @@ func NewEnvFieldRef(name, ref string) v1.EnvVar {
 		},
 	}
 }
+
 func NewEnvValueFromSecretRef(name, secretName, key string) v1.EnvVar {
 	return v1.EnvVar{
 		Name: name,

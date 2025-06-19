@@ -29,7 +29,7 @@ func NewImportCmd(runOptions *importOptions) *cobra.Command {
 		runOptions = newImportOptions()
 	}
 
-	var cmd = &cobra.Command{
+	cmd := &cobra.Command{
 		Use:   "import <snapshot>",
 		Args:  cobra.ExactArgs(1),
 		Short: "Import a raw snapshot ID into a CSI snapshot.",
