@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/avisi-cloud/acloud-toolkit/pkg/helpers"
 	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/retry"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -65,7 +65,7 @@ func ResizeVolume(ctx context.Context, namespace string, pvcName string, newSize
 		corev1.ResourceStorage: newStorageSize,
 	}
 
-	err = helpers.RetryWithCancel(ctx, retryCount, backOffDuration, func() error {
+	err = retry.WithCancel(ctx, retryCount, backOffDuration, func() error {
 		_, err = k8sClient.CoreV1().PersistentVolumeClaims(namespace).Update(ctx, pvc, metav1.UpdateOptions{})
 		if err != nil {
 			return fmt.Errorf("failed to update persistent volume claim %q: %w", pvc.Name, err)
@@ -76,7 +76,7 @@ func ResizeVolume(ctx context.Context, namespace string, pvcName string, newSize
 		return err
 	}
 
-	err = helpers.RetryWithCancel(ctx, retryCount, backOffDuration, func() error {
+	err = retry.WithCancel(ctx, retryCount, backOffDuration, func() error {
 		// if the PVC is not mounted, we should only wait until the PV has been expanded, since the filesystem cannot be expanded until it's mounted.
 		return waitForPVCToBeExpanded(ctx, k8sClient, namespace, pvcName, newStorageSize)
 	})

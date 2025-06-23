@@ -1,4 +1,4 @@
-package helpers
+package k8s
 
 import (
 	"crypto/rand"
@@ -38,10 +38,8 @@ func FormatKubernetesName(name string, maxLength, suffixLength int) string {
 		name = name[:maxNameLength]
 	}
 
-	// Remove any trailing hyphens from the truncated name
 	name = strings.TrimRight(name, Separators)
 
-	// Combine the name, separator, and suffix
 	return name + DefaultSeparator + suffix
 }
 
@@ -59,10 +57,8 @@ func FormatKubernetesNameCustomSuffix(name string, maxLength int, suffix string)
 		name = name[:maxNameLength]
 	}
 
-	// Remove any trailing hyphens from the truncated name
 	name = strings.TrimRight(name, Separators)
 
-	// Combine the name, separator, and suffix
 	return name + DefaultSeparator + suffix
 }
 
@@ -74,10 +70,8 @@ func TruncateAndCleanName(name string, maxLength int) string {
 		name = name[:maxLength]
 	}
 
-	// Remove any trailing hyphens from the truncated name
 	name = strings.TrimRight(name, Separators)
 
-	// Combine the name, separator, and suffix
 	return name
 }
 

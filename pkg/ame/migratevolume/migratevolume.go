@@ -6,8 +6,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/avisi-cloud/acloud-toolkit/pkg/helpers"
 	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/retry"
+	"k8s.io/utils/ptr"
 
 	batchv1 "k8s.io/api/batch/v1"
 	v1 "k8s.io/api/core/v1"
@@ -78,7 +79,7 @@ func StartMigrateVolumeJob(ctx context.Context, opts MigrationOptions) error {
 	migrateVolumeJob := k8sClient.BatchV1().Jobs(namespace)
 
 	pvcName := opts.PVCName
-	jobName := helpers.FormatKubernetesName(fmt.Sprintf("migrate-volume-%s", pvcName), helpers.MaxKubernetesLabelValueLength, 5)
+	jobName := k8s.FormatKubernetesName(fmt.Sprintf("migrate-volume-%s", pvcName), k8s.MaxKubernetesLabelValueLength, 5)
 	tmpPVCName := "tmp-" + opts.PVCName
 
 	if err := k8s.ValidateStorageClassExists(ctx, k8sClient, opts.StorageClassName); err != nil {
@@ -146,7 +147,7 @@ func StartMigrateVolumeJob(ctx context.Context, opts MigrationOptions) error {
 				Spec: v1.PodSpec{
 					NodeSelector: nodeSelector,
 					SecurityContext: &v1.PodSecurityContext{
-						RunAsNonRoot: helpers.False(),
+						RunAsNonRoot: ptr.To(false),
 					},
 					Containers: []v1.Container{
 						{
@@ -160,9 +161,9 @@ func StartMigrateVolumeJob(ctx context.Context, opts MigrationOptions) error {
 								k8s.NewVolumeMount("new", "/mnt/new/", false),
 							},
 							SecurityContext: &v1.SecurityContext{
-								RunAsUser:              helpers.Int64(0),
-								RunAsGroup:             helpers.Int64(0),
-								ReadOnlyRootFilesystem: helpers.False(),
+								RunAsUser:              ptr.To[int64](0),
+								RunAsGroup:             ptr.To[int64](0),
+								ReadOnlyRootFilesystem: ptr.To(false),
 							},
 						},
 					},
@@ -197,7 +198,7 @@ func StartMigrateVolumeJob(ctx context.Context, opts MigrationOptions) error {
 		return fmt.Errorf("failed to get persistent volume claim%q: %w", tmpPVCName, err)
 	}
 
-	err = helpers.RetryWithCancel(ctx, 3, 2*time.Second, func() error {
+	err = retry.WithCancel(ctx, 3, 2*time.Second, func() error {
 		err = k8s.SetPVReclaimPolicyToRetain(ctx, k8sClient, pvc)
 		if err != nil {
 			return err
@@ -225,7 +226,7 @@ func StartMigrateVolumeJob(ctx context.Context, opts MigrationOptions) error {
 		return err
 	}
 
-	err = helpers.RetryWithCancel(ctx, 3, 2*time.Second, func() error {
+	err = retry.WithCancel(ctx, 3, 2*time.Second, func() error {
 		err = k8s.RemoveClaimRefOfPV(ctx, k8sClient, tmpPVC)
 		if err != nil {
 			return err
@@ -238,7 +239,7 @@ func StartMigrateVolumeJob(ctx context.Context, opts MigrationOptions) error {
 		return err
 	}
 
-	err = helpers.RetryWithCancel(ctx, 3, 2*time.Second, func() error {
+	err = retry.WithCancel(ctx, 3, 2*time.Second, func() error {
 		return k8s.CreatePersistentVolumeClaim(ctx, k8sClient, pvcName, namespace, opts.StorageClassName, storageSize)
 	})
 	if err != nil {
@@ -246,7 +247,7 @@ func StartMigrateVolumeJob(ctx context.Context, opts MigrationOptions) error {
 	}
 	fmt.Printf("Created final pvc %q\n", pvcName)
 
-	return helpers.RetryWithCancel(ctx, 3, 2*time.Second, func() error {
+	return retry.WithCancel(ctx, 3, 2*time.Second, func() error {
 		finalPVC, err := k8s.GetPersistentVolumeClaimAndCheckForVolumes(ctx, k8sClient, pvcName, namespace)
 		if err != nil {
 			return fmt.Errorf("failed to get new persistent volume claim%q: %w", pvcName, err)

@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/avisi-cloud/acloud-toolkit/pkg/helpers"
 	v1 "k8s.io/api/core/v1"
 	kubeerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/utils/ptr"
 )
 
 func SetPVReclaimPolicyToRetain(ctx context.Context, k8sClient kubernetes.Interface, pvc *v1.PersistentVolumeClaim) error {
@@ -104,7 +104,7 @@ func CreatePersistentVolumeClaim(ctx context.Context, k8sClient kubernetes.Inter
 			Namespace: namespace,
 		},
 		Spec: v1.PersistentVolumeClaimSpec{
-			StorageClassName: helpers.String(storageClass),
+			StorageClassName: ptr.To(storageClass),
 			AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
 			Resources: v1.VolumeResourceRequirements{
 				Requests: v1.ResourceList{

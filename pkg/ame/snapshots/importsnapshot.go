@@ -8,13 +8,13 @@ import (
 	"github.com/google/uuid"
 	volumesnapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v8/apis/volumesnapshot/v1"
 
-	"github.com/avisi-cloud/acloud-toolkit/pkg/helpers"
 	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/utils/ptr"
 )
 
 func ImportSnapshotFromRawID(ctx context.Context, snapshotName, targetNamespace, snapshotClassName string, rawID string) error {
@@ -69,7 +69,7 @@ func ImportSnapshotFromRawID(ctx context.Context, snapshotName, targetNamespace,
 			DeletionPolicy: volumesnapshotv1.VolumeSnapshotContentRetain,
 			Driver:         volumeSnapshotClass.Driver,
 			Source: volumesnapshotv1.VolumeSnapshotContentSource{
-				SnapshotHandle: helpers.String(rawID),
+				SnapshotHandle: ptr.To(rawID),
 			},
 			VolumeSnapshotRef: v1.ObjectReference{
 				APIVersion: volumesnapshotv1.SchemeGroupVersion.String(),
@@ -107,7 +107,7 @@ func ImportSnapshotFromRawID(ctx context.Context, snapshotName, targetNamespace,
 		},
 		Spec: volumesnapshotv1.VolumeSnapshotSpec{
 			Source: volumesnapshotv1.VolumeSnapshotSource{
-				VolumeSnapshotContentName: helpers.String(snapshotContentName),
+				VolumeSnapshotContentName: ptr.To(snapshotContentName),
 			},
 			VolumeSnapshotClassName: &volumeSnapshotClass.Name,
 		},

@@ -6,11 +6,11 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/avisi-cloud/acloud-toolkit/pkg/helpers"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/fake"
+	"k8s.io/utils/ptr"
 )
 
 func TestCreatePersistentVolumeClaim(t *testing.T) {
@@ -32,7 +32,7 @@ func TestCreatePersistentVolumeClaim(t *testing.T) {
 	}
 	assert.Equal(t, pvcName, testPVC.Name)
 	assert.Equal(t, namespace, testPVC.Namespace)
-	assert.Equal(t, helpers.String(storageClass), testPVC.Spec.StorageClassName)
+	assert.Equal(t, ptr.To(storageClass), testPVC.Spec.StorageClassName)
 	assert.Equal(t, []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce}, testPVC.Spec.AccessModes)
 	assert.Equal(t, resource.MustParse("1"), *testPVC.Spec.Resources.Requests.Storage())
 }

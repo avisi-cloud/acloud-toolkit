@@ -1,4 +1,4 @@
-package helpers
+package retry
 
 import (
 	"context"
@@ -9,10 +9,10 @@ import (
 )
 
 func Retry(attempts int, sleep time.Duration, f func() error) (err error) {
-	return RetryWithCancel(context.Background(), attempts, sleep, f)
+	return WithCancel(context.Background(), attempts, sleep, f)
 }
 
-func RetryWithCancel(ctx context.Context, attempts int, sleep time.Duration, f func() error) (err error) {
+func WithCancel(ctx context.Context, attempts int, sleep time.Duration, f func() error) (err error) {
 	for i := 0; i < attempts; i++ {
 		if err = f(); err == nil {
 			// success

@@ -1,4 +1,4 @@
-package helpers
+package retry
 
 import (
 	"context"
@@ -210,11 +210,11 @@ func TestRetryWithCancel(t *testing.T) {
 	for _, tt := range tests {
 		globalAttampt = 0
 		t.Run(tt.name, func(t *testing.T) {
-			if err := RetryWithCancel(tt.args.ctx, tt.args.attempts, tt.args.sleep, tt.args.f); (err != nil) != tt.wantErr {
-				t.Errorf("RetryWithCancel() error = %v, wantErr %v", err, tt.wantErr)
+			if err := WithCancel(tt.args.ctx, tt.args.attempts, tt.args.sleep, tt.args.f); (err != nil) != tt.wantErr {
+				t.Errorf("WithCancel() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if globalAttampt != tt.wantedAttempts {
-				t.Errorf("RetryWithCancel() globalAttampt = %d, wantedAttepts %d", globalAttampt, tt.wantedAttempts)
+				t.Errorf("WithCancel() globalAttampt = %d, wantedAttepts %d", globalAttampt, tt.wantedAttempts)
 			}
 		})
 		globalCancel()

@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/avisi-cloud/acloud-toolkit/pkg/helpers"
 	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
+	"k8s.io/utils/ptr"
 
 	volumesnapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v8/apis/volumesnapshot/v1"
 
@@ -52,7 +52,7 @@ func SnapshotCreate(ctx context.Context, snapshotName string, targetNamespace st
 
 	var volumeSnapshotClassName *string
 	if strings.TrimSpace(snapshotClassName) != "" {
-		volumeSnapshotClassName = helpers.String(strings.TrimSpace(snapshotClassName))
+		volumeSnapshotClassName = ptr.To(strings.TrimSpace(snapshotClassName))
 	}
 	// convert to the snapshot object
 	createSnapshot := volumesnapshotv1.VolumeSnapshot{
@@ -69,7 +69,7 @@ func SnapshotCreate(ctx context.Context, snapshotName string, targetNamespace st
 		},
 		Spec: volumesnapshotv1.VolumeSnapshotSpec{
 			Source: volumesnapshotv1.VolumeSnapshotSource{
-				PersistentVolumeClaimName: helpers.String(targetName),
+				PersistentVolumeClaimName: ptr.To(targetName),
 			},
 			VolumeSnapshotClassName: volumeSnapshotClassName,
 		},
@@ -149,7 +149,7 @@ func SnapshotCreateAllInNamespace(ctx context.Context, targetNamespace, snapshot
 	// Create a worker pool with a limit on the number of concurrent snapshot creation operations
 	workerPool := make(chan struct{}, concurrentLimit)
 
-	suffix, _ := helpers.GenerateRandomString(5)
+	suffix, _ := k8s.GenerateRandomString(5)
 
 	for _, pvc := range pvcs.Items {
 		wg.Add(1)
@@ -161,9 +161,9 @@ func SnapshotCreateAllInNamespace(ctx context.Context, targetNamespace, snapshot
 
 			var snapshotName string
 			if prefix != "" {
-				snapshotName = helpers.FormatKubernetesNameCustomSuffix(fmt.Sprintf("%s-%s", prefix, pvcName), helpers.MaxKubernetesNameLength, suffix)
+				snapshotName = k8s.FormatKubernetesNameCustomSuffix(fmt.Sprintf("%s-%s", prefix, pvcName), k8s.MaxKubernetesNameLength, suffix)
 			} else {
-				snapshotName = helpers.FormatKubernetesNameCustomSuffix(pvcName, helpers.MaxKubernetesNameLength, suffix)
+				snapshotName = k8s.FormatKubernetesNameCustomSuffix(pvcName, k8s.MaxKubernetesNameLength, suffix)
 			}
 
 			err := SnapshotCreate(ctx, snapshotName, targetNamespace, pvcName, snapshotClassName)

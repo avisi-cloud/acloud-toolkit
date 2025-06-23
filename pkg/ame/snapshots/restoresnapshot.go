@@ -5,9 +5,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/avisi-cloud/acloud-toolkit/pkg/helpers"
 	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
 	"github.com/avisi-cloud/acloud-toolkit/pkg/kubestorageclasses"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/retry"
+	"k8s.io/utils/ptr"
 
 	"k8s.io/client-go/dynamic"
 
@@ -96,9 +97,9 @@ func RestoreSnapshot(ctx context.Context, snapshotName string, sourceNamespace s
 		sourcePVC = *snapshot.Spec.Source.PersistentVolumeClaimName
 	}
 
-	formattedTargetName := helpers.TruncateAndCleanName(targetName, helpers.MaxKubernetesLabelValueLength)
-	formattedSnapshotName := helpers.TruncateAndCleanName(snapshotName, helpers.MaxKubernetesLabelValueLength)
-	formattedSourcePVCName := helpers.TruncateAndCleanName(sourcePVC, helpers.MaxKubernetesLabelValueLength)
+	formattedTargetName := k8s.TruncateAndCleanName(targetName, k8s.MaxKubernetesLabelValueLength)
+	formattedSnapshotName := k8s.TruncateAndCleanName(snapshotName, k8s.MaxKubernetesLabelValueLength)
+	formattedSourcePVCName := k8s.TruncateAndCleanName(sourcePVC, k8s.MaxKubernetesLabelValueLength)
 
 	_, err = k8sclient.CoreV1().PersistentVolumeClaims(sourceNamespace).Create(ctx, &apiv1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
@@ -112,9 +113,9 @@ func RestoreSnapshot(ctx context.Context, snapshotName string, sourceNamespace s
 			},
 		},
 		Spec: apiv1.PersistentVolumeClaimSpec{
-			StorageClassName: helpers.String(restoreStorageClass),
+			StorageClassName: ptr.To(restoreStorageClass),
 			DataSource: &apiv1.TypedLocalObjectReference{
-				APIGroup: helpers.String("snapshot.storage.k8s.io"),
+				APIGroup: ptr.To("snapshot.storage.k8s.io"),
 				Kind:     "VolumeSnapshot",
 				Name:     snapshotName,
 			},
@@ -156,7 +157,7 @@ func RestoreSnapshot(ctx context.Context, snapshotName string, sourceNamespace s
 		return err
 	}
 
-	err = helpers.RetryWithCancel(ctxWithTimeout, 3, 2*time.Second, func() error {
+	err = retry.WithCancel(ctxWithTimeout, 3, 2*time.Second, func() error {
 		return k8s.SetPVReclaimPolicyToRetain(ctx, k8sclient, pvc)
 	})
 	if err != nil {
@@ -170,7 +171,7 @@ func RestoreSnapshot(ctx context.Context, snapshotName string, sourceNamespace s
 	}
 	fmt.Printf("deleted the PVC %s...\n", restorePVCName)
 
-	err = helpers.RetryWithCancel(ctxWithTimeout, 3, 2*time.Second, func() error {
+	err = retry.WithCancel(ctxWithTimeout, 3, 2*time.Second, func() error {
 		err = k8s.RemoveClaimRefOfPV(ctxWithTimeout, k8sclient, pvc)
 		if err != nil {
 			return err
@@ -196,7 +197,7 @@ func RestoreSnapshot(ctx context.Context, snapshotName string, sourceNamespace s
 			},
 		},
 		Spec: apiv1.PersistentVolumeClaimSpec{
-			StorageClassName: helpers.String(restoreStorageClass),
+			StorageClassName: ptr.To(restoreStorageClass),
 			AccessModes:      []apiv1.PersistentVolumeAccessMode{apiv1.ReadWriteOnce},
 			Resources: apiv1.VolumeResourceRequirements{
 				Requests: apiv1.ResourceList{

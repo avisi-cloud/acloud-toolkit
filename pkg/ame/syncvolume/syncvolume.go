@@ -10,8 +10,8 @@ import (
 	kubeerrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 
-	"github.com/avisi-cloud/acloud-toolkit/pkg/helpers"
 	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
 )
 
@@ -53,7 +53,7 @@ func SyncVolumeJob(ctx context.Context, opts SyncVolumeJobOptions) error {
 	}
 
 	syncVolumeJob := k8sClient.BatchV1().Jobs(opts.Namespace)
-	jobName := helpers.FormatKubernetesName(fmt.Sprintf("sync-"+opts.SourcePVCName+"-to-"+opts.TargetPVCName), helpers.MaxKubernetesLabelValueLength, 5)
+	jobName := k8s.FormatKubernetesName(fmt.Sprintf("sync-"+opts.SourcePVCName+"-to-"+opts.TargetPVCName), k8s.MaxKubernetesLabelValueLength, 5)
 
 	sourcePVC, err := k8s.GetPersistentVolumeClaimAndCheckForVolumes(ctx, k8sClient, opts.SourcePVCName, opts.Namespace)
 	if err != nil {
@@ -97,7 +97,7 @@ func SyncVolumeJob(ctx context.Context, opts SyncVolumeJobOptions) error {
 			Template: v1.PodTemplateSpec{
 				Spec: v1.PodSpec{
 					SecurityContext: &v1.PodSecurityContext{
-						RunAsNonRoot: helpers.False(),
+						RunAsNonRoot: ptr.To(false),
 					},
 					Containers: []v1.Container{
 						{
@@ -111,9 +111,9 @@ func SyncVolumeJob(ctx context.Context, opts SyncVolumeJobOptions) error {
 								k8s.NewVolumeMount("target", "/mnt/target/", false),
 							},
 							SecurityContext: &v1.SecurityContext{
-								RunAsUser:              helpers.Int64(0),
-								RunAsGroup:             helpers.Int64(0),
-								ReadOnlyRootFilesystem: helpers.False(),
+								RunAsUser:              ptr.To[int64](0),
+								RunAsGroup:             ptr.To[int64](0),
+								ReadOnlyRootFilesystem: ptr.To(false),
 							},
 						},
 					},
