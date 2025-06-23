@@ -1,10 +1,10 @@
-# 🚀 acloud-toolkit
+# acloud-toolkit
 
 [![Build Status](https://github.com/avisi-cloud/acloud-toolkit/actions/workflows/build.yml/badge.svg)](https://github.com/avisi-cloud/acloud-toolkit/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/avisi-cloud/acloud-toolkit)](https://goreportcard.com/report/github.com/avisi-cloud/acloud-toolkit)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-A powerful CLI toolkit for Kubernetes storage operations, specializing in CSI snapshot management, volume migration, and storage automation.
+Our powerful CLI toolkit for Kubernetes automation and repetitive tasks, specializing in CSI snapshot management, volume migration, and storage.
 
 ## ✨ Features
 
@@ -20,16 +20,12 @@ A powerful CLI toolkit for Kubernetes storage operations, specializing in CSI sn
 
 #### From Homebrew (macOS/Linux) (Recommended)
 ```bash
-brew install avisi-cloud/tools/acloud-toolkit
+brew install avisi-cloud/tools/acloud-toolkit --cask
 ```
 
 #### From Release
-```bash
-# Download the latest release
-curl -LO "https://github.com/avisi-cloud/acloud-toolkit/releases/latest/download/acloud-toolkit-linux-amd64"
-chmod +x acloud-toolkit-linux-amd64
-sudo mv acloud-toolkit-linux-amd64 /usr/local/bin/acloud-toolkit
-```
+
+Download the latest release from the [Releases page](https://github.com/avisi-cloud/acloud-toolkit/releases) and extract it. Then copy the binary to the desired location, e.g. `/usr/local/bin`.
 
 #### From Source
 ```bash
