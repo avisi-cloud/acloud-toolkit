@@ -12,6 +12,14 @@ jobs:
   goreleaser:
     runs-on: ubuntu-latest
     steps:
+      - name: Validate Homebrew PAT
+        run: |
+          curl -f \
+            -H "Authorization: token ${{ secrets.HOMEBREW_TOOLS_GITHUB_TOKEN }}" \
+            https://api.github.com/repos/${{ github.repository_owner }}/homebrew-tools
+        env:
+          HOMEBREW_TOOLS_GITHUB_TOKEN: ${{ secrets.HOMEBREW_TOOLS_GITHUB_TOKEN }}
+
       - name: Checkout
         uses: actions/checkout@v4
         with:
