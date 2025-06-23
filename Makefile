@@ -62,8 +62,15 @@ review:
 	reviewdog -diff="git diff FETCH_HEAD" -tee
 
 .PHONY: docs
-docs:
+docs: ## Generate .md documentation to store locally in repo
+	rm -rf docs
 	go run tools/docs.go
+
+.PHONY: docs-mdx
+docs-mdx: ## Generate .mdx documentation for use in docs.avisi.cloud, output is stored in docs/mdx
+	rm -rf docs/mdx
+	go run tools/docs.go -mdx
+	@echo "Documentation generated in docs/mdx"
 
 .PHONY: docker
 docker:

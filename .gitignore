@@ -116,7 +116,7 @@ vendor
 # exclude generated completion scripts
 completions
 
-# exclude generated documentation
-./docs
+# exclude generated mdx documentation
+docs/mdx/
 
 .DS_Store
