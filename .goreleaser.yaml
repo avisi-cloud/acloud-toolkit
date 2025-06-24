@@ -28,6 +28,7 @@ brews:
       name: homebrew-tools
       token: "{{ .Env.HOMEBREW_TOOLS_GITHUB_TOKEN }}"
     homepage: "https://docs.avisi.cloud/docs/cli/acloud-toolkit/overview"
+    directory: Formula
     dependencies:
       - name: zsh
         type: optional

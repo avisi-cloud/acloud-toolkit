@@ -19,8 +19,9 @@ Our powerful CLI toolkit for Kubernetes automation and repetitive tasks, special
 ### Installation
 
 #### From Homebrew (macOS/Linux) (Recommended)
+
 ```bash
-brew install avisi-cloud/tools/acloud-toolkit --cask
+brew install avisi-cloud/tools/acloud-toolkit
 ```
 
 #### From Release
@@ -28,6 +29,7 @@ brew install avisi-cloud/tools/acloud-toolkit --cask
 Download the latest release from the [Releases page](https://github.com/avisi-cloud/acloud-toolkit/releases) and extract it. Then copy the binary to the desired location, e.g. `/usr/local/bin`.
 
 #### From Source
+
 ```bash
 git clone https://github.com/avisi-cloud/acloud-toolkit.git
 cd acloud-toolkit
@@ -36,6 +38,7 @@ sudo cp bin/acloud-toolkit /usr/local/bin/acloud-toolkit
 ```
 
 ### Verify Installation
+
 ```bash
 acloud-toolkit version
 ```
@@ -45,6 +48,7 @@ acloud-toolkit version
 ### Snapshot Operations
 
 #### Create a snapshot
+
 ```bash
 # Create snapshot from a PVC
 acloud-toolkit snapshot create my-snapshot --pvc my-pvc
@@ -54,6 +58,7 @@ acloud-toolkit snapshot create --all --namespace my-namespace --prefix backup
 ```
 
 #### Restore from snapshot
+
 ```bash
 # Restore to new PVC
 acloud-toolkit snapshot restore my-snapshot \
@@ -62,6 +67,7 @@ acloud-toolkit snapshot restore my-snapshot \
 ```
 
 #### Import external snapshots
+
 ```bash
 # Import AWS EBS snapshot
 acloud-toolkit snapshot import \
@@ -72,6 +78,7 @@ acloud-toolkit snapshot import \
 ### Storage Management
 
 #### Prune orphaned resources
+
 ```bash
 acloud-toolkit volumes prune                    # Preview what will be deleted
 acloud-toolkit volumes prune --dry-run=false    # Execute cleanup
@@ -80,6 +87,7 @@ acloud-toolkit volumes prune --dry-run=false    # Execute cleanup
 ## 🤝 Contributing
 
 ### Development Setup
+
 ```bash
 git clone https://github.com/avisi-cloud/acloud-toolkit.git
 cd acloud-toolkit
@@ -88,6 +96,7 @@ make build
 ```
 
 ### Running Tests
+
 ```bash
 make test          # Unit tests
 make lint          # Code linting
@@ -95,6 +104,7 @@ make race          # Race condition detection
 ```
 
 ### Generate Documentation
+
 ```bash
 go run tools/docs.go
 ```
