@@ -70,7 +70,7 @@ func SyncVolumeJob(ctx context.Context, opts SyncVolumeJobOptions) error {
 			sourcePVCStorageSize = resource.MustParse(fmt.Sprintf("%dM", opts.NewSize))
 		}
 
-		err = k8s.CreatePersistentVolumeClaim(ctx, k8sClient, opts.TargetPVCName, opts.Namespace, opts.NewStorageClassName, sourcePVCStorageSize)
+		err = k8s.CreatePersistentVolumeClaim(ctx, k8sClient, metav1.ObjectMeta{Name: opts.TargetPVCName, Namespace: opts.Namespace}, opts.NewStorageClassName, sourcePVCStorageSize)
 		if err != nil {
 			// if the pvc already exists while create-pvc option is true, an existing pvc is not used
 			if kubeerrors.IsAlreadyExists(err) {

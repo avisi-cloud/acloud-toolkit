@@ -97,12 +97,9 @@ func SetClaimRefOfPV(ctx context.Context, k8sClient kubernetes.Interface, volume
 	return nil
 }
 
-func CreatePersistentVolumeClaim(ctx context.Context, k8sClient kubernetes.Interface, pvcName, namespace, storageClass string, storageSize resource.Quantity) error {
-	_, err := k8sClient.CoreV1().PersistentVolumeClaims(namespace).Create(ctx, &v1.PersistentVolumeClaim{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      pvcName,
-			Namespace: namespace,
-		},
+func CreatePersistentVolumeClaim(ctx context.Context, k8sClient kubernetes.Interface, metadata metav1.ObjectMeta, storageClass string, storageSize resource.Quantity) error {
+	_, err := k8sClient.CoreV1().PersistentVolumeClaims(metadata.Namespace).Create(ctx, &v1.PersistentVolumeClaim{
+		ObjectMeta: metadata,
 		Spec: v1.PersistentVolumeClaimSpec{
 			StorageClassName: ptr.To(storageClass),
 			AccessModes:      []v1.PersistentVolumeAccessMode{v1.ReadWriteOnce},
@@ -114,10 +111,10 @@ func CreatePersistentVolumeClaim(ctx context.Context, k8sClient kubernetes.Inter
 		},
 	}, metav1.CreateOptions{})
 	if err != nil {
-		return fmt.Errorf("failed to create persistent volume claim %q: %w", pvcName, err)
+		return fmt.Errorf("failed to create persistent volume claim %q: %w", metadata.Name, err)
 	}
 
-	fmt.Printf("created a new PVC %s in namespace %s...\n", pvcName, namespace)
+	fmt.Printf("created a new PVC %s in namespace %s...\n", metadata.Name, metadata.Namespace)
 	return nil
 }
 
@@ -130,4 +127,11 @@ func ValidateStorageClassExists(ctx context.Context, client *kubernetes.Clientse
 		return fmt.Errorf("error while checking storage class: %s", err)
 	}
 	return nil
+}
+
+func RemoveKubernetesVolumeAnnotations(annotations map[string]string) {
+	delete(annotations, "pv.kubernetes.io/bind-completed")
+	delete(annotations, "pv.kubernetes.io/bound-by-controller")
+	delete(annotations, "volume.kubernetes.io/storage-provisioner")
+	delete(annotations, "volume.beta.kubernetes.io/storage-provisioner")
 }

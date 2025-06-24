@@ -20,6 +20,7 @@ type BatchMigrateOptions struct {
 	MigrationMode          MigrationMode
 	MigrationFlags         string
 	NodeSelector           []string
+	PreserveMetadata       bool
 
 	RSyncImage  string
 	RCloneImage string
@@ -108,6 +109,7 @@ func BatchMigrateVolumes(ctx context.Context, opts BatchMigrateOptions) error {
 			MigrationMode:    opts.MigrationMode,
 			MigrationFlags:   opts.MigrationFlags,
 			NodeSelector:     opts.NodeSelector,
+			PreserveMetadata: opts.PreserveMetadata,
 		})
 		if err != nil {
 			return fmt.Errorf("failed to migrate volume job: %s", err)

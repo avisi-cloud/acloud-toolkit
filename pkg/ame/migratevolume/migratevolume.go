@@ -25,6 +25,8 @@ const (
 
 // MigrationOptions is the type of tool used for migration of the filesystem
 type MigrationOptions struct {
+	// PreserveMetadata is a flag to indicate if the original metadata should be preserved
+	PreserveMetadata bool
 	// StorageClassName is the name of the new storageclass
 	StorageClassName string
 	// PVCName is the name of the persistent volume claim
@@ -91,12 +93,25 @@ func StartMigrateVolumeJob(ctx context.Context, opts MigrationOptions) error {
 		return err
 	}
 
+	var (
+		originalLabels          map[string]string
+		originalAnnotations     map[string]string
+		originalOwnerReferences []metav1.OwnerReference
+	)
+
+	if opts.PreserveMetadata {
+		originalLabels = pvc.GetLabels()
+		originalAnnotations = pvc.GetAnnotations()
+		originalOwnerReferences = pvc.GetOwnerReferences()
+		k8s.RemoveKubernetesVolumeAnnotations(pvc.Annotations)
+	}
+
 	storageSize := *pvc.Spec.Resources.Requests.Storage()
 	if opts.NewSize > UseEqualSize {
 		storageSize = resource.MustParse(fmt.Sprintf("%dM", opts.NewSize))
 	}
 
-	err = k8s.CreatePersistentVolumeClaim(ctx, k8sClient, tmpPVCName, namespace, opts.StorageClassName, storageSize)
+	err = k8s.CreatePersistentVolumeClaim(ctx, k8sClient, metav1.ObjectMeta{Name: tmpPVCName, Namespace: namespace}, opts.StorageClassName, storageSize)
 	if err != nil {
 		if !kubeerrors.IsAlreadyExists(err) {
 			return err
@@ -240,7 +255,13 @@ func StartMigrateVolumeJob(ctx context.Context, opts MigrationOptions) error {
 	}
 
 	err = retry.WithCancel(ctx, 3, 2*time.Second, func() error {
-		return k8s.CreatePersistentVolumeClaim(ctx, k8sClient, pvcName, namespace, opts.StorageClassName, storageSize)
+		return k8s.CreatePersistentVolumeClaim(ctx, k8sClient, metav1.ObjectMeta{
+			Name:            pvcName,
+			Namespace:       namespace,
+			Labels:          originalLabels,
+			Annotations:     originalAnnotations,
+			OwnerReferences: originalOwnerReferences,
+		}, opts.StorageClassName, storageSize)
 	})
 	if err != nil {
 		return err

@@ -21,7 +21,7 @@ func TestCreatePersistentVolumeClaim(t *testing.T) {
 	namespace := "default"
 	storageClass := "ebs"
 
-	err := CreatePersistentVolumeClaim(context.TODO(), k8sClient, pvcName, namespace, storageClass, resource.MustParse("1"))
+	err := CreatePersistentVolumeClaim(context.TODO(), k8sClient, metav1.ObjectMeta{Name: pvcName, Namespace: namespace}, storageClass, resource.MustParse("1"))
 	if !assert.NoError(t, err, "should not receive an error when creating the pvc") {
 		t.FailNow()
 	}
