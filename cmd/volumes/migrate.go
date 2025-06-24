@@ -20,6 +20,7 @@ type migrateVolumeOptions struct {
 	nodeSelector     []string
 	migrationMode    string
 	migrationFlags   string
+	preserveMetadata bool
 
 	rsyncImage  string
 	rcloneImage string
@@ -38,6 +39,7 @@ func AddMigrateVolumeOptions(flagSet *flag.FlagSet, opts *migrateVolumeOptions) 
 	flagSet.StringSliceVar(&opts.nodeSelector, "node-selector", []string{}, "comma separated list of node labels used for nodeSelector of the migration job")
 	flagSet.StringVarP(&opts.migrationMode, "migration-mode", "m", "rsync", "Migration mode to use. Options: rsync, rclone. Default is rsync with rclone being newly introduced")
 	flagSet.StringVarP(&opts.migrationFlags, "migration-flags", "f", "", "Additional flags to pass to the migration tool")
+	flagSet.BoolVar(&opts.preserveMetadata, "preserve-metadata", false, "Preserve the original metadata of the PVC")
 
 	// images
 	flagSet.StringVar(&opts.rsyncImage, "rsync-image", migratevolume.DefaultRSyncContainerImage, "Image used for the rsync migration tool")
@@ -81,9 +83,9 @@ It is recommended to utilize the migration-flag option to pass additional flags 
 				NodeSelector:     runOptions.nodeSelector,
 				MigrationMode:    migratevolume.MigrationMode(runOptions.migrationMode),
 				MigrationFlags:   runOptions.migrationFlags,
-
-				RCloneImage: runOptions.rcloneImage,
-				RyncImage:   runOptions.rsyncImage,
+				PreserveMetadata: runOptions.preserveMetadata,
+				RCloneImage:      runOptions.rcloneImage,
+				RyncImage:        runOptions.rsyncImage,
 			})
 		},
 	}
