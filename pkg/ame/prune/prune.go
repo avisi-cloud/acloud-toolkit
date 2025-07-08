@@ -16,6 +16,7 @@ type Opts struct {
 	DryRun        bool
 	AllNamespaces bool
 	PvcNamespace  string
+	LabelSelector string
 }
 
 func Volumes(ctx context.Context, opts Opts) error {
@@ -40,7 +41,11 @@ func Volumes(ctx context.Context, opts Opts) error {
 		namespace = contextNamespace
 	}
 
-	pvs, err := k8sClient.CoreV1().PersistentVolumes().List(ctx, metav1.ListOptions{})
+	listOptions := metav1.ListOptions{}
+	if opts.LabelSelector != "" {
+		listOptions.LabelSelector = opts.LabelSelector
+	}
+	pvs, err := k8sClient.CoreV1().PersistentVolumes().List(ctx, listOptions)
 	if err != nil {
 		return err
 	}
