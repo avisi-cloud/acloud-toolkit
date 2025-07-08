@@ -3,6 +3,7 @@ package prune
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
 
@@ -13,10 +14,11 @@ import (
 )
 
 type Opts struct {
-	DryRun        bool
-	AllNamespaces bool
-	PvcNamespace  string
-	LabelSelector string
+	DryRun              bool
+	AllNamespaces       bool
+	PvcNamespace        string
+	LabelSelector       string
+	MinReleasedDuration time.Duration
 }
 
 func Volumes(ctx context.Context, opts Opts) error {
@@ -55,6 +57,12 @@ func Volumes(ctx context.Context, opts Opts) error {
 	for _, pv := range pvs.Items {
 		if pv.Status.Phase != v1.VolumeReleased {
 			continue
+		}
+		if opts.MinReleasedDuration > 0 {
+			lastPhaseTransitionTime := pv.Status.LastPhaseTransitionTime
+			if lastPhaseTransitionTime != nil && time.Since(lastPhaseTransitionTime.Time) < opts.MinReleasedDuration {
+				continue
+			}
 		}
 		if pv.Spec.PersistentVolumeReclaimPolicy != v1.PersistentVolumeReclaimDelete {
 			orphanedPVs = append(orphanedPVs, pv)

@@ -1,6 +1,8 @@
 package volumes
 
 import (
+	"time"
+
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 
@@ -8,10 +10,11 @@ import (
 )
 
 type volumePruneOptions struct {
-	dryRun        bool
-	allNamespaces bool
-	pvcNamespace  string
-	labelSelector string
+	dryRun              bool
+	allNamespaces       bool
+	pvcNamespace        string
+	labelSelector       string
+	minReleasedDuration time.Duration
 }
 
 func newVolumePruneOptions() *volumePruneOptions {
@@ -23,6 +26,7 @@ func AddVolumePruneFlags(flagSet *flag.FlagSet, opts *volumePruneOptions) {
 	flagSet.BoolVarP(&opts.allNamespaces, "all", "A", false, "Prune volumes from all namespaces")
 	flagSet.StringVarP(&opts.pvcNamespace, "namespace", "n", "", "Namespace to prune volumes from. Volume namespaces are cluster scoped, so the namespace is only used to filter the PVCs")
 	flagSet.StringVarP(&opts.labelSelector, "label-selector", "l", "", "Label selector to filter the volumes to prune")
+	flagSet.DurationVar(&opts.minReleasedDuration, "min-released-duration", 0, "Minimum duration since the volume was released")
 }
 
 // NewVolumePruneCmd returns the Cobra Bootstrap sub command
@@ -48,10 +52,11 @@ acloud-toolkit storage prune -n my-namespace --dry-run=false
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := prune.Volumes(cmd.Context(), prune.Opts{
-				DryRun:        runOptions.dryRun,
-				AllNamespaces: runOptions.allNamespaces,
-				PvcNamespace:  runOptions.pvcNamespace,
-				LabelSelector: runOptions.labelSelector,
+				DryRun:              runOptions.dryRun,
+				AllNamespaces:       runOptions.allNamespaces,
+				PvcNamespace:        runOptions.pvcNamespace,
+				LabelSelector:       runOptions.labelSelector,
+				MinReleasedDuration: runOptions.minReleasedDuration,
 			}); err != nil {
 				return err
 			}
