@@ -64,7 +64,7 @@ func NewListCmd(runOptions *listOptions) *cobra.Command {
 				if volume.Claim != nil {
 					claimNamespace = volume.Claim.GetNamespace()
 					claimName = volume.Claim.Name
-					claimStatus = string(volume.Claim.Status.Phase)
+					claimStatus = string(volume.PeristentVolume.Status.Phase)
 				}
 
 				attachmentNode := "-"
