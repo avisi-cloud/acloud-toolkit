@@ -22,25 +22,25 @@ archives:
   - files:
       - completions/*
 
-brews:
+homebrew_casks:
   - repository:
       owner: avisi-cloud
       name: homebrew-tools
       token: "{{ .Env.HOMEBREW_TOOLS_GITHUB_TOKEN }}"
     homepage: "https://docs.avisi.cloud/docs/cli/acloud-toolkit/overview"
-    directory: Formula
-    dependencies:
-      - name: zsh
-        type: optional
-      - name: fzf
-        type: optional
-    test: |
-      system "#{bin}/acloud-toolkit version"
-    install: |
-      bin.install "acloud-toolkit"
-      zsh_completion.install "completions/acloud-toolkit.zsh" => "_acloud-toolkit"
-      bash_completion.install "completions/acloud-toolkit.bash" => "acloud-toolkit"
-      fish_completion.install "completions/acloud-toolkit.fish"
+    conflicts:
+      - formula: acloud-toolkit
+    completions:
+      bash: completions/acloud-toolkit.bash
+      zsh: completions/acloud-toolkit.zsh
+      fish: completions/acloud-toolkit.fish
+    hooks:
+      post:
+        install: |
+          if system_command("/usr/bin/xattr", args: ["-h"]).exit_status == 0
+            # replace 'acloud-toolkit' with the actual binary name
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/acloud-toolkit"]
+          end
 
 release:
   footer: |
