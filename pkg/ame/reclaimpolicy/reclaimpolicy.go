@@ -3,6 +3,7 @@ package reclaimpolicy
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -25,12 +26,12 @@ func SetReclaimPolicy(ctx context.Context, opts ReclaimPolicyOptions) error {
 	}
 
 	var policy v1.PersistentVolumeReclaimPolicy
-	switch opts.Policy {
-	case "Retain":
+	switch strings.ToLower(opts.Policy) {
+	case "retain":
 		policy = v1.PersistentVolumeReclaimRetain
-	case "Delete":
+	case "delete":
 		policy = v1.PersistentVolumeReclaimDelete
-	case "Recycle":
+	case "recycle":
 		policy = v1.PersistentVolumeReclaimRecycle
 	default:
 		return fmt.Errorf("invalid reclaim policy %q, must be one of: Retain, Delete, Recycle", opts.Policy)
