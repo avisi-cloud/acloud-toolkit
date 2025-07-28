@@ -23,5 +23,6 @@ func NewStorageCmd() *cobra.Command {
 	cmds.AddCommand(NewListCmd(nil))
 	cmds.AddCommand(NewVolumePruneCmd(nil))
 	cmds.AddCommand(NewSyncVolumeCmd(nil))
+	cmds.AddCommand(NewReclaimPolicyCmd(nil))
 	return cmds
 }
