@@ -33,6 +33,7 @@ acloud-toolkit volumes migrate -s gp2 --pvc app-data -n default
   -m, --migration-mode string     Migration mode to use. Options: rsync, rclone. Default is rsync with rclone being newly introduced (default "rsync")
       --new-size int              Use a different size for the new PVC. Value is in MB. Default 0 means use same size as current PVC
       --node-selector strings     comma separated list of node labels used for nodeSelector of the migration job
+      --preserve-metadata         Preserve the original metadata of the PVC
   -p, --pvc string                name of the persitentvolumeclaim
       --rclone-image string       Image used for the rclone migration tool (default "rclone/rclone:1.66.0")
       --rsync-image string        Image used for the rsync migration tool (default "registry.avisi.cloud/library/rsync:v1")

@@ -37,6 +37,7 @@ acloud-toolkit storage batch-migrate -s rbd -t rbd-new -m rclone -f '--multi-thr
   -f, --migration-flags string        Additional flags to pass to the migration tool
   -m, --migration-mode string         Migration mode to use. Options: rsync, rclone (default "rsync")
       --node-selector strings         comma separated list of node labels used for nodeSelector of the migration job
+      --preserve-metadata             Preserve the original metadata of the PVC
       --rclone-image string           Image used for the rclone migration tool (default "rclone/rclone:1.66.0")
       --rsync-image string            Image used for the rsync migration tool (default "registry.avisi.cloud/library/rsync:v1")
   -s, --source-storage-class string   name of the source storageclass

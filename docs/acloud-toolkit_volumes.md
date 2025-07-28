@@ -19,6 +19,7 @@ Various commands for working with Kubernetes CSI volumes
 * [acloud-toolkit volumes list](acloud-toolkit_volumes_list.md)	 - List all persistent volumes in a Kubernetes cluster
 * [acloud-toolkit volumes migrate](acloud-toolkit_volumes_migrate.md)	 - Migrate the filesystem on a persistent volume to another storage class
 * [acloud-toolkit volumes prune](acloud-toolkit_volumes_prune.md)	 - Prune removes any unused and released persistent volumes
+* [acloud-toolkit volumes reclaim-policy](acloud-toolkit_volumes_reclaim-policy.md)	 - Change the reclaim policy of a persistent volume
 * [acloud-toolkit volumes resize](acloud-toolkit_volumes_resize.md)	 - Resize adjusts the volume size of a persistent volume claim
 * [acloud-toolkit volumes sync](acloud-toolkit_volumes_sync.md)	 - Sync a volume to another existing volume, or create a new volume
 
