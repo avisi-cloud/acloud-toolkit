@@ -81,6 +81,7 @@ anaconda-mode/
 *.dylib
 bin
 .vendor-new
+acloud-toolkit
 
 # Test binary, build with 'go test -c'
 *.test

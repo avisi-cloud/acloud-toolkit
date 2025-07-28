@@ -4,27 +4,33 @@ import (
 	"os"
 
 	"github.com/olekukonko/tablewriter"
+	"github.com/olekukonko/tablewriter/renderer"
+	"github.com/olekukonko/tablewriter/tw"
 )
 
 func Print(header []string, body [][]string) {
-	table := tablewriter.NewWriter(os.Stdout)
-	if len(header) > 0 {
-		table.SetHeader(header)
-	}
-	table.SetAutoWrapText(false)
-	table.SetAutoFormatHeaders(true)
-	table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
-	table.SetAlignment(tablewriter.ALIGN_LEFT)
-	table.SetCenterSeparator("")
-	table.SetColumnSeparator("")
-	table.SetRowSeparator("")
-	table.SetHeaderLine(false)
-	table.SetBorder(false)
-	table.SetTablePadding("\t") // pad with tabs
-	table.SetNoWhiteSpace(true)
-	if len(body) > 0 {
-		table.AppendBulk(body)
-	}
+	table := tablewriter.NewTable(os.Stdout,
+		tablewriter.WithRenderer(renderer.NewBlueprint(tw.Rendition{
+			Borders: tw.BorderNone,
+			Settings: tw.Settings{
+				Separators: tw.SeparatorsNone,
+				Lines:      tw.LinesNone,
+			},
+		})),
+		tablewriter.WithConfig(tablewriter.Config{
+			Header: tw.CellConfig{
+				Padding:    tw.CellPadding{Global: tw.Padding{Right: "    "}},
+				Formatting: tw.CellFormatting{Alignment: tw.AlignLeft},
+			},
+			Row: tw.CellConfig{
+				Formatting: tw.CellFormatting{AutoWrap: tw.WrapNone},
+				Alignment:  tw.CellAlignment{Global: tw.AlignLeft},
+				Padding:    tw.CellPadding{Global: tw.Padding{Right: tw.PaddingDefault.Right}},
+			},
+		}),
+	)
 
+	table.Header(header)
+	table.Bulk(body)
 	table.Render()
 }
