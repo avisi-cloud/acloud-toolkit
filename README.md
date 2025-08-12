@@ -21,7 +21,7 @@ Our powerful CLI toolkit for Kubernetes automation and repetitive tasks, special
 #### From Homebrew (macOS/Linux) (Recommended)
 
 ```bash
-brew install avisi-cloud/tools/acloud-toolkit
+brew install avisi-cloud/tools/acloud-toolkit --cask
 ```
 
 #### From Release
