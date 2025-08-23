@@ -28,8 +28,6 @@ homebrew_casks:
       name: homebrew-tools
       token: "{{ .Env.HOMEBREW_TOOLS_GITHUB_TOKEN }}"
     homepage: "https://docs.avisi.cloud/docs/cli/acloud-toolkit/overview"
-    conflicts:
-      - formula: acloud-toolkit
     completions:
       bash: completions/acloud-toolkit.bash
       zsh: completions/acloud-toolkit.zsh
