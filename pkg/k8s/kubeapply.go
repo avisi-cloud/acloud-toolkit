@@ -2,7 +2,6 @@ package k8s
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/pkg/errors"
 
@@ -128,17 +127,17 @@ func (a *KubeApply) ApplyService(ctx context.Context, svc *v1.Service) error {
 		if kubeerrors.IsNotFound(err) {
 			_, err := a.client.CoreV1().Services(a.namespace).Create(ctx, svc, metav1.CreateOptions{})
 			if err != nil && !kubeerrors.IsAlreadyExists(err) {
-				return errors.Wrapf(err, fmt.Sprintf("failed install service %s", svc.GetName()))
+				return errors.Wrapf(err, "failed install service %s", svc.GetName())
 			}
 			return nil
 		}
-		return errors.Wrapf(err, fmt.Sprintf("failed install service %s", svc.GetName()))
+		return errors.Wrapf(err, "failed install service %s", svc.GetName())
 	}
 
 	if existingSvc == nil {
 		_, err := a.client.CoreV1().Services(a.namespace).Create(ctx, svc, metav1.CreateOptions{})
 		if err != nil && !kubeerrors.IsAlreadyExists(err) {
-			return errors.Wrapf(err, fmt.Sprintf("failed install service %s", svc.GetName()))
+			return errors.Wrapf(err, "failed install service %s", svc.GetName())
 		}
 		return nil
 	}
@@ -171,7 +170,7 @@ func (a *KubeApply) ApplyIngress(ctx context.Context, ingress *networkingv1.Ingr
 	}
 
 	if existingIngress == nil {
-		return fmt.Errorf(errorMsg)
+		return errors.New(errorMsg)
 	}
 
 	// Update the attributes
@@ -205,7 +204,7 @@ func (a *KubeApply) ApplyNetworkPolicy(ctx context.Context, networkPolicy networ
 	}
 
 	if existingPSP == nil {
-		return fmt.Errorf(errorMsg)
+		return errors.New(errorMsg)
 	}
 
 	// Update the attributes

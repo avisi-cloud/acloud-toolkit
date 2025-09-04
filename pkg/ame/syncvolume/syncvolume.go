@@ -53,7 +53,7 @@ func SyncVolumeJob(ctx context.Context, opts SyncVolumeJobOptions) error {
 	}
 
 	syncVolumeJob := k8sClient.BatchV1().Jobs(opts.Namespace)
-	jobName := k8s.FormatKubernetesName(fmt.Sprintf("sync-"+opts.SourcePVCName+"-to-"+opts.TargetPVCName), k8s.MaxKubernetesLabelValueLength, 5)
+	jobName := k8s.FormatKubernetesName(fmt.Sprintf("sync-%s-to-%s", opts.SourcePVCName, opts.TargetPVCName), k8s.MaxKubernetesLabelValueLength, 5)
 
 	sourcePVC, err := k8s.GetPersistentVolumeClaimAndCheckForVolumes(ctx, k8sClient, opts.SourcePVCName, opts.Namespace)
 	if err != nil {
