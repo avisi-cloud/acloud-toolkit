@@ -48,10 +48,7 @@ func GetPersistentVolumeClaimAndCheckForVolumes(ctx context.Context, k8sClient k
 	if err != nil {
 		return nil, fmt.Errorf("failed to get persistent volume claim %q: %w", pvcName, err)
 	}
-	for {
-		if pvc.Spec.VolumeName != "" {
-			break
-		}
+	for pvc.Spec.VolumeName == "" {
 
 		pvc, err = k8sClient.CoreV1().PersistentVolumeClaims(namespace).Get(ctx, pvcName, metav1.GetOptions{})
 		if err != nil {
