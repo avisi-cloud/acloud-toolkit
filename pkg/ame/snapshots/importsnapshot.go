@@ -61,6 +61,7 @@ func ImportSnapshotFromRawID(ctx context.Context, snapshotName, targetNamespace,
 			Name: snapshotContentName,
 			Labels: map[string]string{
 				"k8s.avisi.cloud/snapshot-import": "true",
+				"app.kubernetes.io/created-by": "acloud-toolkit",
 			},
 		},
 		Spec: volumesnapshotv1.VolumeSnapshotContentSpec{
