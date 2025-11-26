@@ -5,21 +5,18 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
-	"github.com/avisi-cloud/acloud-toolkit/pkg/kubestorageclasses"
-	"github.com/avisi-cloud/acloud-toolkit/pkg/retry"
-	"k8s.io/utils/ptr"
-
-	"k8s.io/client-go/dynamic"
-
-	apiv1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
+	"github.com/google/uuid"
+	volumesnapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v8/apis/volumesnapshot/v1"
+	corev1 "k8s.io/api/core/v1"
 	storagev1 "k8s.io/api/storage/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/dynamic"
+	"k8s.io/utils/ptr"
 
-	"github.com/google/uuid"
-	volumesnapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v8/apis/volumesnapshot/v1"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/kubestorageclasses"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/retry"
 )
 
 func RestoreSnapshot(ctx context.Context, snapshotName string, sourceNamespace string, targetName string, targetNamespace string, restoreStorageClass string) error {
@@ -101,7 +98,7 @@ func RestoreSnapshot(ctx context.Context, snapshotName string, sourceNamespace s
 	formattedSnapshotName := k8s.TruncateAndCleanName(snapshotName, k8s.MaxKubernetesLabelValueLength)
 	formattedSourcePVCName := k8s.TruncateAndCleanName(sourcePVC, k8s.MaxKubernetesLabelValueLength)
 
-	_, err = k8sclient.CoreV1().PersistentVolumeClaims(sourceNamespace).Create(ctx, &apiv1.PersistentVolumeClaim{
+	_, err = k8sclient.CoreV1().PersistentVolumeClaims(sourceNamespace).Create(ctx, &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      restorePVCName,
 			Namespace: sourceNamespace,
@@ -112,16 +109,16 @@ func RestoreSnapshot(ctx context.Context, snapshotName string, sourceNamespace s
 				"acloud-toolkit.k8s.avisi.cloud/source-pvc":         formattedSourcePVCName,
 			},
 		},
-		Spec: apiv1.PersistentVolumeClaimSpec{
+		Spec: corev1.PersistentVolumeClaimSpec{
 			StorageClassName: ptr.To(restoreStorageClass),
-			DataSource: &apiv1.TypedLocalObjectReference{
+			DataSource: &corev1.TypedLocalObjectReference{
 				APIGroup: ptr.To("snapshot.storage.k8s.io"),
 				Kind:     "VolumeSnapshot",
 				Name:     snapshotName,
 			},
-			AccessModes: []apiv1.PersistentVolumeAccessMode{apiv1.ReadWriteOnce},
-			Resources: apiv1.VolumeResourceRequirements{
-				Requests: apiv1.ResourceList{
+			AccessModes: []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+			Resources: corev1.VolumeResourceRequirements{
+				Requests: corev1.ResourceList{
 					"storage": storageSize,
 				},
 			},
@@ -137,10 +134,8 @@ func RestoreSnapshot(ctx context.Context, snapshotName string, sourceNamespace s
 	if err != nil {
 		return err
 	}
-	for {
-		if pvc.Spec.VolumeName != "" {
-			break
-		}
+	for pvc.Spec.VolumeName == "" {
+
 		time.Sleep(1 * time.Second)
 
 		pvc, err = k8sclient.CoreV1().PersistentVolumeClaims(sourceNamespace).Get(ctx, restorePVCName, metav1.GetOptions{})
@@ -176,7 +171,7 @@ func RestoreSnapshot(ctx context.Context, snapshotName string, sourceNamespace s
 		if err != nil {
 			return err
 		}
-		claimRef := v1.ObjectReference{Name: targetName, Namespace: targetNamespace}
+		claimRef := corev1.ObjectReference{Name: targetName, Namespace: targetNamespace}
 		return k8s.SetClaimRefOfPV(ctxWithTimeout, k8sclient, pvc.Spec.VolumeName, claimRef)
 	})
 	if err != nil {
@@ -184,7 +179,7 @@ func RestoreSnapshot(ctx context.Context, snapshotName string, sourceNamespace s
 	}
 
 	// Create a new PVC in the target namespace.
-	_, err = k8sclient.CoreV1().PersistentVolumeClaims(targetNamespace).Create(ctx, &apiv1.PersistentVolumeClaim{
+	_, err = k8sclient.CoreV1().PersistentVolumeClaims(targetNamespace).Create(ctx, &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      targetName,
 			Namespace: targetNamespace,
@@ -196,11 +191,11 @@ func RestoreSnapshot(ctx context.Context, snapshotName string, sourceNamespace s
 				"acloud-toolkit.k8s.avisi.cloud/source-pvc":         formattedSourcePVCName,
 			},
 		},
-		Spec: apiv1.PersistentVolumeClaimSpec{
+		Spec: corev1.PersistentVolumeClaimSpec{
 			StorageClassName: ptr.To(restoreStorageClass),
-			AccessModes:      []apiv1.PersistentVolumeAccessMode{apiv1.ReadWriteOnce},
-			Resources: apiv1.VolumeResourceRequirements{
-				Requests: apiv1.ResourceList{
+			AccessModes:      []corev1.PersistentVolumeAccessMode{corev1.ReadWriteOnce},
+			Resources: corev1.VolumeResourceRequirements{
+				Requests: corev1.ResourceList{
 					"storage": storageSize,
 				},
 			},
@@ -216,10 +211,8 @@ func RestoreSnapshot(ctx context.Context, snapshotName string, sourceNamespace s
 	if err != nil {
 		return err
 	}
-	for {
-		if targetPVC.Spec.VolumeName != "" {
-			break
-		}
+	for targetPVC.Spec.VolumeName == "" {
+
 		time.Sleep(1 * time.Second)
 
 		targetPVC, err = k8sclient.CoreV1().PersistentVolumeClaims(targetNamespace).Get(ctx, targetName, metav1.GetOptions{})
