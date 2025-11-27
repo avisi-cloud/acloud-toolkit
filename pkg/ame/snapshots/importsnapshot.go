@@ -7,14 +7,14 @@ import (
 
 	"github.com/google/uuid"
 	volumesnapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v8/apis/volumesnapshot/v1"
-
-	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/utils/ptr"
+
+	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
 )
 
 func ImportSnapshotFromRawID(ctx context.Context, snapshotName, targetNamespace, snapshotClassName string, rawID string) error {
@@ -61,6 +61,7 @@ func ImportSnapshotFromRawID(ctx context.Context, snapshotName, targetNamespace,
 			Name: snapshotContentName,
 			Labels: map[string]string{
 				"k8s.avisi.cloud/snapshot-import": "true",
+				createdByLabelKey:                 createdByLabelValue,
 			},
 		},
 		Spec: volumesnapshotv1.VolumeSnapshotContentSpec{
@@ -71,7 +72,7 @@ func ImportSnapshotFromRawID(ctx context.Context, snapshotName, targetNamespace,
 			Source: volumesnapshotv1.VolumeSnapshotContentSource{
 				SnapshotHandle: ptr.To(rawID),
 			},
-			VolumeSnapshotRef: v1.ObjectReference{
+			VolumeSnapshotRef: corev1.ObjectReference{
 				APIVersion: volumesnapshotv1.SchemeGroupVersion.String(),
 				Kind:       "VolumeSnapshot",
 				Name:       snapshotName,
@@ -103,6 +104,7 @@ func ImportSnapshotFromRawID(ctx context.Context, snapshotName, targetNamespace,
 			Namespace: targetNamespace,
 			Labels: map[string]string{
 				"k8s.avisi.cloud/snapshot-import": "true",
+				createdByLabelKey:                 createdByLabelValue,
 			},
 		},
 		Spec: volumesnapshotv1.VolumeSnapshotSpec{

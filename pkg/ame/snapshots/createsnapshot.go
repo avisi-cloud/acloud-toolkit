@@ -7,15 +7,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
-	"k8s.io/utils/ptr"
-
 	volumesnapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v8/apis/volumesnapshot/v1"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/utils/ptr"
+
+	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
 )
 
 func SnapshotCreate(ctx context.Context, snapshotName string, targetNamespace string, targetName string, snapshotClassName string) error {
@@ -64,7 +63,7 @@ func SnapshotCreate(ctx context.Context, snapshotName string, targetNamespace st
 			Name:      snapshotName,
 			Namespace: targetNamespace,
 			Labels: map[string]string{
-				"app.kubernetes.io/created-by": "acloud-toolkit",
+				createdByLabelKey: createdByLabelValue,
 			},
 		},
 		Spec: volumesnapshotv1.VolumeSnapshotSpec{
