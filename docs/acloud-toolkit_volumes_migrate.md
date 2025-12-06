@@ -37,7 +37,7 @@ acloud-toolkit volumes migrate -s gp2 --pvc app-data -n default
   -p, --pvc string                name of the persitentvolumeclaim
       --rclone-image string       Image used for the rclone migration tool (default "rclone/rclone:1.66.0")
       --rsync-image string        Image used for the rsync migration tool (default "registry.avisi.cloud/library/rsync:v1")
-  -s, --storageClass string       name of the new storageclass
+  -s, --storage-class string      name of the new storage class
   -n, --target-namespace string   Namespace where the volume migrate job will be executed
   -t, --timeout int32             Timeout of the context in minutes (default 300)
 ```
