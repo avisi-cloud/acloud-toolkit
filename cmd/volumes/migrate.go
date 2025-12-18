@@ -31,7 +31,7 @@ func newMigrateVolumeOptions() *migrateVolumeOptions {
 }
 
 func AddMigrateVolumeOptions(flagSet *flag.FlagSet, opts *migrateVolumeOptions) {
-	flagSet.StringVarP(&opts.storageClassName, "storageClass", "s", "", "name of the new storageclass")
+	flagSet.StringVarP(&opts.storageClassName, "storage-class", "s", "", "name of the new storage class")
 	flagSet.StringVarP(&opts.pvcName, "pvc", "p", "", "name of the persitentvolumeclaim")
 	flagSet.StringVarP(&opts.targetNamespace, "target-namespace", "n", "", "Namespace where the volume migrate job will be executed")
 	flagSet.Int32VarP(&opts.timeout, "timeout", "t", 300, "Timeout of the context in minutes")
