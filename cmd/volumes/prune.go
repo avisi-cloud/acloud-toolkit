@@ -15,6 +15,7 @@ type volumePruneOptions struct {
 	pvcNamespace        string
 	labelSelector       string
 	minReleasedDuration time.Duration
+	nameFilterPattern   string
 }
 
 func newVolumePruneOptions() *volumePruneOptions {
@@ -27,6 +28,7 @@ func AddVolumePruneFlags(flagSet *flag.FlagSet, opts *volumePruneOptions) {
 	flagSet.StringVarP(&opts.pvcNamespace, "namespace", "n", "", "Namespace to prune volumes from. Volume namespaces are cluster scoped, so the namespace is only used to filter the PVCs")
 	flagSet.StringVarP(&opts.labelSelector, "label-selector", "l", "", "Label selector to filter the volumes to prune")
 	flagSet.DurationVar(&opts.minReleasedDuration, "min-released-duration", 0, "Minimum duration since the volume was released")
+	flagSet.StringVar(&opts.nameFilterPattern, "name-pattern", "", "Filter volumes by name using a regex pattern")
 }
 
 // NewVolumePruneCmd returns the Cobra Bootstrap sub command
@@ -48,6 +50,9 @@ acloud-toolkit storage prune -A --dry-run=false
 
 # Prune all persistent volumes that are set to Released within a specific namespace
 acloud-toolkit storage prune -n my-namespace --dry-run=false
+
+# Prune all persistent volumes that are set to Released within a specific namespace and name pattern
+acloud-toolkit storage prune -n my-namespace --name-pattern "data-.*" --dry-run=false
 `,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -57,6 +62,7 @@ acloud-toolkit storage prune -n my-namespace --dry-run=false
 				PvcNamespace:        runOptions.pvcNamespace,
 				LabelSelector:       runOptions.labelSelector,
 				MinReleasedDuration: runOptions.minReleasedDuration,
+				NameFilterPattern:   runOptions.nameFilterPattern,
 			}); err != nil {
 				return err
 			}
