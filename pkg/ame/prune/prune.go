@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"time"
+	"regexp"
 
 	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
 
@@ -19,6 +20,7 @@ type Opts struct {
 	PvcNamespace        string
 	LabelSelector       string
 	MinReleasedDuration time.Duration
+	NameFilterPattern string
 }
 
 func Volumes(ctx context.Context, opts Opts) error {
@@ -70,6 +72,15 @@ func Volumes(ctx context.Context, opts Opts) error {
 	}
 
 	pvsToPrune := []v1.PersistentVolume{}
+
+	var re *regexp.Regexp
+	if opts.NameFilterPattern != "" {
+		re, err = regexp.Compile(opts.NameFilterPattern)
+		if err != nil {
+			return fmt.Errorf("failed to compile regex pattern %q for name filter: %w", opts.NameFilterPattern, err)
+		}
+	}
+
 	for _, pv := range orphanedPVs {
 		if pv.Spec.CSI == nil {
 			continue
@@ -79,6 +90,11 @@ func Volumes(ctx context.Context, opts Opts) error {
 			if pv.Spec.ClaimRef != nil && pv.Spec.ClaimRef.Namespace != namespace { // filter by PVC namespace
 				continue
 			}
+		}
+
+		// match name with regex if filter pattern is provided
+		if re != nil && !re.MatchString(pv.Name) {
+			continue
 		}
 
 		if !containsVolumeIdMultipleTimes(pv.Spec.CSI.VolumeHandle, pvs.Items) {
