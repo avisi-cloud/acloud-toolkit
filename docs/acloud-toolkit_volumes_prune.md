@@ -23,6 +23,9 @@ acloud-toolkit storage prune -A --dry-run=false
 # Prune all persistent volumes that are set to Released within a specific namespace
 acloud-toolkit storage prune -n my-namespace --dry-run=false
 
+# Prune all persistent volumes that are set to Released within a specific namespace and name pattern
+acloud-toolkit storage prune -n my-namespace --name-pattern "data-.*" --dry-run=false
+
 ```
 
 ### Options
@@ -33,6 +36,7 @@ acloud-toolkit storage prune -n my-namespace --dry-run=false
   -h, --help                             help for prune
   -l, --label-selector string            Label selector to filter the volumes to prune
       --min-released-duration duration   Minimum duration since the volume was released
+      --name-pattern string              Filter volumes by name using a regex pattern
   -n, --namespace string                 Namespace to prune volumes from. Volume namespaces are cluster scoped, so the namespace is only used to filter the PVCs
 ```
 
