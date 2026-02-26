@@ -2,6 +2,7 @@ package volumes
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -13,8 +14,8 @@ import (
 )
 
 type reclaimPolicyOptions struct {
-	pvName    string
-	pvcName   string
+	pvNames   []string
+	pvcNames  []string
 	namespace string
 	policy    string
 }
@@ -24,8 +25,8 @@ func newReclaimPolicyOptions() *reclaimPolicyOptions {
 }
 
 func AddReclaimPolicyFlags(flagSet *flag.FlagSet, opts *reclaimPolicyOptions) {
-	flagSet.StringVar(&opts.pvName, "pv", "", "name of the persistent volume")
-	flagSet.StringVar(&opts.pvcName, "pvc", "", "name of the persistent volume claim")
+	flagSet.StringArrayVar(&opts.pvNames, "pv", []string{}, "name of the persistent volume (may be specified multiple times)")
+	flagSet.StringArrayVar(&opts.pvcNames, "pvc", []string{}, "name of the persistent volume claim (may be specified multiple times)")
 	flagSet.StringVarP(&opts.namespace, "namespace", "n", "", "namespace of the persistent volume claim (optional when using --pvc, defaults to current kubeconfig context)")
 	flagSet.StringVarP(&opts.policy, "policy", "p", "", "reclaim policy to set (Retain, Delete, Recycle)")
 }
@@ -49,26 +50,42 @@ The reclaim policy determines what happens to the underlying storage when the pe
 # Set reclaim policy to Retain for a specific PV
 acloud-toolkit volumes reclaim-policy --pv my-pv --policy Retain
 
+# Set reclaim policy to Retain for multiple PVs at once
+acloud-toolkit volumes reclaim-policy --pv my-pv --pv another-pv --policy Retain
+
 # Set reclaim policy to Delete for a PV via PVC using current namespace from kubeconfig
 acloud-toolkit volumes reclaim-policy --pvc my-pvc --policy Delete
 
-# Set reclaim policy to Retain for a PV via PVC in a specific namespace
-acloud-toolkit volumes reclaim-policy --pvc data-pvc --namespace production --policy Retain
+# Set reclaim policy to Retain for multiple PVCs in a specific namespace
+acloud-toolkit volumes reclaim-policy --pvc data-pvc --pvc logs-pvc --namespace production --policy Retain
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if runOptions.pvName == "" && runOptions.pvcName == "" {
+			if len(runOptions.pvNames) == 0 && len(runOptions.pvcNames) == 0 {
 				return fmt.Errorf("either --pv or --pvc must be specified")
 			}
-			if runOptions.pvName != "" && runOptions.pvcName != "" {
+			if len(runOptions.pvNames) > 0 && len(runOptions.pvcNames) > 0 {
 				return fmt.Errorf("cannot specify both --pv and --pvc")
 			}
 
-			return reclaimpolicy.SetReclaimPolicy(cmd.Context(), reclaimpolicy.ReclaimPolicyOptions{
-				PVName:    runOptions.pvName,
-				PVCName:   runOptions.pvcName,
-				Namespace: runOptions.namespace,
-				Policy:    runOptions.policy,
-			})
+			var errs []error
+			for _, pvName := range runOptions.pvNames {
+				if err := reclaimpolicy.SetReclaimPolicy(cmd.Context(), reclaimpolicy.ReclaimPolicyOptions{
+					PVName: pvName,
+					Policy: runOptions.policy,
+				}); err != nil {
+					errs = append(errs, err)
+				}
+			}
+			for _, pvcName := range runOptions.pvcNames {
+				if err := reclaimpolicy.SetReclaimPolicy(cmd.Context(), reclaimpolicy.ReclaimPolicyOptions{
+					PVCName:   pvcName,
+					Namespace: runOptions.namespace,
+					Policy:    runOptions.policy,
+				}); err != nil {
+					errs = append(errs, err)
+				}
+			}
+			return errors.Join(errs...)
 		},
 	}
 
