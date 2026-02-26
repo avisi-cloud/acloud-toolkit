@@ -2,8 +2,8 @@ package volumes
 
 import (
 	"context"
-	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
@@ -67,13 +67,12 @@ acloud-toolkit volumes reclaim-policy --pvc data-pvc --pvc logs-pvc --namespace 
 				return fmt.Errorf("cannot specify both --pv and --pvc")
 			}
 
-			var errs []error
 			for _, pvName := range runOptions.pvNames {
 				if err := reclaimpolicy.SetReclaimPolicy(cmd.Context(), reclaimpolicy.ReclaimPolicyOptions{
 					PVName: pvName,
 					Policy: runOptions.policy,
 				}); err != nil {
-					errs = append(errs, err)
+					return err
 				}
 			}
 			for _, pvcName := range runOptions.pvcNames {
@@ -82,10 +81,10 @@ acloud-toolkit volumes reclaim-policy --pvc data-pvc --pvc logs-pvc --namespace 
 					Namespace: runOptions.namespace,
 					Policy:    runOptions.policy,
 				}); err != nil {
-					errs = append(errs, err)
+					return err
 				}
 			}
-			return errors.Join(errs...)
+			return nil
 		},
 	}
 
@@ -94,16 +93,13 @@ acloud-toolkit volumes reclaim-policy --pvc data-pvc --pvc logs-pvc --namespace 
 	cmd.MarkFlagRequired("policy")
 
 	_ = cmd.RegisterFlagCompletionFunc("pv", completePVNames)
-	_ = cmd.RegisterFlagCompletionFunc("pvc", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		namespace, _ := cmd.Flags().GetString("namespace")
-		return completePVCNames(cmd, args, toComplete, namespace)
-	})
+	_ = cmd.RegisterFlagCompletionFunc("pvc", completePVCNames)
 
 	return cmd
 }
 
 // completePVNames returns the names of all PersistentVolumes in the cluster for shell completion.
-func completePVNames(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+func completePVNames(_ *cobra.Command, _ []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 	client, err := k8s.GetClient()
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveError
@@ -116,20 +112,25 @@ func completePVNames(_ *cobra.Command, _ []string, _ string) ([]string, cobra.Sh
 
 	names := make([]string, 0, len(pvList.Items))
 	for _, pv := range pvList.Items {
-		names = append(names, pv.Name)
+		if strings.HasPrefix(pv.Name, toComplete) {
+			names = append(names, pv.Name)
+		}
 	}
 	return names, cobra.ShellCompDirectiveNoFileComp
 }
 
 // completePVCNames returns the names of PersistentVolumeClaims for shell completion.
-// When namespace is non-empty it uses that; otherwise it falls back to the current kubeconfig context namespace.
-func completePVCNames(_ *cobra.Command, _ []string, _ string, namespace string) ([]string, cobra.ShellCompDirective) {
+// It reads the --namespace flag from cmd; if unset it falls back to the current kubeconfig context
+// namespace. If the namespace cannot be determined, completion fails with an error.
+func completePVCNames(cmd *cobra.Command, _ []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+	namespace, _ := cmd.Flags().GetString("namespace")
 	if namespace == "" {
 		clientConfig, err := k8s.GetClientConfig()
-		if err == nil {
-			if ns, _, err := clientConfig.Namespace(); err == nil && ns != "" {
-				namespace = ns
-			}
+		if err != nil {
+			return nil, cobra.ShellCompDirectiveError
+		}
+		if ns, _, err := clientConfig.Namespace(); err == nil && ns != "" {
+			namespace = ns
 		}
 	}
 
@@ -145,7 +146,9 @@ func completePVCNames(_ *cobra.Command, _ []string, _ string, namespace string) 
 
 	names := make([]string, 0, len(pvcList.Items))
 	for _, pvc := range pvcList.Items {
-		names = append(names, pvc.Name)
+		if strings.HasPrefix(pvc.Name, toComplete) {
+			names = append(names, pvc.Name)
+		}
 	}
 	return names, cobra.ShellCompDirectiveNoFileComp
 }
