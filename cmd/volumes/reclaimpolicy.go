@@ -1,12 +1,15 @@
 package volumes
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/avisi-cloud/acloud-toolkit/pkg/ame/reclaimpolicy"
+	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
 )
 
 type reclaimPolicyOptions struct {
@@ -73,5 +76,59 @@ acloud-toolkit volumes reclaim-policy --pvc data-pvc --namespace production --po
 
 	cmd.MarkFlagRequired("policy")
 
+	_ = cmd.RegisterFlagCompletionFunc("pv", completePVNames)
+	_ = cmd.RegisterFlagCompletionFunc("pvc", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
+		namespace, _ := cmd.Flags().GetString("namespace")
+		return completePVCNames(cmd, args, toComplete, namespace)
+	})
+
 	return cmd
+}
+
+// completePVNames returns the names of all PersistentVolumes in the cluster for shell completion.
+func completePVNames(_ *cobra.Command, _ []string, _ string) ([]string, cobra.ShellCompDirective) {
+	client, err := k8s.GetClient()
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveError
+	}
+
+	pvList, err := client.CoreV1().PersistentVolumes().List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveError
+	}
+
+	names := make([]string, 0, len(pvList.Items))
+	for _, pv := range pvList.Items {
+		names = append(names, pv.Name)
+	}
+	return names, cobra.ShellCompDirectiveNoFileComp
+}
+
+// completePVCNames returns the names of PersistentVolumeClaims for shell completion.
+// When namespace is non-empty it uses that; otherwise it falls back to the current kubeconfig context namespace.
+func completePVCNames(_ *cobra.Command, _ []string, _ string, namespace string) ([]string, cobra.ShellCompDirective) {
+	if namespace == "" {
+		clientConfig, err := k8s.GetClientConfig()
+		if err == nil {
+			if ns, _, err := clientConfig.Namespace(); err == nil && ns != "" {
+				namespace = ns
+			}
+		}
+	}
+
+	client, err := k8s.GetClient()
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveError
+	}
+
+	pvcList, err := client.CoreV1().PersistentVolumeClaims(namespace).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return nil, cobra.ShellCompDirectiveError
+	}
+
+	names := make([]string, 0, len(pvcList.Items))
+	for _, pvc := range pvcList.Items {
+		names = append(names, pvc.Name)
+	}
+	return names, cobra.ShellCompDirectiveNoFileComp
 }
