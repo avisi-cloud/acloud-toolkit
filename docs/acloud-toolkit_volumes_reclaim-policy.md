@@ -22,11 +22,14 @@ acloud-toolkit volumes reclaim-policy [flags]
 # Set reclaim policy to Retain for a specific PV
 acloud-toolkit volumes reclaim-policy --pv my-pv --policy Retain
 
+# Set reclaim policy to Retain for multiple PVs at once
+acloud-toolkit volumes reclaim-policy --pv my-pv --pv another-pv --policy Retain
+
 # Set reclaim policy to Delete for a PV via PVC using current namespace from kubeconfig
 acloud-toolkit volumes reclaim-policy --pvc my-pvc --policy Delete
 
-# Set reclaim policy to Retain for a PV via PVC in a specific namespace
-acloud-toolkit volumes reclaim-policy --pvc data-pvc --namespace production --policy Retain
+# Set reclaim policy to Retain for multiple PVCs in a specific namespace
+acloud-toolkit volumes reclaim-policy --pvc data-pvc --pvc logs-pvc --namespace production --policy Retain
 
 ```
 
@@ -36,8 +39,8 @@ acloud-toolkit volumes reclaim-policy --pvc data-pvc --namespace production --po
   -h, --help               help for reclaim-policy
   -n, --namespace string   namespace of the persistent volume claim (optional when using --pvc, defaults to current kubeconfig context)
   -p, --policy string      reclaim policy to set (Retain, Delete, Recycle)
-      --pv string          name of the persistent volume
-      --pvc string         name of the persistent volume claim
+      --pv stringArray     name of the persistent volume (may be specified multiple times)
+      --pvc stringArray    name of the persistent volume claim (may be specified multiple times)
 ```
 
 ### SEE ALSO
