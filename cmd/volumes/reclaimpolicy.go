@@ -2,7 +2,6 @@ package volumes
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -60,13 +59,6 @@ acloud-toolkit volumes reclaim-policy --pvc my-pvc --policy Delete
 acloud-toolkit volumes reclaim-policy --pvc data-pvc --pvc logs-pvc --namespace production --policy Retain
 `,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(runOptions.pvNames) == 0 && len(runOptions.pvcNames) == 0 {
-				return fmt.Errorf("either --pv or --pvc must be specified")
-			}
-			if len(runOptions.pvNames) > 0 && len(runOptions.pvcNames) > 0 {
-				return fmt.Errorf("cannot specify both --pv and --pvc")
-			}
-
 			for _, pvName := range runOptions.pvNames {
 				if err := reclaimpolicy.SetReclaimPolicy(cmd.Context(), reclaimpolicy.ReclaimPolicyOptions{
 					PVName: pvName,
@@ -91,6 +83,7 @@ acloud-toolkit volumes reclaim-policy --pvc data-pvc --pvc logs-pvc --namespace 
 	AddReclaimPolicyFlags(cmd.Flags(), runOptions)
 
 	cmd.MarkFlagRequired("policy")
+	cmd.MarkFlagsOneRequired("pv", "pvc")
 
 	_ = cmd.RegisterFlagCompletionFunc("pv", completePVNames)
 	_ = cmd.RegisterFlagCompletionFunc("pvc", completePVCNames)
