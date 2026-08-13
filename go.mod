@@ -2,7 +2,7 @@ module github.com/avisi-cloud/acloud-toolkit
 
 go 1.25.0
 
-toolchain go1.26.4
+toolchain go1.26.6
 
 require (
 	github.com/andanhm/go-prettytime v1.1.0
