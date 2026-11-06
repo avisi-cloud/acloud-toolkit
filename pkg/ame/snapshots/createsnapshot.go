@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	volumesnapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v8/apis/volumesnapshot/v1"
@@ -17,24 +18,16 @@ import (
 	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
 )
 
-func SnapshotCreate(ctx context.Context, snapshotName string, targetNamespace string, targetName string, snapshotClassName string) error {
-	kubeconfig, err := k8s.GetClientConfig()
-	if err != nil {
-		return err
-	}
-	config, err := kubeconfig.ClientConfig()
-	if err != nil {
-		return err
-	}
-	client, err := dynamic.NewForConfig(config)
-	if err != nil {
-		return err
-	}
-	k8sclient, err := k8s.GetClientWithConfig(config)
-	if err != nil {
+// SnapshotCreate creates a snapshot of a single PVC. The snapshot is labeled with SnapshotBatchLabelKey=batchID.
+func SnapshotCreate(ctx context.Context, snapshotName string, targetNamespace string, targetName string, snapshotClassName string, batchID string) error {
+	if err := ValidateSnapshotBatchID(batchID); err != nil {
 		return err
 	}
 	if targetNamespace == "" {
+		kubeconfig, err := k8s.GetClientConfig()
+		if err != nil {
+			return err
+		}
 		contextNamespace, _, err := kubeconfig.Namespace()
 		if err != nil {
 			return err
@@ -42,10 +35,44 @@ func SnapshotCreate(ctx context.Context, snapshotName string, targetNamespace st
 		targetNamespace = contextNamespace
 	}
 
+	submitted, err := createSnapshot(ctx, snapshotName, targetNamespace, targetName, snapshotClassName, batchID)
+	if submitted {
+		printSnapshotBatchDeleteHint(targetNamespace, batchID)
+	}
+	return err
+}
+
+// createSnapshot creates the VolumeSnapshot and waits until it is ready to use.
+// submitted reports whether the VolumeSnapshot was created in the cluster, even if waiting for it failed afterwards.
+func createSnapshot(ctx context.Context, snapshotName string, targetNamespace string, targetName string, snapshotClassName string, batchID string) (bool, error) {
+	kubeconfig, err := k8s.GetClientConfig()
+	if err != nil {
+		return false, err
+	}
+	config, err := kubeconfig.ClientConfig()
+	if err != nil {
+		return false, err
+	}
+	client, err := dynamic.NewForConfig(config)
+	if err != nil {
+		return false, err
+	}
+	k8sclient, err := k8s.GetClientWithConfig(config)
+	if err != nil {
+		return false, err
+	}
+	if targetNamespace == "" {
+		contextNamespace, _, err := kubeconfig.Namespace()
+		if err != nil {
+			return false, err
+		}
+		targetNamespace = contextNamespace
+	}
+
 	// wait until PVC has a persistent volume
 	pvc, err := k8sclient.CoreV1().PersistentVolumeClaims(targetNamespace).Get(ctx, targetName, metav1.GetOptions{})
 	if err != nil {
-		return err
+		return false, err
 	}
 	fmt.Printf("PVC with volume %s found...\n", pvc.Spec.VolumeName)
 
@@ -54,7 +81,7 @@ func SnapshotCreate(ctx context.Context, snapshotName string, targetNamespace st
 		volumeSnapshotClassName = ptr.To(strings.TrimSpace(snapshotClassName))
 	}
 	// convert to the snapshot object
-	createSnapshot := volumesnapshotv1.VolumeSnapshot{
+	volumeSnapshot := volumesnapshotv1.VolumeSnapshot{
 		TypeMeta: metav1.TypeMeta{
 			APIVersion: "snapshot.storage.k8s.io/v1",
 			Kind:       "VolumeSnapshot",
@@ -63,7 +90,8 @@ func SnapshotCreate(ctx context.Context, snapshotName string, targetNamespace st
 			Name:      snapshotName,
 			Namespace: targetNamespace,
 			Labels: map[string]string{
-				createdByLabelKey: createdByLabelValue,
+				createdByLabelKey:     createdByLabelValue,
+				SnapshotBatchLabelKey: batchID,
 			},
 		},
 		Spec: volumesnapshotv1.VolumeSnapshotSpec{
@@ -73,9 +101,9 @@ func SnapshotCreate(ctx context.Context, snapshotName string, targetNamespace st
 			VolumeSnapshotClassName: volumeSnapshotClassName,
 		},
 	}
-	snapshotUnstructued, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&createSnapshot)
+	snapshotUnstructued, err := runtime.DefaultUnstructuredConverter.ToUnstructured(&volumeSnapshot)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	fmt.Printf("Creating snapshot %q for PVC %q...\n", snapshotName, targetName)
@@ -83,14 +111,14 @@ func SnapshotCreate(ctx context.Context, snapshotName string, targetNamespace st
 		Object: snapshotUnstructued,
 	}, metav1.CreateOptions{})
 	if err != nil {
-		return err
+		return false, err
 	}
 	fmt.Printf("Snapshot %q created for PVC %q...\n", snapshotName, targetName)
 	fmt.Printf("Waiting until %q is ready for use...\n", snapshotName)
 	for {
 		snapshotUnstructued, err := client.Resource(volumesnapshotResource).Namespace(targetNamespace).Get(ctx, snapshotName, metav1.GetOptions{})
 		if err != nil {
-			return err
+			return true, err
 		}
 
 		// convert to the snapshot object
@@ -104,17 +132,22 @@ func SnapshotCreate(ctx context.Context, snapshotName string, targetNamespace st
 		}
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return true, ctx.Err()
 		case <-time.After(1 * time.Second):
 			continue
 		}
 	}
 	fmt.Printf("Snapshot %q completed...\n", snapshotName)
 
-	return nil
+	return true, nil
 }
 
-func SnapshotCreateAllInNamespace(ctx context.Context, targetNamespace, snapshotClassName, prefix string, concurrentLimit int) error {
+// SnapshotCreateAllInNamespace creates a snapshot for every PVC in the namespace. All snapshots are labeled with
+// SnapshotBatchLabelKey=batchID.
+func SnapshotCreateAllInNamespace(ctx context.Context, targetNamespace, snapshotClassName, prefix string, concurrentLimit int, batchID string) error {
+	if err := ValidateSnapshotBatchID(batchID); err != nil {
+		return err
+	}
 	kubeconfig, err := k8s.GetClientConfig()
 	if err != nil {
 		return err
@@ -142,6 +175,8 @@ func SnapshotCreateAllInNamespace(ctx context.Context, targetNamespace, snapshot
 	}
 
 	var wg sync.WaitGroup
+	var mu sync.Mutex
+	var anySubmitted atomic.Bool
 	errCh := make(chan error, len(pvcs.Items))
 	createdSnapshots := make([]string, 0, len(pvcs.Items))
 
@@ -165,11 +200,16 @@ func SnapshotCreateAllInNamespace(ctx context.Context, targetNamespace, snapshot
 				snapshotName = k8s.FormatKubernetesNameCustomSuffix(pvcName, k8s.MaxKubernetesNameLength, suffix)
 			}
 
-			err := SnapshotCreate(ctx, snapshotName, targetNamespace, pvcName, snapshotClassName)
+			submitted, err := createSnapshot(ctx, snapshotName, targetNamespace, pvcName, snapshotClassName, batchID)
+			if submitted {
+				anySubmitted.Store(true)
+			}
 			if err != nil {
 				errCh <- err
 			} else {
+				mu.Lock()
 				createdSnapshots = append(createdSnapshots, snapshotName)
+				mu.Unlock()
 			}
 		}(pvc.Name)
 	}
@@ -188,6 +228,9 @@ func SnapshotCreateAllInNamespace(ctx context.Context, targetNamespace, snapshot
 	fmt.Println("\nCreated snapshots:")
 	for _, snapshot := range createdSnapshots {
 		fmt.Println(snapshot)
+	}
+	if anySubmitted.Load() {
+		printSnapshotBatchDeleteHint(targetNamespace, batchID)
 	}
 
 	return finalErr

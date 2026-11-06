@@ -8,6 +8,8 @@ This command creates a snapshot of a Kubernetes PVC, allowing you to capture a p
 
 To create a snapshot, you need to provide the name of the PVC to snapshot, as well as a name for the snapshot. You can also specify a namespace if the PVC is not in the current namespace context. If no snapshot class is specified, the default snapshot class will be used.
 
+All snapshots created by a single run are labeled with `acloud-toolkit.k8s.avisi.cloud/snapshot-batch=<batch-id>`, so they can be listed and deleted in one go afterwards with `snapshot list --batch-id` and `snapshot delete --batch-id`. The batch id is generated unless --batch-id is set, and the matching delete command is printed when the run finishes.
+
 ```
 acloud-toolkit snapshots create <snapshot> [flags]
 ```
@@ -27,6 +29,10 @@ acloud-toolkit snapshot create --all --namespace=my-namespace
 
 # Create snapshots for all PVCs in the namespace "my-namespace" with a prefix "backup":
 acloud-toolkit snapshot create --all --namespace=my-namespace --prefix=backup
+
+# Create snapshots for all PVCs in the namespace "my-namespace" with a fixed batch id, then delete them all at once:
+acloud-toolkit snapshot create --all --namespace=my-namespace --batch-id=before-upgrade
+acloud-toolkit snapshot delete --batch-id=before-upgrade --namespace=my-namespace
 		
 ```
 
@@ -34,6 +40,7 @@ acloud-toolkit snapshot create --all --namespace=my-namespace --prefix=backup
 
 ```
       --all                     Create snapshots for all PVCs in the namespace, and use pvc name as snapshot name
+      --batch-id string         Value for the acloud-toolkit.k8s.avisi.cloud/snapshot-batch label set on all created snapshots, to delete them later in one go. Generated (<timestamp>-<random>) by default; reuse a value to group multiple runs
       --concurrent-limit int    Maximum number of concurrent snapshot creation operations (default 10)
   -h, --help                    help for create
   -n, --namespace string        If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context

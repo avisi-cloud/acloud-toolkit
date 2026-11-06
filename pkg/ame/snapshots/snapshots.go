@@ -11,6 +11,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 var (
@@ -90,4 +91,34 @@ func geVolumeSnapshotContent(ctx context.Context, client *dynamic.DynamicClient,
 		return &snapshotContentData, nil
 	}
 	return nil, ErrNoVolumeSnapshotContentFound
+}
+
+func resolveNamespace(kubeconfig clientcmd.ClientConfig, namespace string, allNamespaces bool) (string, error) {
+	if allNamespaces {
+		return metav1.NamespaceAll, nil
+	}
+	if namespace != "" {
+		return namespace, nil
+	}
+	contextNamespace, _, err := kubeconfig.Namespace()
+	if err != nil {
+		return "", err
+	}
+	return contextNamespace, nil
+}
+
+func listVolumeSnapshots(ctx context.Context, client dynamic.Interface, namespace string, labelSelector string) ([]volumesnapshotv1.VolumeSnapshot, error) {
+	snapshotList, err := client.Resource(volumesnapshotResource).Namespace(namespace).List(ctx, metav1.ListOptions{LabelSelector: labelSelector})
+	if err != nil {
+		return nil, err
+	}
+	snapshots := make([]volumesnapshotv1.VolumeSnapshot, 0, len(snapshotList.Items))
+	for _, item := range snapshotList.Items {
+		snapshot := volumesnapshotv1.VolumeSnapshot{}
+		if err := runtime.DefaultUnstructuredConverter.FromUnstructured(item.Object, &snapshot); err != nil {
+			return nil, fmt.Errorf("failed to convert volumesnapshot %s/%s: %w", item.GetNamespace(), item.GetName(), err)
+		}
+		snapshots = append(snapshots, snapshot)
+	}
+	return snapshots, nil
 }
