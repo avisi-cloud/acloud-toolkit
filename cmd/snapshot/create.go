@@ -56,7 +56,7 @@ func NewSnapshotCreateCmd(runOptions *snapshotCreateOptions) *cobra.Command {
 
 To create a snapshot, you need to provide the name of the PVC to snapshot, as well as a name for the snapshot. You can also specify a namespace if the PVC is not in the current namespace context. If no snapshot class is specified, the default snapshot class will be used.
 
-All snapshots created by a single run are labeled with ` + "`" + snapshots.SnapshotBatchLabelKey + "=<batch-id>`" + `, so they can be deleted in one go afterwards. The batch id is generated unless --batch-id is set, and the matching delete command is printed when the run finishes.`,
+All snapshots created by a single run are labeled with ` + "`" + snapshots.SnapshotBatchLabelKey + "=<batch-id>`" + `, so they can be listed and deleted in one go afterwards with ` + "`snapshot list --batch-id`" + ` and ` + "`snapshot delete --batch-id`" + `. The batch id is generated unless --batch-id is set, and the matching delete command is printed when the run finishes.`,
 		Example: `
 # Create a snapshot of the PVC "my-pvc" with the name "my-snapshot":
 acloud-toolkit snapshot create my-snapshot --pvc=my-pvc
@@ -72,7 +72,7 @@ acloud-toolkit snapshot create --all --namespace=my-namespace --prefix=backup
 
 # Create snapshots for all PVCs in the namespace "my-namespace" with a fixed batch id, then delete them all at once:
 acloud-toolkit snapshot create --all --namespace=my-namespace --batch-id=before-upgrade
-kubectl delete volumesnapshots -n my-namespace -l ` + snapshots.SnapshotBatchLabelKey + `=before-upgrade
+acloud-toolkit snapshot delete --batch-id=before-upgrade --namespace=my-namespace
 		`,
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			if runOptions.prefix != "" && !runOptions.allInNamespace {

@@ -40,7 +40,12 @@ func ValidateSnapshotBatchID(batchID string) error {
 	return nil
 }
 
+// SnapshotBatchLabelSelector returns the label selector matching all snapshots of the given batch.
+func SnapshotBatchLabelSelector(batchID string) string {
+	return SnapshotBatchLabelKey + "=" + batchID
+}
+
 func printSnapshotBatchDeleteHint(namespace, batchID string) {
-	fmt.Printf("\nAll snapshots of this run are labeled %s=%s\n", SnapshotBatchLabelKey, batchID)
-	fmt.Printf("Delete them in one go with:\n  kubectl delete volumesnapshots -n %s -l %s=%s\n", namespace, SnapshotBatchLabelKey, batchID)
+	fmt.Printf("\nAll snapshots of this run are labeled %s\n", SnapshotBatchLabelSelector(batchID))
+	fmt.Printf("Delete them in one go with:\n  acloud-toolkit snapshot delete --batch-id %s -n %s\n", batchID, namespace)
 }

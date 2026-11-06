@@ -5,15 +5,22 @@ import (
 	"fmt"
 
 	volumesnapshotv1 "github.com/kubernetes-csi/external-snapshotter/client/v8/apis/volumesnapshot/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/dynamic"
 
 	"github.com/avisi-cloud/acloud-toolkit/pkg/k8s"
 	"github.com/avisi-cloud/acloud-toolkit/pkg/table"
 )
 
-func List(ctx context.Context, namespace string, allNamespaces, fetchSnapshotHandle bool) error {
+// List prints the VolumeSnapshots in the namespace (or all namespaces). When batchID is set, only snapshots of that
+// batch (labeled SnapshotBatchLabelKey=batchID) are listed.
+func List(ctx context.Context, namespace string, allNamespaces, fetchSnapshotHandle bool, batchID string) error {
+	labelSelector := ""
+	if batchID != "" {
+		if err := ValidateSnapshotBatchID(batchID); err != nil {
+			return err
+		}
+		labelSelector = SnapshotBatchLabelSelector(batchID)
+	}
 	kubeconfig, err := k8s.GetClientConfig()
 	if err != nil {
 		return err
@@ -26,46 +33,21 @@ func List(ctx context.Context, namespace string, allNamespaces, fetchSnapshotHan
 	if err != nil {
 		return err
 	}
-	if namespace == "" {
-		contextNamespace, _, err := kubeconfig.Namespace()
-		if err != nil {
-			return err
-		}
-		namespace = contextNamespace
+	k8sclient, err := k8s.GetClientWithConfig(config)
+	if err != nil {
+		return err
 	}
 
 	// Collect namespaces, either based a single (default) namespace, or collect all namespaces in the cluster
 	// and use those to query the snapshots in cluster.
-	namespaces := []string{}
-	if allNamespaces {
-		k8sclient := k8s.GetClientOrDie()
-		namespaceList, err := k8sclient.CoreV1().Namespaces().List(context.Background(), metav1.ListOptions{})
-		if err != nil {
-			return err
-		}
-		for _, ns := range namespaceList.Items {
-			namespaces = append(namespaces, ns.GetName())
-		}
-	} else {
-		namespaces = append(namespaces, namespace)
+	namespaces, err := resolveNamespaces(ctx, kubeconfig, k8sclient, namespace, allNamespaces)
+	if err != nil {
+		return err
 	}
 
-	// collect all listSnapshots for each namespace
-	listSnapshots := []volumesnapshotv1.VolumeSnapshot{}
-	for _, namespace := range namespaces {
-		snapshotUnstructured, err := client.Resource(volumesnapshotResource).Namespace(namespace).List(context.TODO(), metav1.ListOptions{})
-		if err != nil {
-			return err
-		}
-		if snapshotUnstructured == nil {
-			continue
-		}
-		for _, snapshotItem := range snapshotUnstructured.Items {
-			snapshot := volumesnapshotv1.VolumeSnapshot{}
-
-			runtime.DefaultUnstructuredConverter.FromUnstructured(snapshotItem.Object, &snapshot)
-			listSnapshots = append(listSnapshots, snapshot)
-		}
+	listSnapshots, err := listVolumeSnapshots(ctx, client, namespaces, labelSelector)
+	if err != nil {
+		return err
 	}
 
 	// Format output
@@ -105,6 +87,7 @@ func List(ctx context.Context, namespace string, allNamespaces, fetchSnapshotHan
 			size,
 			fmt.Sprintf("%v", snapshot.Status != nil && snapshot.Status.ReadyToUse != nil && *snapshot.Status.ReadyToUse),
 			snapshotClassName,
+			snapshot.GetLabels()[SnapshotBatchLabelKey],
 			snapshotHandle,
 		})
 	}
@@ -117,6 +100,7 @@ func List(ctx context.Context, namespace string, allNamespaces, fetchSnapshotHan
 		"Size",
 		"Ready",
 		"Classname",
+		"Batch",
 		"Snapshot Handle",
 	}, body)
 

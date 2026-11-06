@@ -11,6 +11,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
 )
 
 var (
@@ -90,4 +92,50 @@ func geVolumeSnapshotContent(ctx context.Context, client *dynamic.DynamicClient,
 		return &snapshotContentData, nil
 	}
 	return nil, ErrNoVolumeSnapshotContentFound
+}
+
+// resolveNamespaces returns the namespaces to operate on: all namespaces in the cluster when allNamespaces is set,
+// otherwise the given namespace, falling back to the namespace of the current Kubernetes context.
+func resolveNamespaces(ctx context.Context, kubeconfig clientcmd.ClientConfig, k8sclient kubernetes.Interface, namespace string, allNamespaces bool) ([]string, error) {
+	if allNamespaces {
+		namespaceList, err := k8sclient.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+		if err != nil {
+			return nil, err
+		}
+		namespaces := make([]string, 0, len(namespaceList.Items))
+		for _, ns := range namespaceList.Items {
+			namespaces = append(namespaces, ns.GetName())
+		}
+		return namespaces, nil
+	}
+	if namespace == "" {
+		contextNamespace, _, err := kubeconfig.Namespace()
+		if err != nil {
+			return nil, err
+		}
+		namespace = contextNamespace
+	}
+	return []string{namespace}, nil
+}
+
+// listVolumeSnapshots returns the VolumeSnapshots in the given namespaces matching labelSelector (empty matches all).
+func listVolumeSnapshots(ctx context.Context, client dynamic.Interface, namespaces []string, labelSelector string) ([]volumesnapshotv1.VolumeSnapshot, error) {
+	snapshots := []volumesnapshotv1.VolumeSnapshot{}
+	for _, namespace := range namespaces {
+		snapshotList, err := client.Resource(volumesnapshotResource).Namespace(namespace).List(ctx, metav1.ListOptions{LabelSelector: labelSelector})
+		if err != nil {
+			return nil, err
+		}
+		if snapshotList == nil {
+			continue
+		}
+		for _, item := range snapshotList.Items {
+			snapshot := volumesnapshotv1.VolumeSnapshot{}
+			if err := runtime.DefaultUnstructuredConverter.FromUnstructured(item.Object, &snapshot); err != nil {
+				return nil, fmt.Errorf("failed to convert volumesnapshot %s/%s: %w", item.GetNamespace(), item.GetName(), err)
+			}
+			snapshots = append(snapshots, snapshot)
+		}
+	}
+	return snapshots, nil
 }
