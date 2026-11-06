@@ -71,7 +71,9 @@ func deleteSnapshotsByBatch(ctx context.Context, client dynamic.Interface, names
 	var errs []error
 	deleted := 0
 	for _, snapshot := range snapshotsToDelete {
-		err := client.Resource(volumesnapshotResource).Namespace(snapshot.GetNamespace()).Delete(ctx, snapshot.GetName(), metav1.DeleteOptions{})
+		err := client.Resource(volumesnapshotResource).Namespace(snapshot.GetNamespace()).Delete(ctx, snapshot.GetName(), metav1.DeleteOptions{
+			Preconditions: metav1.NewUIDPreconditions(string(snapshot.GetUID())),
+		})
 		if err != nil && !kubeerrors.IsNotFound(err) {
 			fmt.Printf("  failed to delete %s/%s: %v\n", snapshot.GetNamespace(), snapshot.GetName(), err)
 			errs = append(errs, fmt.Errorf("failed to delete snapshot %s/%s: %w", snapshot.GetNamespace(), snapshot.GetName(), err))

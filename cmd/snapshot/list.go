@@ -22,7 +22,7 @@ func AddListFlags(flagSet *flag.FlagSet, opts *listOptions) {
 	flagSet.StringVarP(&opts.sourceNamespace, "namespace", "n", "", "If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context")
 	flagSet.BoolVarP(&opts.allNamespaces, "all-namespaces", "A", false, "return results for all namespaces")
 	flagSet.BoolVarP(&opts.fetchSnapshotHandles, "handles", "S", true, "show snapshot content handle")
-	flagSet.StringVar(&opts.batchID, "batch-id", "", "Only list snapshots of this batch (created by a single `snapshot create` run)")
+	flagSet.StringVar(&opts.batchID, "batch-id", "", "Only list snapshots of this batch (created by a single snapshot create run)")
 }
 
 // NewListCmd returns the Cobra Bootstrap sub command

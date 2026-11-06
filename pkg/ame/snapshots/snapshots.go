@@ -94,8 +94,6 @@ func geVolumeSnapshotContent(ctx context.Context, client *dynamic.DynamicClient,
 	return nil, ErrNoVolumeSnapshotContentFound
 }
 
-// resolveNamespaces returns the namespaces to operate on: all namespaces in the cluster when allNamespaces is set,
-// otherwise the given namespace, falling back to the namespace of the current Kubernetes context.
 func resolveNamespaces(ctx context.Context, kubeconfig clientcmd.ClientConfig, k8sclient kubernetes.Interface, namespace string, allNamespaces bool) ([]string, error) {
 	if allNamespaces {
 		namespaceList, err := k8sclient.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
@@ -118,7 +116,6 @@ func resolveNamespaces(ctx context.Context, kubeconfig clientcmd.ClientConfig, k
 	return []string{namespace}, nil
 }
 
-// listVolumeSnapshots returns the VolumeSnapshots in the given namespaces matching labelSelector (empty matches all).
 func listVolumeSnapshots(ctx context.Context, client dynamic.Interface, namespaces []string, labelSelector string) ([]volumesnapshotv1.VolumeSnapshot, error) {
 	snapshots := []volumesnapshotv1.VolumeSnapshot{}
 	for _, namespace := range namespaces {

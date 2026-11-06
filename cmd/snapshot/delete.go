@@ -19,7 +19,7 @@ func newDeleteOptions() *deleteOptions {
 }
 
 func AddDeleteFlags(flagSet *flag.FlagSet, opts *deleteOptions) {
-	flagSet.StringVar(&opts.batchID, "batch-id", "", "Delete all snapshots of this batch (created by a single `snapshot create` run). (required)")
+	flagSet.StringVar(&opts.batchID, "batch-id", "", "Delete all snapshots of this batch (created by a single snapshot create run). (required)")
 	flagSet.StringVarP(&opts.namespace, "namespace", "n", "", "If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context")
 	flagSet.BoolVarP(&opts.allNamespaces, "all-namespaces", "A", false, "Delete the snapshots of the batch in all namespaces")
 	flagSet.BoolVar(&opts.dryRun, "dry-run", false, "Only show the snapshots that would be deleted")

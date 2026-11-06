@@ -30,11 +30,11 @@ acloud-toolkit snapshot delete --batch-id=before-upgrade -A
 ### Options
 
 ```
-  -A, --all-namespaces             Delete the snapshots of the batch in all namespaces
-      --batch-id snapshot create   Delete all snapshots of this batch (created by a single snapshot create run). (required)
-      --dry-run                    Only show the snapshots that would be deleted
-  -h, --help                       help for delete
-  -n, --namespace string           If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context
+  -A, --all-namespaces     Delete the snapshots of the batch in all namespaces
+      --batch-id string    Delete all snapshots of this batch (created by a single snapshot create run). (required)
+      --dry-run            Only show the snapshots that would be deleted
+  -h, --help               help for delete
+  -n, --namespace string   If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context
 ```
 
 ### SEE ALSO

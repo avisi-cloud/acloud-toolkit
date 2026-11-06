@@ -10,11 +10,14 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/apimachinery/pkg/types"
 	dynamicfake "k8s.io/client-go/dynamic/fake"
+	k8stesting "k8s.io/client-go/testing"
 )
 
 func newTestSnapshot(namespace, name, batchID string) *unstructured.Unstructured {
 	snapshot := &unstructured.Unstructured{}
+	snapshot.SetUID(types.UID(namespace + "-" + name + "-uid"))
 	snapshot.SetAPIVersion("snapshot.storage.k8s.io/v1")
 	snapshot.SetKind("VolumeSnapshot")
 	snapshot.SetNamespace(namespace)
@@ -76,6 +79,24 @@ func TestDeleteSnapshotsByBatch(t *testing.T) {
 		[]string{"ns-a/a-batch2", "ns-a/a-unlabeled", "ns-b/b-batch1"},
 		remainingSnapshots(t, client, "ns-a", "ns-b"),
 		"only batch1 snapshots in the selected namespace are deleted")
+}
+
+func TestDeleteSnapshotsByBatchOnlyDeletesListedObject(t *testing.T) {
+	client := newFakeSnapshotClient(testSnapshots()...)
+
+	require.NoError(t, deleteSnapshotsByBatch(context.Background(), client, []string{"ns-a"}, "batch1", false))
+
+	var deleteActions []k8stesting.DeleteAction
+	for _, action := range client.Actions() {
+		if deleteAction, ok := action.(k8stesting.DeleteAction); ok {
+			deleteActions = append(deleteActions, deleteAction)
+		}
+	}
+	require.Len(t, deleteActions, 1)
+	preconditions := deleteActions[0].GetDeleteOptions().Preconditions
+	require.NotNil(t, preconditions)
+	require.NotNil(t, preconditions.UID)
+	assert.Equal(t, types.UID("ns-a-a-batch1-uid"), *preconditions.UID)
 }
 
 func TestDeleteSnapshotsByBatchDryRun(t *testing.T) {
