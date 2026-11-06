@@ -32,8 +32,9 @@ func NewDeleteCmd(runOptions *deleteOptions) *cobra.Command {
 	}
 
 	cmd := &cobra.Command{
-		Use:   "delete --batch-id <batch-id>",
-		Short: "Delete all CSI snapshots created by a single snapshot create run",
+		Use:     "delete --batch-id <batch-id>",
+		Aliases: []string{"rm", "remove"},
+		Short:   "Delete all CSI snapshots created by a single snapshot create run",
 		Long: `This command deletes all CSI snapshots of a batch. Every ` + "`acloud-toolkit snapshot create`" + ` run labels the snapshots it creates with ` + "`" + snapshots.SnapshotBatchLabelKey + "=<batch-id>`" + `, and prints the batch id when it finishes. The batch id of existing snapshots is shown in the Batch column of ` + "`acloud-toolkit snapshot list`" + `.
 
 Whether the underlying snapshot data is removed as well depends on the deletion policy of the VolumeSnapshotClass.`,
