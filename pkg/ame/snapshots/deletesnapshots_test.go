@@ -35,15 +35,13 @@ func newFakeSnapshotClient(objects ...runtime.Object) *dynamicfake.FakeDynamicCl
 	)
 }
 
-func remainingSnapshots(t *testing.T, client *dynamicfake.FakeDynamicClient, namespaces ...string) []string {
+func remainingSnapshots(t *testing.T, client *dynamicfake.FakeDynamicClient) []string {
 	t.Helper()
+	list, err := client.Resource(volumesnapshotResource).Namespace(metav1.NamespaceAll).List(context.Background(), metav1.ListOptions{})
+	require.NoError(t, err)
 	names := []string{}
-	for _, namespace := range namespaces {
-		list, err := client.Resource(volumesnapshotResource).Namespace(namespace).List(context.Background(), metav1.ListOptions{})
-		require.NoError(t, err)
-		for _, item := range list.Items {
-			names = append(names, item.GetNamespace()+"/"+item.GetName())
-		}
+	for _, item := range list.Items {
+		names = append(names, item.GetNamespace()+"/"+item.GetName())
 	}
 	return names
 }
@@ -57,10 +55,20 @@ func testSnapshots() []runtime.Object {
 	}
 }
 
-func TestListVolumeSnapshotsByBatch(t *testing.T) {
+func TestListVolumeSnapshotsByBatchInOneNamespace(t *testing.T) {
 	client := newFakeSnapshotClient(testSnapshots()...)
 
-	snapshots, err := listVolumeSnapshots(context.Background(), client, []string{"ns-a", "ns-b"}, SnapshotBatchLabelSelector("batch1"))
+	snapshots, err := listVolumeSnapshots(context.Background(), client, "ns-a", SnapshotBatchLabelSelector("batch1"))
+	require.NoError(t, err)
+
+	require.Len(t, snapshots, 1)
+	assert.Equal(t, "a-batch1", snapshots[0].GetName())
+}
+
+func TestListVolumeSnapshotsByBatchInAllNamespaces(t *testing.T) {
+	client := newFakeSnapshotClient(testSnapshots()...)
+
+	snapshots, err := listVolumeSnapshots(context.Background(), client, metav1.NamespaceAll, SnapshotBatchLabelSelector("batch1"))
 	require.NoError(t, err)
 
 	names := []string{}
@@ -73,18 +81,18 @@ func TestListVolumeSnapshotsByBatch(t *testing.T) {
 func TestDeleteSnapshotsByBatch(t *testing.T) {
 	client := newFakeSnapshotClient(testSnapshots()...)
 
-	require.NoError(t, deleteSnapshotsByBatch(context.Background(), client, []string{"ns-a"}, "batch1", false))
+	require.NoError(t, deleteSnapshotsByBatch(context.Background(), client, "ns-a", "batch1", false))
 
 	assert.ElementsMatch(t,
 		[]string{"ns-a/a-batch2", "ns-a/a-unlabeled", "ns-b/b-batch1"},
-		remainingSnapshots(t, client, "ns-a", "ns-b"),
+		remainingSnapshots(t, client),
 		"only batch1 snapshots in the selected namespace are deleted")
 }
 
 func TestDeleteSnapshotsByBatchOnlyDeletesListedObject(t *testing.T) {
 	client := newFakeSnapshotClient(testSnapshots()...)
 
-	require.NoError(t, deleteSnapshotsByBatch(context.Background(), client, []string{"ns-a"}, "batch1", false))
+	require.NoError(t, deleteSnapshotsByBatch(context.Background(), client, "ns-a", "batch1", false))
 
 	var deleteActions []k8stesting.DeleteAction
 	for _, action := range client.Actions() {
@@ -102,15 +110,23 @@ func TestDeleteSnapshotsByBatchOnlyDeletesListedObject(t *testing.T) {
 func TestDeleteSnapshotsByBatchDryRun(t *testing.T) {
 	client := newFakeSnapshotClient(testSnapshots()...)
 
-	require.NoError(t, deleteSnapshotsByBatch(context.Background(), client, []string{"ns-a", "ns-b"}, "batch1", true))
+	require.NoError(t, deleteSnapshotsByBatch(context.Background(), client, metav1.NamespaceAll, "batch1", true))
 
-	assert.Len(t, remainingSnapshots(t, client, "ns-a", "ns-b"), 4, "dry-run deletes nothing")
+	assert.Len(t, remainingSnapshots(t, client), 4, "dry-run deletes nothing")
 }
 
 func TestDeleteSnapshotsByBatchNoMatches(t *testing.T) {
 	client := newFakeSnapshotClient(testSnapshots()...)
 
-	require.NoError(t, deleteSnapshotsByBatch(context.Background(), client, []string{"ns-a", "ns-b"}, "unknown", false))
+	require.NoError(t, deleteSnapshotsByBatch(context.Background(), client, metav1.NamespaceAll, "unknown", false))
 
-	assert.Len(t, remainingSnapshots(t, client, "ns-a", "ns-b"), 4)
+	assert.Len(t, remainingSnapshots(t, client), 4)
+}
+
+func TestDeleteSnapshotsByBatchInAllNamespaces(t *testing.T) {
+	client := newFakeSnapshotClient(testSnapshots()...)
+
+	require.NoError(t, deleteSnapshotsByBatch(context.Background(), client, metav1.NamespaceAll, "batch1", false))
+
+	assert.ElementsMatch(t, []string{"ns-a/a-batch2", "ns-a/a-unlabeled"}, remainingSnapshots(t, client))
 }

@@ -36,21 +36,16 @@ func DeleteByBatch(ctx context.Context, opts DeleteByBatchOpts) error {
 	if err != nil {
 		return err
 	}
-	k8sclient, err := k8s.GetClientWithConfig(config)
+	namespace, err := resolveNamespace(kubeconfig, opts.Namespace, opts.AllNamespaces)
 	if err != nil {
 		return err
 	}
-
-	namespaces, err := resolveNamespaces(ctx, kubeconfig, k8sclient, opts.Namespace, opts.AllNamespaces)
-	if err != nil {
-		return err
-	}
-	return deleteSnapshotsByBatch(ctx, client, namespaces, opts.BatchID, opts.DryRun)
+	return deleteSnapshotsByBatch(ctx, client, namespace, opts.BatchID, opts.DryRun)
 }
 
-func deleteSnapshotsByBatch(ctx context.Context, client dynamic.Interface, namespaces []string, batchID string, dryRun bool) error {
+func deleteSnapshotsByBatch(ctx context.Context, client dynamic.Interface, namespace string, batchID string, dryRun bool) error {
 	selector := SnapshotBatchLabelSelector(batchID)
-	snapshotsToDelete, err := listVolumeSnapshots(ctx, client, namespaces, selector)
+	snapshotsToDelete, err := listVolumeSnapshots(ctx, client, namespace, selector)
 	if err != nil {
 		return err
 	}

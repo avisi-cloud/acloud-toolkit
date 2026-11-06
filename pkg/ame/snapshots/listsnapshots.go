@@ -33,19 +33,12 @@ func List(ctx context.Context, namespace string, allNamespaces, fetchSnapshotHan
 	if err != nil {
 		return err
 	}
-	k8sclient, err := k8s.GetClientWithConfig(config)
+	namespace, err = resolveNamespace(kubeconfig, namespace, allNamespaces)
 	if err != nil {
 		return err
 	}
 
-	// Collect namespaces, either based a single (default) namespace, or collect all namespaces in the cluster
-	// and use those to query the snapshots in cluster.
-	namespaces, err := resolveNamespaces(ctx, kubeconfig, k8sclient, namespace, allNamespaces)
-	if err != nil {
-		return err
-	}
-
-	listSnapshots, err := listVolumeSnapshots(ctx, client, namespaces, labelSelector)
+	listSnapshots, err := listVolumeSnapshots(ctx, client, namespace, labelSelector)
 	if err != nil {
 		return err
 	}
