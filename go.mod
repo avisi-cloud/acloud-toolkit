@@ -7,7 +7,7 @@ toolchain go1.27.3
 require (
 	github.com/andanhm/go-prettytime v1.1.0
 	github.com/google/uuid v1.6.0
-	github.com/kubernetes-csi/external-snapshotter/client/v8 v8.6.0
+	github.com/kubernetes-csi/external-snapshotter/client/v8 v8.7.0
 	github.com/olekukonko/tablewriter v1.1.5
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.10.2
