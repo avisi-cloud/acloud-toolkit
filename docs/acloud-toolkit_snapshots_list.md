@@ -8,6 +8,8 @@ This command lists all available CSI snapshots within the current namespace. CSI
 
 By default, this command lists all snapshots in the current namespace. You can also specify a different namespace if needed.
 
+The Batch column shows the batch id of snapshots created with `acloud-toolkit snapshot create`. Use --batch-id to only list the snapshots of one batch.
+
 ```
 acloud-toolkit snapshots list [flags]
 ```
@@ -24,6 +26,9 @@ acloud-toolkit snapshot list --namespace=my-namespace
 
 # List all available CSI snapshots within all namespaces:
 acloud-toolkit snapshot list -A
+
+# List the snapshots created by a single "snapshot create" run, in all namespaces:
+acloud-toolkit snapshot list -A --batch-id=20261106-142501-x7k2p
 		
 ```
 
@@ -31,6 +36,7 @@ acloud-toolkit snapshot list -A
 
 ```
   -A, --all-namespaces     return results for all namespaces
+      --batch-id string    Only list snapshots of this batch (created by a single snapshot create run)
   -S, --handles            show snapshot content handle (default true)
   -h, --help               help for list
   -n, --namespace string   If present, the namespace scope for this CLI request. Otherwise uses the namespace from the current Kubernetes context
